@@ -1,0 +1,20 @@
+[package]
+name = "vekrel-relay"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8"
+base64 = "0.23.1"
+clap = { version = "4.6.7", features = ["derive"] }
+ed25519-dalek = { version = "3.0.0", features = ["pkcs8", "pem"] }
+getrandom = "0.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
+
+[dev-dependencies]
+http-body-util = "0.1.5"
+tower = { version = "0.5.3", features = ["util"] }
