@@ -17,7 +17,7 @@ Environment variables only:
 |---|---|---|
 | `PORT` | `8080` | Listen port (all interfaces) |
 | `RELAY_ORIGIN` | `http://localhost:$PORT` | Public origin of the relay, no trailing slash |
-| `DATABASE_URL` | unset | Postgres URL (not used yet) |
+| `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
 ## Run locally
@@ -28,7 +28,7 @@ scripts/smoke.sh http://127.0.0.1:8080   # GET /health -> {"ok":true,"service":"
 cargo run -- keygen                      # fresh Ed25519 key: PKCS#8 PEM, then the public JWK
 ```
 
-Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (CI runs the same).
+Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo sqlx prepare --check` (CI runs the same). Tests need a Postgres in `DATABASE_URL` (e.g. `postgres://localhost/postgres`); each test creates and drops its own database.
 
 ## Deploy
 

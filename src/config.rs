@@ -6,7 +6,7 @@ pub struct Config {
     pub addr: SocketAddr,
     /// Public origin of the relay, e.g. `https://relay.example.com` (T3's `relayIssuer`).
     pub relay_origin: String,
-    /// Unused until Task 2 (Postgres).
+    /// Postgres URL; `serve` requires it. Never logged.
     pub database_url: Option<String>,
 }
 

@@ -1,7 +1,8 @@
 # Railway builds this file. Build stage compiles the release binary; runtime is distroless (glibc, CA certs, nonroot).
 FROM rust:1-bookworm AS build
 WORKDIR /src
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock build.rs ./
+COPY migrations ./migrations
 COPY src ./src
 RUN cargo build --release --locked
 

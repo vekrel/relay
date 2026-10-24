@@ -1,4 +1,5 @@
 mod config;
+mod db;
 mod http;
 mod keygen;
 
@@ -45,11 +46,18 @@ async fn main() {
 
 async fn serve() -> Result<(), String> {
     let config = config::Config::from_env()?;
+    let database_url = config
+        .database_url
+        .as_deref()
+        .ok_or("DATABASE_URL is required")?;
+    let pool = db::connect(database_url).await?;
+    let versions = db::migrate(&pool).await?;
+    tracing::info!(?versions, "migrations applied");
     let listener = tokio::net::TcpListener::bind(config.addr)
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;
-    tracing::info!(addr = %config.addr, origin = %config.relay_origin, database_configured = config.database_url.is_some(), "relay listening");
-    axum::serve(listener, http::router())
+    tracing::info!(addr = %config.addr, origin = %config.relay_origin, "relay listening");
+    axum::serve(listener, http::router(pool))
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|e| e.to_string())
