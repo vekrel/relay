@@ -1,6 +1,8 @@
 // Router. `/health` follows T3's relay `infra/relay/src/http/Api.ts` (layerHealthApi) and
 // Vekrel-Shared `packages/contracts/src/relay.ts` (RelayHealthResponse).
 // T3 runs `SELECT 1` and answers RelayInternalError `database_unavailable` (500) on failure.
+use std::sync::Arc;
+
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::{Json, Router, routing::get};
@@ -8,14 +10,17 @@ use serde_json::{Value, json};
 use sqlx::PgPool;
 
 use crate::accounts::keys::SigningKeys;
+use crate::accounts::oauth::{self, AccountsState};
+use crate::config::Config;
 
 pub mod wellknown;
 
-pub fn router(pool: PgPool, keys: &SigningKeys, origin: &str) -> Router {
+pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
     Router::new()
         .route("/health", get(health))
-        .with_state(pool)
-        .merge(wellknown::router(keys, origin))
+        .with_state(pool.clone())
+        .merge(wellknown::router(&keys, &config.relay_origin))
+        .merge(oauth::router(AccountsState::new(pool, keys, config)))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
@@ -58,7 +63,7 @@ mod tests {
     fn router(pool: PgPool) -> Router {
         let (a, _) = crate::accounts::keys::tests::entry("a", "active");
         let keys = SigningKeys::from_json(&json!([a]).to_string()).unwrap();
-        super::router(pool, &keys, "http://localhost:8080")
+        super::router(pool, Arc::new(keys), &Config::for_tests(&[]))
     }
 
     #[sqlx::test]

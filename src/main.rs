@@ -1,4 +1,5 @@
 mod accounts;
+mod admin;
 // shortcut: the relay protocol core has no routes until Task 9 (link, connect); drop the allows then.
 #[allow(dead_code)]
 mod auth;
@@ -30,6 +31,9 @@ enum Command {
         #[arg(long, value_name = "KID")]
         auth_kid: Option<String>,
     },
+    /// Accounts admin (needs `DATABASE_URL`).
+    #[command(subcommand)]
+    Admin(admin::Admin),
 }
 
 #[tokio::main]
@@ -43,6 +47,13 @@ async fn main() {
             print!("{}", kp.private_pem);
             println!("{}", kp.public_jwk);
         }
+        Command::Admin(cmd) => match admin_cli(cmd).await {
+            Ok(out) => println!("{out}"),
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        },
         Command::Serve => {
             tracing_subscriber::fmt()
                 .json()
@@ -59,21 +70,30 @@ async fn main() {
     }
 }
 
+async fn admin_cli(cmd: admin::Admin) -> Result<String, String> {
+    let config = config::Config::from_env()?;
+    let url = config
+        .database_url
+        .as_deref()
+        .ok_or("DATABASE_URL is required")?;
+    admin::run(&db::connect(url).await?, cmd).await
+}
+
 async fn serve() -> Result<(), String> {
     let config = config::Config::from_env()?;
     let database_url = config
         .database_url
         .as_deref()
         .ok_or("DATABASE_URL is required")?;
-    let keys = accounts::keys::SigningKeys::from_env()?;
+    let keys = std::sync::Arc::new(accounts::keys::SigningKeys::from_env()?);
     let pool = db::connect(database_url).await?;
     let versions = db::migrate(&pool).await?;
     tracing::info!(?versions, "migrations applied");
     let listener = tokio::net::TcpListener::bind(config.addr)
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;
-    tracing::info!(addr = %config.addr, origin = %config.relay_origin, "relay listening");
-    axum::serve(listener, http::router(pool, &keys, &config.relay_origin))
+    tracing::info!(addr = %config.addr, origin = %config.relay_origin, signup_mode = ?config.signup_mode, "relay listening");
+    axum::serve(listener, http::router(pool, keys, &config))
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|e| e.to_string())
