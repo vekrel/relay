@@ -423,22 +423,45 @@ async fn code_lives_60_seconds(pool: PgPool) {
 #[sqlx::test]
 async fn code_is_bound_to_client_and_redirect_uri(pool: PgPool) {
     let a = app(pool);
+    let app_redirect = "vekrel://auth/callback";
+    let redeem = |code: String, v: String, client: &'static str, redirect: &'static str| {
+        let a = &a;
+        async move {
+            a.post(
+                "/oauth/token",
+                &[
+                    ("grant_type", "authorization_code"),
+                    ("code", &code),
+                    ("redirect_uri", redirect),
+                    ("client_id", client),
+                    ("code_verifier", &v),
+                ],
+                &[],
+            )
+            .await
+            .json()
+        }
+    };
     let (v, c) = pkce();
     let code = a.code(&c, "a@example.test").await;
+    let res = redeem(code, v, "vekrel-mobile", app_redirect).await;
+    assert_eq!(res["error"], "invalid_grant");
+    // Desktop and mobile share redirect URIs: the client id alone must not match.
+    let (v, c) = pkce();
     let res = a
-        .post(
-            "/oauth/token",
-            &[
-                ("grant_type", "authorization_code"),
-                ("code", &code),
-                ("redirect_uri", "vekrel://auth/callback"),
-                ("client_id", "vekrel-mobile"),
-                ("code_verifier", &v),
-            ],
-            &[],
-        )
+        .sign_in("vekrel-mobile", app_redirect, &c, "a@example.test")
         .await;
-    assert_eq!(res.json()["error"], "invalid_grant");
+    let code = res.redirect_query(app_redirect)["code"].clone();
+    let res = redeem(code, v, "vekrel-desktop", app_redirect).await;
+    assert_eq!(res["error"], "invalid_grant");
+    // Same client, its other registered redirect URI.
+    let (v, c) = pkce();
+    let res = a
+        .sign_in("vekrel-mobile", app_redirect, &c, "a@example.test")
+        .await;
+    let code = res.redirect_query(app_redirect)["code"].clone();
+    let res = redeem(code, v, "vekrel-mobile", "vekrel-dev://auth/callback").await;
+    assert_eq!(res["error"], "invalid_grant");
 }
 
 #[sqlx::test]
@@ -572,15 +595,25 @@ async fn disable_user_makes_the_next_access_token_use_401(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn disabled_user_cannot_redeem_a_code_issued_before(pool: PgPool) {
+async fn disabled_user_cannot_use_earlier_codes_or_tokens(pool: PgPool) {
     let a = app(pool.clone());
+    let t = a.login("a@example.test").await;
     let (v, c) = pkce();
     let code = a.code(&c, "a@example.test").await;
+    // Disabled directly, without the CLI's revocations: `disabled_at` alone is enforced.
     sqlx::query("UPDATE users SET disabled_at = now()")
         .execute(&pool)
         .await
         .unwrap();
     assert_eq!(a.exchange(&code, &v).await.json()["error"], "invalid_grant");
+    assert_eq!(
+        a.whoami(t["access_token"].as_str().unwrap()).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        a.refresh(t["refresh_token"].as_str().unwrap()).await.json()["error"],
+        "invalid_grant"
+    );
 }
 
 #[sqlx::test]

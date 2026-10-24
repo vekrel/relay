@@ -18,6 +18,8 @@ Environment variables only:
 | `PORT` | `8080` | Listen port (all interfaces) |
 | `RELAY_ORIGIN` | `http://localhost:$PORT` | Public origin of the relay, no trailing slash. Account tokens use it as `iss` |
 | `AUTH_SIGNING_KEYS` | unset | Required by `serve`. JSON list `[{kid, private_jwk, status: next\|active\|retired}]`, exactly one `active`. Rotation: add a `next` key, wait 24 h, make it `active` and the old one `retired`, drop the retired one after 24 h. `/.well-known/jwks.json` publishes all listed keys |
+| `SIGNUP_MODE` | `allowlist` | `allowlist`: only emails added with `admin allow` can create an account; `open`: anyone can. Existing accounts sign in either way |
+| `WEB_ORIGINS` | unset | Comma-separated web app origins (`https://app.<domain>`, `http://localhost:5733` in dev). Each one gets the `vekrel-web` redirect `<origin>/auth/callback` and is the only CORS origin for `/oauth/token` and `/oauth/revoke` |
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
@@ -28,6 +30,20 @@ cargo run -- serve                       # PORT=8080 by default
 scripts/smoke.sh http://127.0.0.1:8080   # GET /health -> {"ok":true,"service":"relay"}
 cargo run -- keygen                      # fresh Ed25519 key: PKCS#8 PEM, then the public JWK
 cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status next; set active for the first key)
+```
+
+## Accounts
+
+`GET /oauth/authorize` (PKCE S256 only, exact redirect URIs per client in `src/accounts/clients.rs`) shows the sign-in page; `POST /oauth/token` handles `authorization_code` and `refresh_token` (rotated on every use; a reused token revokes its whole family); `POST /oauth/revoke` signs out. The web client gets its refresh token only as an `HttpOnly; Secure; SameSite=Lax; Path=/oauth` cookie. Sign-in providers (GitHub, Google, email, device code) arrive in later tasks; the buttons on the page lead nowhere until then.
+
+Admin (production: `railway run vekrel-relay admin ...`; needs `DATABASE_URL`):
+
+```bash
+vekrel-relay admin allow someone@example.com [--note "why"]
+vekrel-relay admin disallow someone@example.com
+vekrel-relay admin list-allowed
+vekrel-relay admin disable-user someone@example.com   # refuses sign-in, revokes refresh tokens, machine links and credentials
+vekrel-relay admin enable-user someone@example.com
 ```
 
 Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo sqlx prepare --check` (CI runs the same). Tests need a Postgres in `DATABASE_URL` (e.g. `postgres://localhost/postgres`); each test creates and drops its own database.
