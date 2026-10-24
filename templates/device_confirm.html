@@ -1,8 +1,11 @@
 {% extends "_layout.html" %}
 {% block title %}Approve sign-in{% endblock %}
 {% block content %}
-<h1>Approve sign-in for {{ client }} on {{ user_agent }}?</h1>
-<p>Signed in as {{ email }}. Check that your terminal shows the code <strong>{{ user_code }}</strong>. Only approve a sign-in you started.</p>
+<h1>Approve sign-in for {{ client }}?</h1>
+<p style="margin:0 0 4px;font:700 28px/1.2 ui-monospace,Menlo,monospace;letter-spacing:0.08em;color:var(--ink)">{{ user_code }}</p>
+<p>Check this matches the code in your terminal. Only approve a sign-in you started.</p>
+<p>Signed in as {{ email }}. Requested {{ requested }} UTC.</p>
+{% if let Some(ua) = user_agent %}<p style="font-size:13px">Reported by the device (unverified): {{ ua }}</p>{% endif %}
 <form method="post" action="/device/confirm">
 <input type="hidden" name="approval" value="{{ approval }}">
 <button class="primary" type="submit" name="action" value="approve">Approve</button>

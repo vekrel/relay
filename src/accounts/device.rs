@@ -7,7 +7,8 @@
 // internal `vekrel-device` authorize request whose PKCE verifier sits in a cookie, so every
 // provider and the sign-up rules (`signup::resolve_user`) apply. `/device/callback` then asks for
 // an explicit approval, posted back with a signed 5 min token (`/device/confirm`). The CLI polls
-// `/oauth/token` with the device_code grant (`redeem`).
+// `/oauth/token` with the device_code grant (`redeem`). The prompt heading uses only trusted data
+// (client name); the CLI-reported User-Agent is shown below it, labelled unverified.
 use std::sync::Arc;
 
 use askama::Template;
@@ -50,6 +51,7 @@ const APPROVAL_TYP: &str = "vekrel-device-approval+jwt";
 const BROWSER_CLIENT: &str = "vekrel-device";
 const VERIFIER_COOKIE: &str = "vekrel_device_verifier";
 const MAX_USER_AGENT_CHARS: usize = 200;
+const SHOWN_USER_AGENT_CHARS: usize = 64;
 
 type Refused = (&'static str, &'static str);
 
@@ -190,8 +192,9 @@ struct EntryPage<'a> {
 #[template(path = "device_confirm.html")]
 struct ConfirmPage<'a> {
     client: &'a str,
-    user_agent: &'a str,
+    user_agent: Option<String>,
     email: &'a str,
+    requested: &'a str,
     user_code: &'a str,
     approval: &'a str,
 }
@@ -327,8 +330,10 @@ async fn callback(
         }
         Ok(_) => {}
     }
-    let found: Option<(Option<String>, String)> = match sqlx::query_as(
-        "SELECT d.user_agent, u.email::text FROM device_codes d JOIN users u ON u.id = $2
+    let found: Option<(Option<String>, String, String)> = match sqlx::query_as(
+        "SELECT d.user_agent, u.email::text,
+                to_char(d.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+         FROM device_codes d JOIN users u ON u.id = $2
          WHERE d.user_code = $1 AND d.status = 'pending' AND d.expires_at > now()",
     )
     .bind(&user_code)
@@ -339,7 +344,7 @@ async fn callback(
         Ok(f) => f,
         Err(e) => return internal(e),
     };
-    let Some((user_agent, email)) = found else {
+    let Some((user_agent, email, requested)) = found else {
         return invalid_code_page();
     };
     let now = tokens::now_secs();
@@ -357,8 +362,10 @@ async fn callback(
     );
     let page = ConfirmPage {
         client: "Vekrel CLI",
-        user_agent: user_agent.as_deref().unwrap_or("an unknown device"),
+        // Self-reported by the CLI: shown small and labelled, never in the heading.
+        user_agent: user_agent.map(|ua| ua.chars().take(SHOWN_USER_AGENT_CHARS).collect()),
         email: &email,
+        requested: &requested,
         user_code: &display(&user_code),
         approval: &approval,
     };

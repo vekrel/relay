@@ -197,7 +197,28 @@ async fn approve_issues_tokens_once(pool: PgPool) {
     assert_eq!(page.status, StatusCode::OK, "{}", page.body);
     assert!(
         page.body
-            .contains("Approve sign-in for Vekrel CLI on vekrel-engine 1.0 (test host)?"),
+            .contains("<h1>Approve sign-in for Vekrel CLI?</h1>"),
+        "{}",
+        page.body
+    );
+    assert!(
+        page.body
+            .contains("Check this matches the code in your terminal")
+    );
+    let requested: String = sqlx::query_scalar(
+        "SELECT to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI') FROM device_codes",
+    )
+    .fetch_one(&a.state.pool)
+    .await
+    .unwrap();
+    assert!(
+        page.body.contains(&format!("Requested {requested} UTC")),
+        "{}",
+        page.body
+    );
+    assert!(
+        page.body
+            .contains("Reported by the device (unverified): vekrel-engine 1.0 (test host)"),
         "{}",
         page.body
     );
@@ -525,20 +546,43 @@ async fn entry_page_and_prompt_are_hardened(pool: PgPool) {
     assert!(page.body.contains(r#"name="user_code""#));
     assert_eq!(page.headers[header::X_FRAME_OPTIONS], "DENY");
     assert_eq!(page.headers[header::CACHE_CONTROL], "no-store");
-    // The user agent is the CLI's to choose: it is escaped on the prompt.
+    // The user agent is the CLI's to choose: never in the heading, labelled, escaped, cut short.
+    let ua = format!(
+        "Vekrel Official <b>x</b><script>alert(1)</script>{}",
+        "z".repeat(100)
+    );
     let res = a
         .post(
             "/oauth/device_authorization",
             &[("client_id", CLI)],
-            &[("user-agent", "<script>alert(1)</script>")],
+            &[("user-agent", &ua)],
         )
         .await
         .json();
     let prompt = a
         .device_sign_in(&s(&res, "user_code"), "a@example.test")
         .await;
+    let heading = prompt
+        .body
+        .split("<h1>")
+        .nth(1)
+        .and_then(|r| r.split("</h1>").next())
+        .unwrap();
+    assert_eq!(heading, "Approve sign-in for Vekrel CLI?");
     assert!(!prompt.body.contains("<script>"));
-    assert!(prompt.body.contains("alert(1)"), "{}", prompt.body);
+    assert!(!prompt.body.contains("<b>"));
+    let shown = prompt
+        .body
+        .split("Reported by the device (unverified): ")
+        .nth(1)
+        .and_then(|r| r.split("</p>").next())
+        .unwrap_or_else(|| panic!("no unverified label in {}", prompt.body));
+    assert!(shown.starts_with("Vekrel Official "), "{shown}");
+    assert!(shown.contains("alert(1)"), "{shown}");
+    assert!(
+        !shown.contains("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"),
+        "{shown}"
+    );
     assert_eq!(prompt.headers[header::X_FRAME_OPTIONS], "DENY");
     assert!(
         prompt.headers[header::CONTENT_SECURITY_POLICY]
