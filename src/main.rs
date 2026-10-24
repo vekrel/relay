@@ -4,6 +4,7 @@ mod auth;
 mod config;
 mod db;
 mod email;
+mod hooks;
 mod http;
 mod jws;
 mod keygen;

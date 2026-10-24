@@ -16,6 +16,7 @@ use crate::accounts::magic_link;
 use crate::accounts::oauth::{self, AccountsState};
 use crate::accounts::providers;
 use crate::config::Config;
+use crate::hooks;
 use crate::machines::Relay;
 use crate::machines::provider::NoTunnels;
 
@@ -41,17 +42,19 @@ pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
     };
     let mint_key =
         crate::jws::signing_key_from_pem(&pem.0).expect("serve validated RELAY_MINT_PRIVATE_KEY");
-    let relay = Relay::new(
+    let relay = Arc::new(Relay::new(
         pool,
         mint_key,
         &config.relay_origin,
         config.tunnel_zone.clone(),
         Arc::new(NoTunnels),
-    );
-    global(r.merge(client::router(client::MachineState {
-        relay: Arc::new(relay),
-        accounts,
-    })))
+    ));
+    // Held webhooks are delivered in the background (T3: the inbox objects' alarms).
+    tokio::spawn(hooks::inbox::worker(relay.clone()));
+    global(
+        r.merge(hooks::forwarder::router(relay.clone()))
+            .merge(client::router(client::MachineState { relay, accounts })),
+    )
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
@@ -95,8 +98,11 @@ fn global(r: Router) -> Router {
     Router::new()
         .fallback_service(r)
         .layer(axum::middleware::map_response(|res: Response| async move {
-            // axum answers a known path with another method 405 + `Allow`; no handler sends 405.
-            if res.status() == StatusCode::METHOD_NOT_ALLOWED {
+            // axum answers a known path with another method 405 + `Allow`; the only handler 405
+            // (the hook forwarder's, as T3's) is marked.
+            if res.status() == StatusCode::METHOD_NOT_ALLOWED
+                && res.extensions().get::<hooks::forwarder::Own405>().is_none()
+            {
                 StatusCode::NOT_FOUND.into_response()
             } else {
                 res

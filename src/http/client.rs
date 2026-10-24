@@ -29,6 +29,7 @@ use crate::auth::dpop_proofs::{self, Rejected};
 use crate::auth::relay_tokens::{
     LinkChallengeRequest, RELAY_MACHINE_CONNECT_SCOPE, RELAY_MACHINE_STATUS_SCOPE,
 };
+use crate::hooks::{held, inbox};
 use crate::machines::connector::{self, ConnectError};
 use crate::machines::linker::{self, LinkError, LinkRequest};
 use crate::machines::provider::ProviderError;
@@ -410,6 +411,9 @@ async fn unlink(s: &MachineState, user: Uuid, machine_id: &str) -> Result<bool, 
         .prepare_deprovision(user, machine_id)
         .await
         .map_err(upstream)?;
+    let endpoint_key = held::endpoint_key_of(&s.relay.pool, user, machine_id)
+        .await
+        .map_err(persistence)?;
     let mut conn = s.relay.pool.acquire().await.map_err(persistence)?;
     let link = links::get_for_user(&mut conn, user, machine_id)
         .await
@@ -439,11 +443,22 @@ async fn unlink(s: &MachineState, user: Uuid, machine_id: &str) -> Result<bool, 
             revoked
         }
     };
-    // Held webhooks for the endpoint are cleared by Task 11 (`HookInbox.clear`).
     let deprovisioned = provider
         .deprovision(user, machine_id, Some(target))
         .await
         .map_err(upstream)?;
+    // Nobody links the endpoint now, so its held webhooks go (`HookInbox.clear`).
+    if let Some(key) = endpoint_key {
+        let cleared = async {
+            let mut tx = s.relay.pool.begin().await?;
+            inbox::clear(&mut tx, &key).await?;
+            tx.commit().await
+        }
+        .await;
+        if let Err(e) = cleared {
+            tracing::warn!(machine_id, error = %e, "could not clear held webhook requests");
+        }
+    }
     if !deprovisioned {
         let retry = provider
             .prepare_deprovision(user, machine_id)

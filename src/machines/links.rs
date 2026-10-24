@@ -154,7 +154,7 @@ pub async fn revoke_for_user(
 
 /// `setHoldWebhooksWhileOffline`: every active link proven by this key.
 pub async fn set_hold_webhooks_while_offline(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     machine_id: &str,
     machine_public_key: &str,
     hold: bool,
@@ -166,7 +166,7 @@ pub async fn set_hold_webhooks_while_offline(
     .bind(machine_id)
     .bind(machine_public_key)
     .bind(hold)
-    .execute(pool)
+    .execute(conn)
     .await?;
     Ok(())
 }

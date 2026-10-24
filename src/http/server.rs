@@ -2,7 +2,8 @@
 // `layerEnvironmentAuth`, `layerServerApi`, `verifyEnvironmentTunnelRecoveryProof`,
 // `registerEnvironmentTunnelRecovery`, `recoverEnvironmentTunnelRecord`; MIT, Copyright (c) T3
 // Tools Inc.; see NOTICE). The bearer is the machine credential from linking, looked up by hash.
-// Agent activity (Task 12) and held-hook wake (Task 11) join this group later.
+// Held-hook wake and the hold opt-out follow `HeldHooks.ts` (`src/hooks/held.rs`); agent activity
+// (Task 12) joins this group later.
 // Handlers return early with the response T3 sends; boxing it buys nothing on this path.
 #![allow(clippy::result_large_err)]
 use axum::body::Bytes;
@@ -17,6 +18,7 @@ use uuid::Uuid;
 
 use super::client::{MachineState, machine_param};
 use super::errors::{RelayError, Tns, credential, json_payload, no_store, persistence};
+use crate::hooks::held;
 use crate::jws;
 use crate::machines::credentials::{self, Principal};
 use crate::machines::linker::{decode_origin, registered_claims_ok, tns};
@@ -33,6 +35,10 @@ pub fn routes() -> Router<MachineState> {
         .route(
             "/v1/machines/{machine_id}/link-preferences",
             post(link_preferences),
+        )
+        .route(
+            "/v1/machines/{machine_id}/hooks/wake",
+            post(wake_held_hooks),
         )
 }
 
@@ -334,8 +340,8 @@ async fn link_preferences(
             Ok(v) => v,
             Err(r) => return r,
         };
-    // Turning the hold off also clears held webhooks (`HeldHooks.setHoldWhileOffline`, Task 11).
-    match links::set_hold_webhooks_while_offline(
+    // Turning the hold off also clears held webhooks (`HeldHooks.setHoldWhileOffline`).
+    match held::set_hold_while_offline(
         &s.relay.pool,
         &machine_id,
         &p.machine_public_key,
@@ -345,6 +351,29 @@ async fn link_preferences(
     {
         Ok(()) => Json(json!({ "holdWebhooksWhileOffline": b.hold_webhooks_while_offline }))
             .into_response(),
+        Err(e) => persistence(e).into_response(),
+    }
+}
+
+/// `wakeHeldHooks`: the machine's tunnel is back; deliver what is held for it now.
+async fn wake_held_hooks(
+    State(s): State<MachineState>,
+    Path(machine_id): Path<String>,
+    headers: HeaderMap,
+) -> Response {
+    let p = match machine(&s, &headers).await {
+        Ok(p) => p,
+        Err(r) => return r,
+    };
+    let machine_id = match machine_param(&machine_id) {
+        Ok(m) => m,
+        Err(r) => return r,
+    };
+    if p.machine_id != machine_id {
+        return not_authorized().into_response();
+    }
+    match held::wake(&s.relay, &machine_id, &p.machine_public_key).await {
+        Ok(pending) => Json(json!({ "pending": pending })).into_response(),
         Err(e) => persistence(e).into_response(),
     }
 }

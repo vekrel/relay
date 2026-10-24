@@ -16,7 +16,7 @@ pub enum Admin {
     Disallow { email: String },
     /// Print the allowlist.
     ListAllowed,
-    /// Disable an account: refuse sign-in and revoke its refresh tokens, machine links and machine credentials.
+    /// Disable an account: refuse sign-in, revoke its refresh tokens, machine links and machine credentials, and delete its held webhooks.
     DisableUser { email: String },
     /// Re-enable a disabled account (revoked links stay revoked).
     EnableUser { email: String },
@@ -114,9 +114,10 @@ async fn run_db(pool: &PgPool, cmd: Admin) -> Result<Result<String, String>, sql
             .execute(&mut *tx)
             .await?
             .rows_affected();
+            let held = crate::hooks::inbox::clear_for_user(&mut tx, user).await?;
             tx.commit().await?;
             Ok(format!(
-                "disabled {email}: revoked {tokens} refresh tokens, {links} machine links, {credentials} machine credentials"
+                "disabled {email}: revoked {tokens} refresh tokens, {links} machine links, {credentials} machine credentials; deleted {held} held webhooks"
             ))
         }
         Admin::EnableUser { email } => {

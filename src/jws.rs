@@ -18,11 +18,10 @@ pub const RELAY_MINT_REQUEST_TYP: &str = "t3-cloud-mint+jwt";
 pub const RELAY_HEALTH_REQUEST_TYP: &str = "t3-cloud-health+jwt";
 pub const RELAY_MINT_RESPONSE_TYP: &str = "t3-env-mint+jwt";
 pub const RELAY_HEALTH_RESPONSE_TYP: &str = "t3-env-health+jwt";
-// shortcut: used by agent activity (Task 12) and hook delivery (Task 11); drop the allows then.
+// shortcut: used by agent activity (Task 12); drop the allow then.
 #[allow(dead_code)]
 pub const RELAY_ACTIVITY_PUBLISH_TYP: &str = "t3-env-activity+jwt";
 pub const RELAY_MANAGED_TUNNEL_RECOVERY_TYP: &str = "t3-env-managed-tunnel-recovery+jwt";
-#[allow(dead_code)]
 pub const RELAY_HOOK_DELIVERY_TYP: &str = "t3-relay-hook-delivery+jwt";
 
 /// `verifyRelayJwt` defaults: `maxTokenAge: "5 minutes"`, `clockTolerance: 60`.
