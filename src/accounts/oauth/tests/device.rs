@@ -691,6 +691,12 @@ async fn device_code_lookups_are_limited_per_ip(pool: PgPool) {
         .await;
     assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
     assert!(!res.body.contains("approval"));
+    // Refused before the browser leg's code is redeemed.
+    let unused: i64 = sqlx::query_scalar("SELECT count(*) FROM auth_codes WHERE used_at IS NULL")
+        .fetch_one(&a.state.pool)
+        .await
+        .unwrap();
+    assert_eq!(unused, 1);
 }
 
 /// The callback's `state` is the user code the sign-in started with; another one is refused.

@@ -82,7 +82,7 @@ fn internal_error(reason: &str) -> (StatusCode, Json<Value>) {
 }
 
 /// T3 `Api.ts` `RELAY_REQUEST_DEADLINE_MS` / `RELAY_HOOK_REQUEST_DEADLINE_MS`.
-const REQUEST_DEADLINE_MS: u64 = 9_000;
+pub(crate) const REQUEST_DEADLINE_MS: u64 = 9_000;
 const HOOK_REQUEST_DEADLINE_MS: u64 = 25_000;
 /// T3 `HookForwarder.ts` `RELAY_HOOK_PATH_PREFIX`.
 const HOOK_PATH_PREFIX: &str = "/v1/hooks/";

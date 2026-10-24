@@ -332,6 +332,19 @@ async fn callback(
     else {
         return expired_page();
     };
+    // Before the code is spent, so a refused browser can retry once the window passes.
+    if let Some(res) = oauth::ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "device_lookup",
+        LOOKUP_IP_LIMIT,
+        too_many_lookups,
+    )
+    .await
+    {
+        return res;
+    }
     let redeemed: Option<(Uuid, String, bool)> = match sqlx::query_as(
         "UPDATE auth_codes SET used_at = now()
          WHERE code_hash = $1 AND used_at IS NULL AND client_id = $2 AND redirect_uri = $3
@@ -351,18 +364,6 @@ async fn callback(
     };
     if URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes())) != challenge {
         return expired_page();
-    }
-    if let Some(res) = oauth::ip_limited(
-        &s,
-        &headers,
-        &extensions,
-        "device_lookup",
-        LOOKUP_IP_LIMIT,
-        too_many_lookups,
-    )
-    .await
-    {
-        return res;
     }
     // Every lookup counts, hit or miss, so one account cannot walk the code space.
     let lookups: Result<i32, _> = sqlx::query_scalar(

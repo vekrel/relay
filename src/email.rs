@@ -65,11 +65,14 @@ struct ResendBody<'a> {
     text: &'a str,
 }
 
+/// Inside the 9 s request deadline (`http::REQUEST_DEADLINE_MS`), so a slow send fails cleanly.
+const SEND_TIMEOUT: Duration = Duration::from_secs(6);
+
 impl ResendMailer {
     pub fn new(api_key: Secret, from: &str, base_url: &str) -> Self {
         Self {
             client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(10))
+                .timeout(SEND_TIMEOUT)
                 // Resend refuses requests without a User-Agent.
                 .user_agent(concat!("vekrel-relay/", env!("CARGO_PKG_VERSION")))
                 .build()
@@ -168,6 +171,13 @@ pub mod mock {
 
 #[cfg(test)]
 mod tests {
+    /// A slow Resend must fail inside the relay's 9 s request deadline, not be cut off by it.
+    #[test]
+    fn send_timeout_is_inside_the_request_deadline() {
+        assert!(
+            super::SEND_TIMEOUT.as_millis() < u128::from(crate::http::REQUEST_DEADLINE_MS) - 2000
+        );
+    }
     use super::*;
     use axum::http::StatusCode;
 

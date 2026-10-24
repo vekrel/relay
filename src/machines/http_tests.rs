@@ -1378,3 +1378,55 @@ async fn tunnel_recovery_needs_loopback_and_a_managed_link(pool: PgPool) {
         );
     }
 }
+
+/// Link row and credential commit together: a failed credential insert leaves no live link
+/// (so a deadline cancel or crash between them cannot either).
+#[sqlx::test]
+async fn link_and_credential_commit_together(pool: PgPool) {
+    let app = app(pool);
+    let (_, bearer) = app.user("a@example.test").await;
+    for sql in [
+        "CREATE FUNCTION refuse_credential() RETURNS trigger LANGUAGE plpgsql AS $$
+         BEGIN RAISE EXCEPTION 'refused'; END $$",
+        "CREATE TRIGGER refuse_credential BEFORE INSERT ON relay_machine_credentials
+         FOR EACH ROW EXECUTE FUNCTION refuse_credential()",
+    ] {
+        sqlx::query(sql).execute(&app.pool).await.unwrap();
+    }
+    let challenge = app.challenge(&bearer, false).await;
+    let proof = ProofSpec::new("m", &challenge, false).sign();
+    let r = app.link(&bearer, &proof, false).await;
+    assert_eq!(r.status, StatusCode::INTERNAL_SERVER_ERROR);
+    let links: i64 = sqlx::query_scalar("SELECT count(*) FROM relay_machine_links")
+        .fetch_one(&app.pool)
+        .await
+        .unwrap();
+    assert_eq!(links, 0);
+}
+
+/// The new credential and the revocation of the key's older ones commit together.
+#[sqlx::test]
+async fn new_credential_and_revocation_commit_together(pool: PgPool) {
+    let mut conn = pool.acquire().await.unwrap();
+    crate::machines::credentials::create(&mut conn, "m", "key")
+        .await
+        .unwrap();
+    for sql in [
+        "CREATE FUNCTION refuse_revoke() RETURNS trigger LANGUAGE plpgsql AS $$
+         BEGIN RAISE EXCEPTION 'refused'; END $$",
+        "CREATE TRIGGER refuse_revoke BEFORE UPDATE ON relay_machine_credentials
+         FOR EACH ROW EXECUTE FUNCTION refuse_revoke()",
+    ] {
+        sqlx::query(sql).execute(&pool).await.unwrap();
+    }
+    assert!(
+        crate::machines::credentials::create(&mut conn, "m", "key")
+            .await
+            .is_err()
+    );
+    let rows: i64 = sqlx::query_scalar("SELECT count(*) FROM relay_machine_credentials")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(rows, 1, "the second credential rolled back with its revoke");
+}

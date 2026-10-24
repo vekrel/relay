@@ -261,8 +261,15 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
         return Err(LinkError::Invalid("endpoint_not_secure"));
     }
     let label = tns(verified.descriptor.get("label")).unwrap_or_default();
+    // Link and credential commit together: a cancel (request deadline) or a failure between
+    // them leaves neither. Proof and challenge consumes stay before provisioning, outside it.
+    let mut tx = relay
+        .pool
+        .begin()
+        .await
+        .map_err(LinkError::LinkPersistence)?;
     links::upsert(
-        &relay.pool,
+        &mut tx,
         &UpsertInput {
             user_id: user,
             machine_id: &verified.machine_id,
@@ -277,13 +284,13 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
     )
     .await
     .map_err(LinkError::LinkPersistence)?;
-    let machine_credential = credentials::create(
-        &relay.pool,
-        &verified.machine_id,
-        &verified.machine_public_key,
-    )
-    .await
-    .map_err(LinkError::CredentialPersistence)?;
+    let machine_credential =
+        credentials::create(&mut tx, &verified.machine_id, &verified.machine_public_key)
+            .await
+            .map_err(LinkError::CredentialPersistence)?;
+    tx.commit()
+        .await
+        .map_err(LinkError::CredentialPersistence)?;
     Ok(Linked {
         machine_id: verified.machine_id,
         endpoint,

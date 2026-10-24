@@ -3,7 +3,7 @@
 // a credential is keyed by machine and key, not by user, so it authenticates only while some
 // active link proven by the same key exists, and (Vekrel) only while that link's user is enabled.
 use sha2::{Digest, Sha256};
-use sqlx::{PgConnection, PgPool, Row};
+use sqlx::{Connection, PgConnection, PgPool, Row};
 use uuid::Uuid;
 
 use super::now_iso;
@@ -30,15 +30,18 @@ fn random_part(segments: usize) -> String {
         .collect()
 }
 
-/// `create`: a new credential for this machine key; the key's earlier credentials are revoked.
+/// `create`: a new credential for this machine key; the key's earlier credentials are revoked
+/// in the same transaction.
 pub async fn create(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     machine_id: &str,
     machine_public_key: &str,
 ) -> Result<String, sqlx::Error> {
     let credential_id = random_part(2);
     let token = format!("{TOKEN_PREFIX}{credential_id}_{}", random_part(3));
     let now = now_iso();
+    // One unit: a savepoint inside the caller's transaction, else its own.
+    let mut tx = conn.begin().await?;
     sqlx::query(
         "INSERT INTO relay_machine_credentials (credential_id, machine_id, machine_public_key,
             credential_hash, revoked_at, created_at, updated_at)
@@ -49,7 +52,7 @@ pub async fn create(
     .bind(machine_public_key)
     .bind(hash(&token))
     .bind(&now)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
     sqlx::query(
         "UPDATE relay_machine_credentials SET revoked_at = $4, updated_at = $4
@@ -60,8 +63,9 @@ pub async fn create(
     .bind(machine_public_key)
     .bind(&credential_id)
     .bind(&now)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+    tx.commit().await?;
     Ok(token)
 }
 

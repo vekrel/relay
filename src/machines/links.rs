@@ -55,7 +55,7 @@ fn record(row: &sqlx::postgres::PgRow) -> LinkedMachine {
 
 /// `upsert`. The webhook-hold opt-in carries over from the machine's other active links proven by
 /// the same key only: a machine id is public, so anyone can link one.
-pub async fn upsert(pool: &PgPool, i: &UpsertInput<'_>) -> Result<(), sqlx::Error> {
+pub async fn upsert(conn: &mut PgConnection, i: &UpsertInput<'_>) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT INTO relay_machine_links (user_id, machine_id, hold_webhooks_while_offline,
             machine_label, machine_public_key, endpoint_http_base_url, endpoint_ws_base_url,
@@ -91,7 +91,7 @@ pub async fn upsert(pool: &PgPool, i: &UpsertInput<'_>) -> Result<(), sqlx::Erro
     .bind(i.managed_tunnels_enabled)
     .bind(i.device_id)
     .bind(now_iso())
-    .execute(pool)
+    .execute(conn)
     .await?;
     Ok(())
 }
