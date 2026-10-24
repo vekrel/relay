@@ -10,6 +10,35 @@ use super::payloads::{Aggregate, Preferences, opt_tns as optional_tns, tns};
 use crate::http::errors::int;
 use crate::machines::now_iso;
 
+/// A raw APNs/FCM token. `Debug` leaves it out; JSON, job payloads and rows keep the string.
+#[derive(Clone, PartialEq, Eq, serde::Serialize, Deserialize, sqlx::Type)]
+#[serde(transparent)]
+#[sqlx(transparent)]
+pub struct PushToken(pub String);
+
+impl std::fmt::Debug for PushToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("PushToken([redacted])")
+    }
+}
+
+impl std::ops::Deref for PushToken {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for PushToken {
+    fn from(s: &str) -> Self {
+        Self(s.to_owned())
+    }
+}
+
+fn optional_token<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<PushToken>, D::Error> {
+    optional_tns(d).map(|t| t.map(PushToken))
+}
+
 /// `Schema.optional(X)`: the key may be absent, `null` is refused.
 fn present<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Value>, D::Error> {
     match Value::deserialize(d)? {
@@ -37,10 +66,10 @@ pub struct Registration {
     pub bundle_id: Option<String>,
     #[serde(default, deserialize_with = "present")]
     aps_environment: Option<Value>,
-    #[serde(default, deserialize_with = "optional_tns")]
-    pub push_token: Option<String>,
-    #[serde(default, deserialize_with = "optional_tns")]
-    pub push_to_start_token: Option<String>,
+    #[serde(default, deserialize_with = "optional_token")]
+    pub push_token: Option<PushToken>,
+    #[serde(default, deserialize_with = "optional_token")]
+    pub push_to_start_token: Option<PushToken>,
     pub preferences: Preferences,
 }
 
@@ -243,10 +272,10 @@ pub struct Target {
     pub platform: String,
     pub bundle_id: Option<String>,
     pub aps_environment: Option<String>,
-    pub push_token: Option<String>,
+    pub push_token: Option<PushToken>,
     /// `parsePreferences`: `None` when the stored JSON does not decode.
     pub preferences: Option<Preferences>,
-    pub activity_push_token: Option<String>,
+    pub activity_push_token: Option<PushToken>,
     pub remote_started_at: Option<String>,
     pub last_aggregate: Option<Aggregate>,
     pub last_live_activity_delivery_at: Option<String>,

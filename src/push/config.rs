@@ -151,12 +151,13 @@ impl PushConfig {
 
 impl PushConfig {
     /// Whether a device's own bundle id / package may route its pushes. Without credentials
-    /// nothing is sent, so anything is kept until an operator configures the list.
+    /// nothing is sent, so anything is kept until an operator configures the list. Android needs
+    /// a listed package (every FCM send is restricted to it); iOS without one uses APNS_BUNDLE_ID.
     pub fn app_allowed(&self, platform: &str, app: Option<&str>) -> bool {
-        let Some(app) = app else { return true };
         if platform == "android" {
-            self.fcm.is_none() || self.fcm_package_names.iter().any(|p| p == app)
+            self.fcm.is_none() || app.is_some_and(|a| self.fcm_package_names.iter().any(|p| p == a))
         } else {
+            let Some(app) = app else { return true };
             self.apns.is_none() || self.apns_bundle_ids.iter().any(|b| b == app)
         }
     }

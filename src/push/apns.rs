@@ -20,7 +20,7 @@ use uuid::Uuid;
 use super::Push;
 use super::agent_activity;
 use super::config::{ApnsCredentials, ApnsEnvironment};
-use super::devices::{self, Kind, Target};
+use super::devices::{self, Kind, PushToken, Target};
 use super::jobs::{self, JobError};
 use super::payloads::*;
 use crate::jws::b64url_encode;
@@ -325,7 +325,7 @@ fn is_permanent_token_failure(o: &Outcome) -> bool {
 pub struct JobTarget {
     pub user_id: Uuid,
     pub device_id: String,
-    pub token: String,
+    pub token: PushToken,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bundle_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -465,7 +465,7 @@ enum Chosen {
     Suppressed,
     Live {
         kind: Kind,
-        token: String,
+        token: PushToken,
         aggregate: Option<Aggregate>,
         alert: Option<Alert>,
     },
@@ -478,7 +478,7 @@ fn choose_live_activity(
     now: i64,
     replay: bool,
 ) -> Option<Chosen> {
-    let end = |token: &String| Chosen::Live {
+    let end = |token: &PushToken| Chosen::Live {
         kind: Kind::LiveActivityEnd,
         token: token.clone(),
         aggregate: None,

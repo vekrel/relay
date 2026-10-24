@@ -91,6 +91,17 @@ pub async fn push_test(push: &Push, email: &str) -> Result<String, String> {
             continue;
         };
         let line = if t.platform == "android" {
+            let Some(package) = t
+                .bundle_id
+                .as_deref()
+                .filter(|p| push.config.app_allowed("android", Some(p)))
+            else {
+                out.push(format!(
+                    "android {}: package not in FCM_PACKAGE_NAMES",
+                    t.device_id
+                ));
+                continue;
+            };
             let mut data = serde_json::Map::new();
             data.insert("t3_kind".into(), "agent_activity".into());
             data.insert("device_id".into(), t.device_id.clone().into());
@@ -104,7 +115,7 @@ pub async fn push_test(push: &Push, email: &str) -> Result<String, String> {
             data.insert("alert_title".into(), title.into());
             data.insert("alert_body".into(), body.into());
             data.insert("alert_path".into(), "/".into());
-            match fcm::send(push, token, t.bundle_id.as_deref(), &data, true).await {
+            match fcm::send(push, token, package, &data, true).await {
                 Ok(false) => "FCM accepted".into(),
                 Ok(true) => "FCM: UNREGISTERED".into(),
                 Err(e) => format!("FCM failed: {e:?}"),

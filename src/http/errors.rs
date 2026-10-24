@@ -199,14 +199,24 @@ pub fn form_payload<T: DeserializeOwned>(headers: &HeaderMap, body: &Bytes) -> R
     serde_json::from_value(Value::Object(m)).map_err(|_| bad_request())
 }
 
-/// `TrimmedNonEmptyString`: trimmed on decode, blank refused.
+/// ECMAScript WhiteSpace + LineTerminator (`String.prototype.trim`, `\\s`): Rust's
+/// `is_whitespace` minus U+0085, plus U+FEFF.
+pub fn js_space(c: char) -> bool {
+    (c.is_whitespace() && c != '\u{85}') || c == '\u{feff}'
+}
+
+pub fn js_trim(s: &str) -> &str {
+    s.trim_matches(js_space)
+}
+
+/// `TrimmedNonEmptyString`: trimmed on decode as JS `trim` does, blank refused.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tns(pub String);
 
 impl<'de> Deserialize<'de> for Tns {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;
-        let t = s.trim();
+        let t = js_trim(&s);
         if t.is_empty() {
             return Err(serde::de::Error::custom("blank string"));
         }
@@ -256,6 +266,16 @@ mod tests {
         assert!(b.starts_with(
             r#"{"_tag":"RelayAuthInvalidError","code":"auth_invalid","reason":"invalid_dpop","dpopFailureReason":"replay","traceId":""#
         ));
+    }
+
+    #[test]
+    fn tns_trims_as_js_trim() {
+        let tns = |s: &str| serde_json::from_value::<Tns>(Value::String(s.into())).map(|t| t.0);
+        // JS keeps U+0085 (not WhiteSpace/LineTerminator) and strips U+FEFF.
+        assert_eq!(tns("\u{85}x\u{85}").unwrap(), "\u{85}x\u{85}");
+        assert_eq!(tns("\u{85}").unwrap(), "\u{85}");
+        assert_eq!(tns("\u{feff} x\u{a0}\u{3000}\u{2028}\t").unwrap(), "x");
+        assert!(tns("\u{feff}").is_err());
     }
 
     #[test]

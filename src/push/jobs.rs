@@ -148,14 +148,41 @@ pub async fn run_once(push: &Push) -> Result<usize, sqlx::Error> {
         return Ok(0);
     }
     let jobs = claim(&push.pool, &kinds).await?;
-    for job in &jobs {
+    process(push, &jobs).await?;
+    Ok(jobs.len())
+}
+
+/// Works a claimed batch in order. Each job's claim is renewed before it runs, so later jobs do
+/// not run on a claim that ran out while earlier sends stalled; one lost to another worker
+/// meanwhile is skipped (that worker sends it). One job's sends stay well inside the claim.
+pub async fn process(push: &Push, jobs: &[Claimed]) -> Result<(), sqlx::Error> {
+    for job in jobs {
+        if !renew(&push.pool, job).await? {
+            tracing::warn!(job_id = %job.id, kind = %job.kind, attempt = job.attempts, "push job claim lost to another worker; skipped");
+            continue;
+        }
         let result = match job.kind.as_str() {
             "apns" => super::apns::process(push, job.id, &job.payload).await,
             _ => super::fcm::process(push, &job.payload).await,
         };
         finish(&push.pool, job, result).await?;
     }
-    Ok(jobs.len())
+    Ok(())
+}
+
+/// Extends this worker's claim by CLAIM_TIMEOUT; false if the job is no longer ours.
+pub async fn renew(pool: &PgPool, job: &Claimed) -> Result<bool, sqlx::Error> {
+    let n = sqlx::query(
+        "UPDATE relay_push_jobs SET locked_until = now() + make_interval(secs => $3)
+         WHERE id = $1 AND status = 'running' AND attempts = $2",
+    )
+    .bind(job.id)
+    .bind(job.attempts)
+    .bind(CLAIM_TIMEOUT_SECONDS as f64)
+    .execute(pool)
+    .await?
+    .rows_affected();
+    Ok(n == 1)
 }
 
 /// The delivery loop: polls every second while idle.

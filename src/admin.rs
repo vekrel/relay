@@ -16,7 +16,7 @@ pub enum Admin {
     Disallow { email: String },
     /// Print the allowlist.
     ListAllowed,
-    /// Disable an account: refuse sign-in, revoke its refresh tokens, machine links and machine credentials, and delete its held webhooks.
+    /// Disable an account: refuse sign-in, revoke its refresh tokens, machine links and machine credentials, and delete its phones, queued pushes and held webhooks.
     DisableUser { email: String },
     /// Send a test push to every registered phone of this account and print APNs/FCM's answers.
     PushTest { email: String },
@@ -236,6 +236,14 @@ async fn run_db(pool: &PgPool, cmd: Admin) -> Result<Result<String, String>, sql
                 .execute(&mut *tx)
                 .await?
                 .rows_affected();
+            // Queued pushes go too (APNs jobs keep the user under `target`, FCM jobs at the top).
+            sqlx::query(
+                "DELETE FROM relay_push_jobs WHERE status IN ('pending', 'running')
+                   AND coalesce(payload->'target'->>'userId', payload->>'userId') = $1::text",
+            )
+            .bind(user)
+            .execute(&mut *tx)
+            .await?;
             let held = crate::hooks::inbox::clear_for_user(&mut tx, user).await?;
             tx.commit().await?;
             Ok(format!(

@@ -160,14 +160,7 @@ const MAX_STATUS_TEXT_LENGTH: usize = 40;
 const MAX_DEEP_LINK_LENGTH: usize = 512;
 pub const MAX_ACTIVITY_ROWS: usize = 5;
 
-/// JS `\s` and `String.prototype.trim`'s set: Rust's minus U+0085, plus U+FEFF.
-fn js_space(c: char) -> bool {
-    (c.is_whitespace() && c != '\u{85}') || c == '\u{feff}'
-}
-
-fn js_trim(s: &str) -> &str {
-    s.trim_matches(js_space)
-}
+use crate::http::errors::{js_space, js_trim};
 
 /// `truncateText`: lengths in UTF-16 units.
 // shortcut: a cut inside a surrogate pair drops the lone half (JS keeps it, JSON then escapes it

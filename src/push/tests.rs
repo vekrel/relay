@@ -640,7 +640,7 @@ async fn fcm_requests_equal_t3() {
         !fcm::send(
             &push,
             "fcm-token-1",
-            Some("com.example.vekrel"),
+            "com.example.vekrel",
             &data("mixed"),
             true
         )
@@ -648,9 +648,15 @@ async fn fcm_requests_equal_t3() {
         .unwrap()
     );
     assert!(
-        !fcm::send(&push, "fcm-token-2", None, &data("oneRunning"), false)
-            .await
-            .unwrap()
+        !fcm::send(
+            &push,
+            "fcm-token-2",
+            "com.example.vekrel",
+            &data("oneRunning"),
+            false
+        )
+        .await
+        .unwrap()
     );
     let seen = fake.seen();
     assert_eq!(seen.len(), 3, "one OAuth exchange, then the cached token");
@@ -691,11 +697,12 @@ async fn fcm_requests_equal_t3() {
     );
     assert!(verifies.unwrap(), "RS256 signature");
     for (i, m) in t3["messages"].as_array().unwrap().iter().enumerate() {
-        assert_eq!(
-            seen[i + 1].body,
-            renamed(m["body"].as_str().unwrap()),
-            "message {i}"
+        // T3's second vector has no package; Vekrel always restricts (T3 adds the key last).
+        let t3_body = renamed(m["body"].as_str().unwrap()).replace(
+            r#""collapse_key":"t3-agent-activity"}"#,
+            r#""collapse_key":"t3-agent-activity","restricted_package_name":"com.example.vekrel"}"#,
         );
+        assert_eq!(seen[i + 1].body, t3_body, "message {i}");
         assert_eq!(
             seen[i + 1].headers["authorization"],
             "Bearer ya29.fake-fcm-access-token"
@@ -1071,6 +1078,137 @@ async fn two_workers_never_send_one_job_twice(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn a_stalled_batch_skips_jobs_another_worker_reclaimed(pool: PgPool) {
+    let h = harness(pool).await;
+    let u = h.user("a@example.test", &["mobile:registration"]).await;
+    let cred = h.link(u.id, true, false).await;
+    h.android(&u, "pixel-1", "fcm-token-1").await;
+    h.android(&u, "pixel-2", "fcm-token-2").await;
+    while h.work().await > 0 {}
+    let sent_before = h.fcm.seen().len();
+    h.publish(
+        &cred,
+        "thread-1",
+        Some(&state("thread-1", "waiting_for_input", 1000)),
+    )
+    .await;
+    // Worker A claims both jobs; the first send stalls past the second job's lease.
+    let batch = jobs::claim(&h.pool, &["fcm"]).await.unwrap();
+    assert_eq!(batch.len(), 2);
+    sqlx::query(
+        "UPDATE relay_push_jobs SET locked_until = now() - interval '1 second' WHERE id = $1",
+    )
+    .bind(batch[1].id)
+    .execute(&h.pool)
+    .await
+    .unwrap();
+    // Worker B takes the expired job meanwhile.
+    let b = jobs::claim(&h.pool, &["fcm"]).await.unwrap();
+    assert_eq!(b.iter().map(|j| j.id).collect::<Vec<_>>(), [batch[1].id]);
+    // A gets on with its batch: it sends the job it still holds, and skips the one it lost.
+    jobs::process(&h.push, &batch).await.unwrap();
+    let sent: Vec<String> = h.fcm.seen()[sent_before..]
+        .iter()
+        .filter(|s| s.path.ends_with("messages:send"))
+        .map(|s| s.body.clone())
+        .collect();
+    let token = |j: &jobs::Claimed| j.payload["token"].as_str().unwrap().to_owned();
+    assert_eq!(sent.len(), 1, "A sent a job B now owns");
+    assert!(sent[0].contains(&token(&batch[0])));
+    // The job A still held was renewed while it ran: B cannot take it.
+    let (status, attempts): (String, i32) =
+        sqlx::query_as("SELECT status, attempts FROM relay_push_jobs WHERE id = $1")
+            .bind(batch[0].id)
+            .fetch_one(&h.pool)
+            .await
+            .unwrap();
+    assert_eq!((status.as_str(), attempts), ("done", 1));
+}
+
+#[sqlx::test]
+async fn a_job_lease_is_renewed_before_its_turn_in_the_batch(pool: PgPool) {
+    let h = harness(pool).await;
+    let u = h.user("a@example.test", &["mobile:registration"]).await;
+    let cred = h.link(u.id, true, false).await;
+    h.android(&u, "pixel-1", "fcm-token-1").await;
+    while h.work().await > 0 {}
+    h.publish(
+        &cred,
+        "thread-1",
+        Some(&state("thread-1", "waiting_for_input", 1000)),
+    )
+    .await;
+    let batch = jobs::claim(&h.pool, &["fcm"]).await.unwrap();
+    assert_eq!(batch.len(), 1);
+    // The lease ran out while earlier jobs of the batch were sent, but nobody took the job yet.
+    sqlx::query("UPDATE relay_push_jobs SET locked_until = now() - interval '1 second'")
+        .execute(&h.pool)
+        .await
+        .unwrap();
+    assert!(jobs::renew(&h.pool, &batch[0]).await.unwrap());
+    assert!(
+        jobs::claim(&h.pool, &["fcm"]).await.unwrap().is_empty(),
+        "a renewed lease is not claimable"
+    );
+    let left: f64 = sqlx::query_scalar(
+        "SELECT extract(epoch FROM locked_until - now())::float8 FROM relay_push_jobs WHERE id = $1",
+    )
+    .bind(batch[0].id)
+    .fetch_one(&h.pool)
+    .await
+    .unwrap();
+    assert!(left > (jobs::CLAIM_TIMEOUT_SECONDS - 30) as f64, "{left}");
+}
+
+#[test]
+fn push_tokens_never_show_in_debug() {
+    let secret = "push-token-SECRET-0001";
+    let reg: devices::Registration = serde_json::from_value(json!({
+        "deviceId": "d", "label": "l", "platform": "ios", "iosMajorVersion": 18,
+        "pushToken": secret, "pushToStartToken": secret, "preferences": prefs_json()}))
+    .unwrap();
+    let target = devices::Target {
+        user_id: Uuid::nil(),
+        device_id: "d".into(),
+        platform: "ios".into(),
+        bundle_id: None,
+        aps_environment: None,
+        push_token: Some(secret.into()),
+        preferences: None,
+        activity_push_token: Some(secret.into()),
+        remote_started_at: None,
+        last_aggregate: None,
+        last_live_activity_delivery_at: None,
+    };
+    let apns_target = apns::JobTarget {
+        user_id: Uuid::nil(),
+        device_id: "d".into(),
+        token: secret.into(),
+        bundle_id: None,
+        aps_environment: None,
+    };
+    let fcm_job = fcm::Job {
+        user_id: Uuid::nil(),
+        device_id: "d".into(),
+        token: secret.into(),
+        state: None,
+        queued_at: 0,
+        replay: None,
+    };
+    for d in [
+        format!("{reg:?}"),
+        format!("{target:?}"),
+        format!("{apns_target:?}"),
+        format!("{fcm_job:?}"),
+    ] {
+        assert!(!d.contains("SECRET"), "{d}");
+    }
+    // The wire and job bytes keep the token as a plain string.
+    assert_eq!(serde_json::to_value(&fcm_job).unwrap()["token"], secret);
+    assert_eq!(serde_json::to_value(&apns_target).unwrap()["token"], secret);
+}
+
+#[sqlx::test]
 async fn failures_retry_30s_apart_and_die_after_the_last_attempt(pool: PgPool) {
     let h = harness(pool).await;
     let u = h.user("a@example.test", &["mobile:registration"]).await;
@@ -1418,6 +1556,7 @@ async fn disabling_a_user_removes_their_phones(pool: PgPool) {
     let h = harness(pool).await;
     let u = h.user("a@example.test", &["mobile:registration"]).await;
     h.ios(&u, "phone-1", "push-token-1").await;
+    h.android(&u, "pixel-1", "fcm-token-1").await;
     h.mobile(
         &u,
         "POST",
@@ -1425,6 +1564,35 @@ async fn disabling_a_user_removes_their_phones(pool: PgPool) {
         Some(json!({"deviceId": "phone-1", "activityPushToken": "la-1"})),
     )
     .await;
+    while h.work().await > 0 {}
+    let cred = h.link(u.id, true, true).await;
+    h.publish(
+        &cred,
+        "thread-1",
+        Some(&state("thread-1", "waiting_for_input", 1000)),
+    )
+    .await;
+    let other = Uuid::new_v4();
+    sqlx::query("INSERT INTO relay_push_jobs (kind, payload) VALUES ('fcm', $1)")
+        .bind(json!({"userId": other, "deviceId": "x", "token": "t", "state": null, "queuedAt": 0}))
+        .execute(&h.pool)
+        .await
+        .unwrap();
+    let pending = |pool: PgPool| async move {
+        let rows: Vec<(String,)> = sqlx::query_as(
+            "SELECT coalesce(payload->'target'->>'userId', payload->>'userId') FROM relay_push_jobs
+             WHERE status IN ('pending', 'running') ORDER BY 1",
+        )
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+        rows.into_iter().map(|r| r.0).collect::<Vec<_>>()
+    };
+    let before = pending(h.pool.clone()).await;
+    assert!(
+        before.len() >= 3 && before.contains(&u.id.to_string()),
+        "{before:?}"
+    );
     let out = crate::admin::run(
         &h.pool,
         crate::admin::Admin::DisableUser {
@@ -1433,12 +1601,17 @@ async fn disabling_a_user_removes_their_phones(pool: PgPool) {
     )
     .await
     .unwrap();
-    assert!(out.contains("; removed 1 mobile devices;"), "{out}");
+    assert!(out.contains("; removed 2 mobile devices;"), "{out}");
     let n: i64 = sqlx::query_scalar("SELECT (SELECT count(*) FROM relay_mobile_devices) + (SELECT count(*) FROM relay_live_activities)")
         .fetch_one(&h.pool)
         .await
         .unwrap();
     assert_eq!(n, 0);
+    assert_eq!(
+        pending(h.pool.clone()).await,
+        [other.to_string()],
+        "the user's queued pushes are gone, other users' stay"
+    );
 }
 
 #[sqlx::test]
@@ -1513,6 +1686,9 @@ async fn devices_may_only_route_to_listed_apps(pool: PgPool) {
     let reg = |platform: &str, bundle: &str| {
         let mut v = json!({"deviceId": format!("{platform}-{bundle}"), "label": "x", "platform": platform,
             "bundleId": bundle, "pushToken": format!("tok-{platform}-{bundle}"), "preferences": prefs_json()});
+        if bundle.is_empty() {
+            v.as_object_mut().unwrap().remove("bundleId");
+        }
         if platform == "ios" {
             v["iosMajorVersion"] = json!(18)
         } else {
@@ -1525,6 +1701,8 @@ async fn devices_may_only_route_to_listed_apps(pool: PgPool) {
         ("ios", "com.attacker.app", false),
         ("android", "com.example.vekrel", true),
         ("android", "com.attacker.app", false),
+        ("android", "", false),
+        ("ios", "", true),
     ] {
         let r = h
             .mobile(
@@ -1544,7 +1722,8 @@ async fn devices_may_only_route_to_listed_apps(pool: PgPool) {
     // A value stored before the list existed is never used to send.
     sqlx::query("INSERT INTO relay_mobile_devices (user_id, device_id, platform, ios_major_version, bundle_id, push_token, preferences_json, created_at, updated_at)
                  VALUES ($1, 'old-ios', 'ios', 18, 'com.attacker.app', 'tok-old-ios', $2, 'x', 'x'),
-                        ($1, 'old-android', 'android', NULL, 'com.attacker.app', 'tok-old-android', $2, 'x', 'x')")
+                        ($1, 'old-android', 'android', NULL, 'com.attacker.app', 'tok-old-android', $2, 'x', 'x'),
+                        ($1, 'nopkg-android', 'android', NULL, NULL, 'tok-nopkg-android', $2, 'x', 'x')")
         .bind(u.id)
         .bind(prefs_json())
         .execute(&h.pool)
@@ -1574,7 +1753,7 @@ async fn devices_may_only_route_to_listed_apps(pool: PgPool) {
         !h.fcm
             .seen()
             .iter()
-            .any(|s| s.body.contains("tok-old-android"))
+            .any(|s| s.body.contains("tok-old-android") || s.body.contains("tok-nopkg-android"))
     );
     assert!(
         h.fcm

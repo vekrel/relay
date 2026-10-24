@@ -14,7 +14,7 @@ use uuid::Uuid;
 use super::Push;
 use super::agent_activity;
 use super::config::ServiceAccount;
-use super::devices::{self, Kind, Target};
+use super::devices::{self, Kind, PushToken, Target};
 use super::jobs::{self, JobError};
 use super::payloads::*;
 use crate::config::Secret;
@@ -113,7 +113,7 @@ async fn authorize(push: &Push, a: &ServiceAccount) -> Result<String, FcmError> 
 pub async fn send(
     push: &Push,
     token: &str,
-    package: Option<&str>,
+    package: &str,
     data: &Map<String, Value>,
     alert: bool,
 ) -> Result<bool, FcmError> {
@@ -128,9 +128,7 @@ pub async fn send(
     if !alert {
         android.insert("collapse_key".into(), "t3-agent-activity".into());
     }
-    if let Some(p) = package {
-        android.insert("restricted_package_name".into(), p.into());
-    }
+    android.insert("restricted_package_name".into(), package.into());
     let body = json!({"message": {"token": token, "data": data, "android": android}});
     let project: String = form_urlencoded::byte_serialize(a.project_id.as_bytes()).collect();
     let url = format!(
@@ -179,7 +177,7 @@ pub async fn send(
 pub struct Job {
     pub user_id: Uuid,
     pub device_id: String,
-    pub token: String,
+    pub token: PushToken,
     pub state: Option<ActivityState>,
     pub queued_at: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -336,14 +334,10 @@ pub async fn process(push: &Push, payload: &Value) -> Result<(), JobError> {
         );
     }
     drop(conn);
-    let sent = send(
-        push,
-        &job.token,
-        target.bundle_id.as_deref(),
-        &fit_fcm_data(&data),
-        is_alert,
-    )
-    .await;
+    let Some(package) = target.bundle_id.as_deref() else {
+        return Ok(());
+    };
+    let sent = send(push, &job.token, package, &fit_fcm_data(&data), is_alert).await;
     let mut conn = push.pool.acquire().await?;
     match sent {
         Ok(true) => {
