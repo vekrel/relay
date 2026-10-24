@@ -43,7 +43,6 @@ const PAGE_CSP: &str = "default-src 'none'; style-src 'unsafe-inline'; img-src d
 pub struct AccountsState {
     pub pool: PgPool,
     pub keys: Arc<SigningKeys>,
-    #[cfg_attr(not(test), allow(dead_code))] // read by `AccountUser` (Task 9)
     pub public_keys: PublicKeys,
     pub issuer: String,
     pub signup_mode: SignupMode,
@@ -719,11 +718,11 @@ async fn revoke(
 /// A request with a valid account access token whose user is enabled and whose refresh family is
 /// not revoked (so `disable-user` and sign-out take effect on the next request, not in 10 min).
 /// Rejection: 401 with an empty body (T3 `HttpApiError.Unauthorized`).
-// shortcut: no route takes an account bearer until Task 9 (`/v1/client/...`); drop the allow then.
-#[cfg_attr(not(test), allow(dead_code))]
 pub struct AccountUser {
     pub user_id: Uuid,
+    #[allow(dead_code)] // for routes that show or check them (Tasks 6-8)
     pub email: String,
+    #[allow(dead_code)]
     pub client_id: String,
 }
 
@@ -743,28 +742,38 @@ where
             .and_then(|v| v.to_str().ok())
             .and_then(|v| v.strip_prefix("Bearer "))
             .ok_or_else(unauthorized)?;
-        let claims = tokens::verify_access_token(&s.public_keys, &s.issuer, token)
-            .map_err(|_| unauthorized())?;
-        let user_id = claims.user_id().ok_or_else(unauthorized)?;
-        let family: Uuid = claims.sid.parse().map_err(|_| unauthorized())?;
-        let live: bool = sqlx::query_scalar(
-            "SELECT EXISTS (SELECT 1 FROM users WHERE id = $1 AND disabled_at IS NULL)
-                AND NOT EXISTS (SELECT 1 FROM refresh_tokens WHERE family_id = $2 AND revoked_at IS NOT NULL)",
-        )
-        .bind(user_id)
-        .bind(family)
-        .fetch_one(&s.pool)
-        .await
-        .map_err(internal)?;
-        if !live {
-            return Err(unauthorized());
+        match account_user(&s, token).await {
+            Ok(Some(user)) => Ok(user),
+            Ok(None) => Err(unauthorized()),
+            Err(e) => Err(internal(e)),
         }
-        Ok(Self {
-            user_id,
-            email: claims.email,
-            client_id: claims.client_id,
-        })
     }
+}
+
+/// `AccountUser` for a bearer token: `None` unless the token verifies and is still live.
+pub async fn account_user(
+    s: &AccountsState,
+    token: &str,
+) -> Result<Option<AccountUser>, sqlx::Error> {
+    let Ok(claims) = tokens::verify_access_token(&s.public_keys, &s.issuer, token) else {
+        return Ok(None);
+    };
+    let (Some(user_id), Ok(family)) = (claims.user_id(), claims.sid.parse::<Uuid>()) else {
+        return Ok(None);
+    };
+    let live: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM users WHERE id = $1 AND disabled_at IS NULL)
+            AND NOT EXISTS (SELECT 1 FROM refresh_tokens WHERE family_id = $2 AND revoked_at IS NOT NULL)",
+    )
+    .bind(user_id)
+    .bind(family)
+    .fetch_one(&s.pool)
+    .await?;
+    Ok(live.then_some(AccountUser {
+        user_id,
+        email: claims.email,
+        client_id: claims.client_id,
+    }))
 }
 
 #[cfg(test)]

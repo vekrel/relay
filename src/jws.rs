@@ -18,8 +18,11 @@ pub const RELAY_MINT_REQUEST_TYP: &str = "t3-cloud-mint+jwt";
 pub const RELAY_HEALTH_REQUEST_TYP: &str = "t3-cloud-health+jwt";
 pub const RELAY_MINT_RESPONSE_TYP: &str = "t3-env-mint+jwt";
 pub const RELAY_HEALTH_RESPONSE_TYP: &str = "t3-env-health+jwt";
+// shortcut: used by agent activity (Task 12) and hook delivery (Task 11); drop the allows then.
+#[allow(dead_code)]
 pub const RELAY_ACTIVITY_PUBLISH_TYP: &str = "t3-env-activity+jwt";
 pub const RELAY_MANAGED_TUNNEL_RECOVERY_TYP: &str = "t3-env-managed-tunnel-recovery+jwt";
+#[allow(dead_code)]
 pub const RELAY_HOOK_DELIVERY_TYP: &str = "t3-relay-hook-delivery+jwt";
 
 /// `verifyRelayJwt` defaults: `maxTokenAge: "5 minutes"`, `clockTolerance: 60`.
@@ -104,6 +107,19 @@ pub fn sign(key: &SigningKey, typ: &str, claims: &impl Serialize) -> String {
     let input = format!("{}.{}", b64url_encode(header), b64url_encode(payload));
     let signature = key.sign(input.as_bytes());
     format!("{input}.{}", b64url_encode(signature.to_bytes()))
+}
+
+/// `decodeRelayJwt` (jose `decodeJwt`): the claims of a compact JWS, unverified. Used only to
+/// pick the key a link proof claims before verifying it.
+pub fn decode_unverified(token: &str) -> Option<Map<String, Value>> {
+    let segments: Vec<&str> = token.split('.').collect();
+    let [_, payload, _] = segments[..] else {
+        return None;
+    };
+    match jose_b64_decode(payload).and_then(|b| parse_json_text(&b))? {
+        Value::Object(claims) => Some(claims),
+        _ => None,
+    }
 }
 
 /// What `verifyRelayJwt` checks besides the signature.

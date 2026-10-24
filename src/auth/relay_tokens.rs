@@ -122,6 +122,7 @@ impl RelayTokens {
         }
     }
 
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn issuer(&self) -> &str {
         &self.issuer
     }

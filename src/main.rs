@@ -1,15 +1,13 @@
 mod accounts;
 mod admin;
-// shortcut: the relay protocol core has no routes until Task 9 (link, connect); drop the allows then.
-#[allow(dead_code)]
 mod auth;
 mod config;
 mod db;
 mod email;
 mod http;
-#[allow(dead_code)]
 mod jws;
 mod keygen;
+mod machines;
 mod rate_limit;
 #[cfg(test)]
 mod test_logs;
@@ -88,6 +86,14 @@ async fn serve() -> Result<(), String> {
         .as_deref()
         .ok_or("DATABASE_URL is required")?;
     let keys = std::sync::Arc::new(accounts::keys::SigningKeys::from_env()?);
+    let mint = config
+        .mint_private_key
+        .as_ref()
+        .map(|s| s.0.as_str())
+        .ok_or("RELAY_MINT_PRIVATE_KEY is required (vekrel-relay keygen)")?;
+    // The error names the format only; it never echoes the key.
+    jws::signing_key_from_pem(mint)
+        .map_err(|_| "RELAY_MINT_PRIVATE_KEY is not an Ed25519 PKCS#8 PEM key")?;
     let pool = db::connect(database_url).await?;
     let versions = db::migrate(&pool).await?;
     tracing::info!(?versions, "migrations applied");

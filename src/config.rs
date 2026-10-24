@@ -52,6 +52,12 @@ pub struct Config {
     pub github: Option<OAuthApp>,
     /// `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (both or neither); endpoints overridable for tests.
     pub google: Option<OAuthApp>,
+    /// `RELAY_MINT_PRIVATE_KEY`: Ed25519 PKCS#8 PEM (T3's `CloudMintKeyPair`); signs link challenges,
+    /// relay DPoP tokens and relay -> machine requests. `serve` requires it.
+    pub mint_private_key: Option<Secret>,
+    /// `RELAY_TUNNEL_ZONE_NAME`: zone that holds managed tunnel hostnames (T3
+    /// `managedEndpointBaseDomain`); unset means connect refuses managed endpoints.
+    pub tunnel_zone: Option<String>,
 }
 
 /// An upstream OAuth app (plan 6A Task 6). `Debug` leaves the secret out.
@@ -213,6 +219,10 @@ impl Config {
             trust_proxy_ip_header,
             github,
             google,
+            mint_private_key: get("RELAY_MINT_PRIVATE_KEY")
+                .filter(|s| !s.trim().is_empty())
+                .map(Secret),
+            tunnel_zone: get("RELAY_TUNNEL_ZONE_NAME").filter(|s| !s.trim().is_empty()),
         })
     }
 

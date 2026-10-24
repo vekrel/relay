@@ -28,6 +28,8 @@ Environment variables only:
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth app (callback `<RELAY_ORIGIN>/auth/github/callback`). Both or neither; unset turns "Continue with GitHub" into a "not set up" page. Tests override `GITHUB_AUTHORIZE_URL`, `GITHUB_TOKEN_URL`, `GITHUB_API_URL` |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | unset | Google OAuth client, Web application (redirect `<RELAY_ORIGIN>/auth/google/callback`, scopes `openid email profile`). Both or neither. Tests override `GOOGLE_AUTHORIZE_URL`, `GOOGLE_TOKEN_URL`, `GOOGLE_JWKS_URL` |
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
+| `RELAY_MINT_PRIVATE_KEY` | unset | Required by `serve`. Ed25519 PKCS#8 PEM (`keygen`, first block; literal `\n` allowed). Signs link challenges, relay DPoP tokens and requests to machines; machines pin its public key at link time, so rotating it means relinking every machine |
+| `RELAY_TUNNEL_ZONE_NAME` | unset | Zone holding managed tunnel hosts (T3 `managedEndpointBaseDomain`). Unset: connect and status refuse managed endpoints (`managed_endpoint_base_domain_not_configured`) |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
 ## Run locally
@@ -59,9 +61,13 @@ Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo
 
 Protocol vectors: `tests/fixtures/relay/{jws,dpop}.json` hold TEST-ONLY tokens and keys with the verdicts Vekrel-Shared's `relayJwt.ts` and `dpop.ts` give them. Regenerate from a Vekrel-Engine checkout with `node apps/server/test/relay-conformance/gen-vectors.ts <out-dir>` (DPoP keys are fresh each run).
 
+## Machines
+
+Routes follow Vekrel-Shared `contracts/src/relay.ts` and T3's `infra/relay/src/http/Api.ts`. Client (account access token as `Bearer`): `GET /v1/machines`, `GET /v1/client/devices`, `GET /v2/client/devices`, `POST /v1/client/machine-link-challenges`, `POST /v1/client/machine-links`, `DELETE /v1/client/machine-links/:machineId[/tunnel]`. Token exchange: `POST /v1/client/dpop-token` (form, account token as `subject_token`, DPoP proof) returns a 30-minute relay DPoP token. DPoP client: `POST /v1/machines/:machineId/connect` and `/status` (the relay signs a request, POSTs it to the machine's `/api/vekrel-connect/*` over its tunnel, and checks the signed answer). Machine (machine credential as `Bearer`): `POST /v1/machines/:machineId/tunnel/recovery`, `/tunnel`, `/link-preferences`. A machine credential works only while an active link proven by the same machine key exists and that link's user is not disabled. Managed tunnels need the Cloudflare provider (Task 10); until then a managed link answers 503 `managed_endpoint_not_configured` and publish-only links work. DPoP `htu` is checked against `RELAY_ORIGIN` plus the request path.
+
 ## Deploy
 
-Railway builds the `Dockerfile` (distroless runtime) and health-checks `/health` (`railway.json`). Staging deploys from `main`. Set `RELAY_ORIGIN` and `DATABASE_URL` (a reference to the Railway Postgres service) as Railway variables; Railway sets `PORT`. Then run `scripts/smoke.sh https://<relay host>`.
+Railway builds the `Dockerfile` (distroless runtime) and health-checks `/health` (`railway.json`). Staging deploys from `main`. Set `RELAY_ORIGIN`, `DATABASE_URL` (a reference to the Railway Postgres service), `AUTH_SIGNING_KEYS` and `RELAY_MINT_PRIVATE_KEY` as Railway variables; Railway sets `PORT`. Then run `scripts/smoke.sh https://<relay host>`.
 
 ## License
 

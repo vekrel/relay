@@ -15,19 +15,42 @@ use crate::accounts::magic_link;
 use crate::accounts::oauth::{self, AccountsState};
 use crate::accounts::providers;
 use crate::config::Config;
+use crate::machines::Relay;
+use crate::machines::provider::NoTunnels;
 
+pub mod client;
+pub mod errors;
+pub mod server;
+pub mod token_exchange;
 pub mod wellknown;
 
+/// The relay. Machine routes need `RELAY_MINT_PRIVATE_KEY` (`serve` requires it).
 pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
     let accounts = AccountsState::new(pool.clone(), keys.clone(), config);
-    Router::new()
+    let r = Router::new()
         .route("/health", get(health))
-        .with_state(pool)
+        .with_state(pool.clone())
         .merge(wellknown::router(&keys, &config.relay_origin))
         .merge(oauth::router(accounts.clone()))
         .merge(device::router(accounts.clone()))
         .merge(magic_link::router(accounts.clone(), config))
-        .merge(providers::router(accounts, config))
+        .merge(providers::router(accounts.clone(), config));
+    let Some(pem) = &config.mint_private_key else {
+        return r;
+    };
+    let mint_key =
+        crate::jws::signing_key_from_pem(&pem.0).expect("serve validated RELAY_MINT_PRIVATE_KEY");
+    let relay = Relay::new(
+        pool,
+        mint_key,
+        &config.relay_origin,
+        config.tunnel_zone.clone(),
+        Arc::new(NoTunnels),
+    );
+    r.merge(client::router(client::MachineState {
+        relay: Arc::new(relay),
+        accounts,
+    }))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
@@ -45,9 +68,7 @@ async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
 
 /// T3 `RelayInternalError` body (Vekrel-Shared `contracts/src/relay.ts`), `traceId` a 32-hex id.
 fn internal_error(reason: &str) -> (StatusCode, Json<Value>) {
-    let mut id = [0u8; 16];
-    getrandom::fill(&mut id).expect("OS random source");
-    let trace_id: String = id.iter().map(|b| format!("{b:02x}")).collect();
+    let trace_id = errors::trace_id();
     (
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(json!({
