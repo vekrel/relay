@@ -3,7 +3,13 @@
 
 /// The client that gets the refresh token as an HttpOnly cookie instead of in the body.
 pub const WEB: &str = "vekrel-web";
-const APP_REDIRECTS: [&str; 2] = ["vekrel://auth/callback", "vekrel-dev://auth/callback"];
+const DESKTOP_REDIRECTS: [&str; 2] = ["vekrel://auth/callback", "vekrel-dev://auth/callback"];
+/// Mobile also has a preview build variant with its own scheme (`apps/mobile/app.config.ts`).
+const MOBILE_REDIRECTS: [&str; 3] = [
+    "vekrel://auth/callback",
+    "vekrel-dev://auth/callback",
+    "vekrel-preview://auth/callback",
+];
 /// Engine `CliTokenManager` loopback port 34338.
 const CLI_REDIRECT: &str = "http://127.0.0.1:34338/callback";
 
@@ -32,7 +38,8 @@ impl Clients {
     pub fn redirect_allowed(&self, client_id: &str, redirect_uri: &str) -> bool {
         match client_id {
             WEB => self.web.iter().any(|u| u == redirect_uri),
-            "vekrel-desktop" | "vekrel-mobile" => APP_REDIRECTS.contains(&redirect_uri),
+            "vekrel-desktop" => DESKTOP_REDIRECTS.contains(&redirect_uri),
+            "vekrel-mobile" => MOBILE_REDIRECTS.contains(&redirect_uri),
             "vekrel-cli" => redirect_uri == CLI_REDIRECT,
             _ => false,
         }
@@ -49,6 +56,7 @@ mod tests {
         assert!(c.redirect_allowed(WEB, "https://app.example.com/auth/callback"));
         assert!(c.redirect_allowed("vekrel-mobile", "vekrel://auth/callback"));
         assert!(c.redirect_allowed("vekrel-desktop", "vekrel-dev://auth/callback"));
+        assert!(c.redirect_allowed("vekrel-mobile", "vekrel-preview://auth/callback"));
         assert!(c.redirect_allowed("vekrel-cli", "http://127.0.0.1:34338/callback"));
         for (client, uri) in [
             (WEB, "https://app.example.com/auth/callback/x"),
@@ -60,6 +68,8 @@ mod tests {
             ("vekrel-cli", "http://127.0.0.1:34339/callback"),
             ("vekrel-cli", "http://localhost:34338/callback"),
             ("vekrel-mobile", "https://app.example.com/auth/callback"),
+            ("vekrel-mobile", "vekrel-preview://auth/callback/"),
+            ("vekrel-desktop", "vekrel-preview://auth/callback"),
             ("vekrel-other", "vekrel://auth/callback"),
         ] {
             assert!(!c.redirect_allowed(client, uri), "{client} {uri}");
