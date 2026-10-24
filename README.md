@@ -32,6 +32,8 @@ cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status n
 
 Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo sqlx prepare --check` (CI runs the same). Tests need a Postgres in `DATABASE_URL` (e.g. `postgres://localhost/postgres`); each test creates and drops its own database.
 
+Protocol vectors: `tests/fixtures/relay/{jws,dpop}.json` hold TEST-ONLY tokens and keys with the verdicts Vekrel-Shared's `relayJwt.ts` and `dpop.ts` give them. Regenerate from a Vekrel-Engine checkout with `node apps/server/test/relay-conformance/gen-vectors.ts <out-dir>` (DPoP keys are fresh each run).
+
 ## Deploy
 
 Railway builds the `Dockerfile` (distroless runtime) and health-checks `/health` (`railway.json`). Staging deploys from `main`. Set `RELAY_ORIGIN` and `DATABASE_URL` (a reference to the Railway Postgres service) as Railway variables; Railway sets `PORT`. Then run `scripts/smoke.sh https://<relay host>`.

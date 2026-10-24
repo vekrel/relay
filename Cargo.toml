@@ -10,12 +10,15 @@ clap = { version = "4.6.7", features = ["derive"] }
 ed25519-dalek = { version = "3.0.0", features = ["pkcs8", "pem"] }
 getrandom = "0.3"
 jsonwebtoken = { version = "10", default-features = false, features = ["rust_crypto"] }
+p256 = { version = "0.14", features = ["ecdsa"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
+sha2 = "0.11"
 sqlx = { version = "0.9", default-features = false, features = ["postgres", "runtime-tokio", "tls-rustls-ring", "migrate", "macros"] }
 tokio = { version = "1.54.1", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
+url = "2"
 uuid = { version = "1.29.0", features = ["v4"] }
 
 [dev-dependencies]

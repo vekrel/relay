@@ -1,7 +1,12 @@
 mod accounts;
+// shortcut: the relay protocol core has no routes until Task 9 (link, connect); drop the allows then.
+#[allow(dead_code)]
+mod auth;
 mod config;
 mod db;
 mod http;
+#[allow(dead_code)]
+mod jws;
 mod keygen;
 
 use clap::{Parser, Subcommand};
