@@ -10,6 +10,7 @@ mod http;
 #[allow(dead_code)]
 mod jws;
 mod keygen;
+mod rate_limit;
 #[cfg(test)]
 mod test_logs;
 
@@ -94,10 +95,14 @@ async fn serve() -> Result<(), String> {
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;
     tracing::info!(addr = %config.addr, origin = %config.relay_origin, signup_mode = ?config.signup_mode, "relay listening");
-    axum::serve(listener, http::router(pool, keys, &config))
-        .with_graceful_shutdown(shutdown())
-        .await
-        .map_err(|e| e.to_string())
+    axum::serve(
+        listener,
+        http::router(pool, keys, &config)
+            .into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown())
+    .await
+    .map_err(|e| e.to_string())
 }
 
 async fn shutdown() {

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use askama::Template;
 use axum::extract::rejection::{FormRejection, QueryRejection};
 use axum::extract::{Query, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{Extensions, HeaderMap, StatusCode};
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Form, Router};
@@ -26,14 +26,15 @@ use super::oauth::{
 use super::signup::VerifiedIdentity;
 use crate::config::MagicLinkTransport;
 use crate::email::{self, Email, Mailer};
+use crate::rate_limit::{self, client_ip};
 
 const LINK_TTL_SECS: i64 = 900;
 const MAX_CODE_ATTEMPTS: i32 = 5;
-/// Research R6: 3 sends per email per 15 min, 20 per IP per hour.
+/// `(max, window seconds)`. Research R6: 3 sends per email per 15 min, 20 per IP per hour.
 const EMAIL_LIMIT: (i64, i64) = (3, 900);
 const IP_LIMIT: (i64, i64) = (20, 3600);
-// shortcut: assumes Railway's edge sets X-Real-IP (Global Constraints); confirm on staging (Task 2).
-const CLIENT_IP_HEADER: &str = "x-real-ip";
+/// Ours, a backstop against many IPs at once: all sends together, per hour.
+const GLOBAL_LIMIT: (i64, i64) = (200, 3600);
 /// No 0/O or 1/I. 32 symbols, so `byte % 32` is unbiased.
 const CODE_ALPHABET: &[u8; 32] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -106,33 +107,6 @@ fn valid_email(e: &str) -> bool {
             .any(|c| c.is_whitespace() || c.is_control() || "<>,;\"()[]\\".contains(c))
 }
 
-/// Sliding window over `relay_rate_limits`: a hit is recorded only when it is allowed.
-async fn allow(
-    pool: &sqlx::PgPool,
-    key: &str,
-    (limit, secs): (i64, i64),
-) -> Result<bool, sqlx::Error> {
-    let used: i64 = sqlx::query_scalar(
-        "SELECT coalesce(sum(count), 0)::int8 FROM relay_rate_limits
-         WHERE key = $1 AND window_start > now() - make_interval(secs => $2)",
-    )
-    .bind(key)
-    .bind(secs as f64)
-    .fetch_one(pool)
-    .await?;
-    if used >= limit {
-        return Ok(false);
-    }
-    sqlx::query(
-        "INSERT INTO relay_rate_limits (key, window_start, count) VALUES ($1, clock_timestamp(), 1)
-         ON CONFLICT (key, window_start) DO UPDATE SET count = relay_rate_limits.count + 1",
-    )
-    .bind(key)
-    .execute(pool)
-    .await?;
-    Ok(true)
-}
-
 fn too_many() -> Response {
     message(
         StatusCode::TOO_MANY_REQUESTS,
@@ -149,6 +123,7 @@ struct EmailForm {
 async fn request_link(
     State(m): State<Arc<MagicLinks>>,
     headers: HeaderMap,
+    extensions: Extensions,
     form: Result<Form<EmailForm>, FormRejection>,
 ) -> Response {
     let pool = &m.accounts.pool;
@@ -180,19 +155,20 @@ async fn request_link(
             "Enter an address like name@example.com, then try again.",
         );
     }
-    let ip = headers
-        .get(CLIENT_IP_HEADER)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("unknown");
-    for (key, limit) in [
+    let Some(ip) = client_ip(&headers, &extensions) else {
+        return internal("no client address (serve attaches ConnectInfo)");
+    };
+    // Fixed key order (rate_limit::allow_all locks in this order).
+    let limits = [
+        ("magic_link:global".to_owned(), GLOBAL_LIMIT),
         (format!("magic_link:ip:{ip}"), IP_LIMIT),
         (format!("magic_link:email:{}", hash(&email)), EMAIL_LIMIT),
-    ] {
-        match allow(pool, &key, limit).await {
-            Ok(true) => {}
-            Ok(false) => return too_many(),
-            Err(e) => return internal(e),
-        }
+    ]
+    .map(|(k, (max, secs))| (k, max, secs));
+    match rate_limit::allow_all(pool, &limits).await {
+        Ok(true) => {}
+        Ok(false) => return too_many(),
+        Err(e) => return internal(e),
     }
     let token = random_secret();
     let code = code_for(&token);
@@ -311,32 +287,18 @@ async fn enter_code(
     };
     let code = normalize_code(&form.ok().and_then(|Form(f)| f.code).unwrap_or_default());
     let pool = &m.accounts.pool;
-    let consumed: Option<String> = match sqlx::query_scalar(
-        "UPDATE magic_links SET used_at = now()
-         WHERE auth_request_id = $1 AND code_hash = $2
-           AND used_at IS NULL AND expires_at > now() AND code_attempts < $3
-         RETURNING email::text",
+    // One statement compares the code and counts the try, under the row locks, so parallel
+    // guesses cannot see the counter before the others bump it. A wrong code costs every live
+    // link of this sign-in a try; the fifth wrong try kills it.
+    let rows: Vec<(bool, String, bool)> = match sqlx::query_as(
+        "UPDATE magic_links SET
+                code_attempts = code_attempts + CASE WHEN code_hash = $2 THEN 0 ELSE 1 END,
+                used_at = CASE WHEN code_hash = $2 OR code_attempts + 1 >= $3 THEN now() END
+         WHERE auth_request_id = $1 AND used_at IS NULL AND expires_at > now() AND code_attempts < $3
+         RETURNING code_hash = $2, email::text, used_at IS NULL",
     )
     .bind(&request_id)
     .bind(hash(&code))
-    .bind(MAX_CODE_ATTEMPTS)
-    .fetch_optional(pool)
-    .await
-    {
-        Ok(r) => r,
-        Err(e) => return internal(e),
-    };
-    if let Some(email) = consumed {
-        return sign_in(&m, &headers, email).await;
-    }
-    // Wrong: every live link of this sign-in loses a try; the fifth wrong try kills it.
-    let alive: Vec<bool> = match sqlx::query_scalar(
-        "UPDATE magic_links SET code_attempts = code_attempts + 1,
-                used_at = CASE WHEN code_attempts + 1 >= $2 THEN now() END
-         WHERE auth_request_id = $1 AND used_at IS NULL AND expires_at > now()
-         RETURNING used_at IS NULL",
-    )
-    .bind(&request_id)
     .bind(MAX_CODE_ATTEMPTS)
     .fetch_all(pool)
     .await
@@ -344,7 +306,10 @@ async fn enter_code(
         Ok(r) => r,
         Err(e) => return internal(e),
     };
-    if alive.contains(&true) {
+    if let Some((_, email, _)) = rows.iter().find(|r| r.0) {
+        return sign_in(&m, &headers, email.clone()).await;
+    }
+    if rows.iter().any(|r| r.2) {
         email_sent(
             StatusCode::BAD_REQUEST,
             Some("That code is not right. Check the email and try again."),

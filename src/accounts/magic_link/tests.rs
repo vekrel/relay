@@ -123,9 +123,11 @@ impl App {
         let body = form_urlencoded::Serializer::new(String::new())
             .extend_pairs(form)
             .finish();
-        let mut r = Request::post(path)
-            .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
-            .header("x-real-ip", ip);
+        let mut r =
+            Request::post(path).header(header::CONTENT_TYPE, "application/x-www-form-urlencoded");
+        if !ip.is_empty() {
+            r = r.header(crate::rate_limit::CLIENT_IP_HEADER, ip);
+        }
         if let Some(c) = cookie {
             r = r.header(header::COOKIE, c);
         }
@@ -541,7 +543,7 @@ async fn link_token_code_and_api_key_never_reach_the_logs(pool: PgPool) {
     let mock = mock::start(StatusCode::OK).await;
     let a = resend_app(pool.clone(), &mock, "open");
     let b = a.browser().await;
-    a.request_link(&b, "ann@example.test").await;
+    a.request_link(&b, "logcheck-ann@example.test").await;
     let text = mock.requests()[0].body["text"].as_str().unwrap().to_owned();
     let link = text
         .split_whitespace()
@@ -565,8 +567,166 @@ async fn link_token_code_and_api_key_never_reach_the_logs(pool: PgPool) {
         ltoken,
         lcode,
         API_KEY.to_owned(),
-        "ann@example.test".into(),
+        "logcheck-ann@example.test".into(),
     ] {
         assert!(!logs.contains(&s), "secret in logs: {s}");
     }
+}
+
+#[sqlx::test]
+async fn parallel_sends_to_one_email_never_pass_the_limit(pool: PgPool) {
+    let a = std::sync::Arc::new(log_app(pool));
+    let b = a.browser().await;
+    let mut set = tokio::task::JoinSet::new();
+    for i in 0..10 {
+        let (a, b) = (a.clone(), b.clone());
+        let ip = format!("198.51.100.{i}");
+        set.spawn(async move {
+            a.post(
+                "/auth/email",
+                &[("email", "ann@example.test")],
+                Some(&b),
+                &ip,
+            )
+            .await
+            .status
+        });
+    }
+    let statuses = set.join_all().await;
+    assert_eq!(
+        statuses.iter().filter(|s| **s == StatusCode::OK).count(),
+        3,
+        "{statuses:?}"
+    );
+    assert_eq!(a.count("SELECT count(*) FROM magic_links").await, 3);
+}
+
+/// Without the edge header the socket peer is the key: one client cannot use up a shared bucket.
+#[sqlx::test]
+async fn without_the_edge_header_each_peer_has_its_own_limit(pool: PgPool) {
+    use axum::extract::ConnectInfo;
+    let base = log_app(pool.clone());
+    let b = base.browser().await;
+    let peer = |last: u8| App {
+        router: base
+            .router
+            .clone()
+            // What `into_make_service_with_connect_info` attaches in `serve`.
+            .layer(axum::Extension(ConnectInfo(std::net::SocketAddr::from((
+                [192, 0, 2, last],
+                40000,
+            ))))),
+        pool: pool.clone(),
+    };
+    let (p1, p2) = (peer(1), peer(2));
+    for i in 0..20 {
+        let r = p1
+            .post(
+                "/auth/email",
+                &[("email", &format!("u{i}@example.test"))],
+                Some(&b),
+                "",
+            )
+            .await;
+        assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    }
+    let late = p1
+        .post(
+            "/auth/email",
+            &[("email", "late@example.test")],
+            Some(&b),
+            "",
+        )
+        .await;
+    assert_eq!(late.status, StatusCode::TOO_MANY_REQUESTS);
+    let other = p2
+        .post(
+            "/auth/email",
+            &[("email", "other@example.test")],
+            Some(&b),
+            "",
+        )
+        .await;
+    assert_eq!(other.status, StatusCode::OK);
+}
+
+#[sqlx::test]
+async fn global_send_cap_is_a_backstop(pool: PgPool) {
+    let a = log_app(pool);
+    let b = a.browser().await;
+    sqlx::query(
+        "INSERT INTO relay_rate_limits (key, window_start, count) VALUES ('magic_link:global', now(), 200)",
+    )
+    .execute(&a.pool)
+    .await
+    .unwrap();
+    let res = a.request_link(&b, "ann@example.test").await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(a.count("SELECT count(*) FROM magic_links").await, 0);
+    assert_eq!(
+        a.count("SELECT count(*) FROM relay_rate_limits WHERE key <> 'magic_link:global'")
+            .await,
+        0,
+        "a refused send records nothing"
+    );
+}
+
+/// The code is compared and the try counted in one statement. Two links of one sign-in, one try
+/// left on each; a wrong guess is in flight (blocked on link A) when the right code for link B
+/// arrives. The wrong guess is the fifth try, so link B must be dead too.
+#[sqlx::test]
+async fn a_guess_in_flight_counts_before_a_later_right_code(pool: PgPool) {
+    let a = std::sync::Arc::new(log_app(pool.clone()));
+    let b = a.browser().await;
+    let (link_a, _) = a.request_link(&b, "ann@example.test").await.dev_link();
+    let (_, code_b) = a.request_link(&b, "ann@example.test").await.dev_link();
+    sqlx::query("UPDATE magic_links SET code_attempts = 4")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let token_a = link_a.rsplit("t=").next().unwrap().to_owned();
+    let mut lock = pool.begin().await.unwrap();
+    sqlx::query("SELECT 1 FROM magic_links WHERE token_hash = $1 FOR UPDATE")
+        .bind(crate::accounts::oauth::hash(&token_a))
+        .execute(&mut *lock)
+        .await
+        .unwrap();
+    let waiting = || async {
+        sqlx::query_scalar::<_, i64>(
+            "SELECT count(*) FROM pg_stat_activity
+             WHERE datname = current_database() AND wait_event_type = 'Lock'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+    };
+    let until = |n: i64, task: &tokio::task::JoinHandle<Res>| {
+        let done = task.is_finished();
+        async move {
+            for _ in 0..200 {
+                if done || waiting().await >= n {
+                    return;
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+            }
+            panic!("no request waited on the row lock");
+        }
+    };
+    let (a1, b1) = (a.clone(), b.clone());
+    let wrong = tokio::spawn(async move { a1.enter_code(&b1, "ZZZZZZ").await });
+    until(1, &wrong).await;
+    let (a2, b2) = (a.clone(), b.clone());
+    let right = tokio::spawn(async move { a2.enter_code(&b2, &code_b).await });
+    for _ in 0..200 {
+        if right.is_finished() || waiting().await >= 2 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+    }
+    lock.commit().await.unwrap();
+    let (wrong, right) = (wrong.await.unwrap(), right.await.unwrap());
+    assert_eq!(wrong.status, StatusCode::BAD_REQUEST);
+    assert_eq!(right.status, StatusCode::BAD_REQUEST, "{}", right.body);
+    assert!(right.headers.get(header::LOCATION).is_none());
+    assert_eq!(a.count("SELECT count(*) FROM auth_codes").await, 0);
 }
