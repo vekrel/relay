@@ -228,13 +228,10 @@ enum Outcome {
 }
 
 async fn post(relay: &Relay, endpoint: &Endpoint, path: &str, proof: &str) -> Outcome {
-    #[cfg(test)]
     let base = relay
         .endpoint_override
         .clone()
         .unwrap_or_else(|| endpoint.http_base_url.clone());
-    #[cfg(not(test))]
-    let base = endpoint.http_base_url.clone();
     let url = match url::Url::parse(&base).and_then(|u| u.join(path)) {
         Ok(u) => u,
         Err(_) => {

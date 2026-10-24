@@ -1,22 +1,22 @@
 {
  "_note": "TEST-ONLY vectors from Vekrel-Engine apps/server/test/relay-conformance/gen-vectors.ts; throwaway keys, not secrets. Proofs are stored split (`parts`), join with \".\".",
- "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+ "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
  "vectors": [
   {
    "name": "valid",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -24,18 +24,18 @@
   {
    "name": "valid_lowercase_htm",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJwb3N0IiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "Z6g8l5HBiefSG4Jv5G8ai9y1GycKvlmlNc9tzE51ABMnmVdWHsdvyM99_Q_hQG2CWYu90bZh2ac18zf0azdHPw"
+    "EDMgvo1RQ40oJYS6ylPNpe-Mu25LQOpUdTbUVzjBOpIc7e95c6u_OD6CLokpeIug-6MdP5sFmlJ4241Dogaslg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -43,18 +43,18 @@
   {
    "name": "valid_request_url_query_fragment",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect?a=1#f",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -62,18 +62,18 @@
   {
    "name": "valid_extra_fields_and_kid",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2Iiwia2lkIjoiayJ9LCJ4NSI6MX0",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2Iiwia2lkIjoiayJ9LCJ4NSI6MX0",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAsImV4dHJhIjp0cnVlfQ",
-    "cM3cPWjgmm5jX7vEiL2i82FbN0-rSxqDMjEn6Vm_iMFQky_b7LIBVCG6FykCuLmNADhTDbu4GiiqOr4VaMp7hA"
+    "mEBnR_tI3uIzvK3f0VGbH25PJBGJAoXDEdesD4FHw71T-e4HpgD0NKYVSsf_COADESqg-1MijWy_HItT6UXACA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -81,18 +81,18 @@
   {
    "name": "valid_iat_float_integral",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAuMH0",
-    "58ASYgK_3dG33UTj7AUWa1TlfupIgAbYcazg36PUNMQGwfnMZnOVhEGzr0-2iu_dLUrkcLNPZ8CAElN-fA8zhg"
+    "omegFUIvhcw_vMe5m4az4BbgKGYYb7oMw7V0pWk3woGsqd4ZLsIJnr5Nq3cdjUqJzAzL5EP6VtrtIEcIdCZmXg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -100,18 +100,18 @@
   {
    "name": "valid_high_s",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "Ih_C7LDZqy0NnCWaiDHNmuNbIkGHfGAIqAIB10l67iuoerGAZNXPRLffmiZFbSfNLhzJC80yMuI7at3G5tWRYA"
+    "Di2uNJEuDd2w5MYp9zefZLPEe0WtNrtSUaE-1RF7fXOZZ9urKh7ukmeanACBS5e9mhsYNCyyyxIWjc2gADHk0A"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -119,18 +119,18 @@
   {
    "name": "valid_with_ath",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAsImF0aCI6InoxVXRTSnJfUE5yWjNXQzdJYnA5ODE0M2FhNWhESXVnVTJyNktNOTM0TDAifQ",
-    "91Uz66r6V_aPFLYZaPkbE09-JZCgz6Ib-HP_UryWTLgkUIDuXiEhNQd9sitTouWwvIwMnbIpFsj3IeLh-llNMA"
+    "75fCy4zzVgOrUooclrEvX3XHezTnbMEZf4yWa4ekWwafhnvvXk8TEzoHoqMJa8t7fp699YcWY2d0MEwNgn1UQg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": "relay-access-token-1",
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -138,9 +138,9 @@
   {
    "name": "valid_without_expected_thumbprint",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
@@ -149,7 +149,7 @@
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -157,18 +157,18 @@
   {
    "name": "valid_skew_minus_300",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000300,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -176,18 +176,18 @@
   {
    "name": "valid_skew_plus_300",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1799999700,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -195,18 +195,18 @@
   {
    "name": "valid_padded_segments",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ=="
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g=="
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-1",
     "iat": 1800000000
    }
@@ -214,18 +214,18 @@
   {
    "name": "valid_future_iat_300_for_replay_window",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLWZ1dHVyZSIsImlhdCI6MTgwMDAwMDMwMH0",
-    "TuqD9N3ReT_4KRhqnmyTVKZSb5KDEEBKE5OLC-GjPf2OhECQuQOiPqCDZ9KMIyuG1GQTsGTGNWLNByRWginjbw"
+    "vLOy_2kqHvT4i_V8cqJTPZ7iXFhAA8vpPufIY8weCwLfn_w3KmhQ2aJ5z_oOG3JoBwHgy0QjUZWLn6t_UoOR4A"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": true,
-    "thumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
     "jti": "proof-future",
     "iat": 1800000300
    }
@@ -233,14 +233,14 @@
   {
    "name": "time_window_plus_301",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000301,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -251,14 +251,14 @@
   {
    "name": "time_window_minus_301",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1799999699,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -269,14 +269,14 @@
   {
    "name": "bad_signature_before_time_window",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "rDuflF4XnxT0gJM-ZJq1Ta6fhuQNwytRoQVoty9eKyRmRt5OyJdARZrqprb0tQpjvJqeN1dLvnyRRCMHdT5GeQ"
+    "et65-dCLHhZ3V16Sz3LmV3P14peGw3Y1VjjYbUg8SVRKVkR1wZLP7DGssaJGDTLh6Dv4XBPQ5uP30K1RDXSvUg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800001000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -285,16 +285,562 @@
    }
   },
   {
+   "name": "htu_default_port_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3Q6NDQzL3YxL21hY2hpbmVzL21hY2hpbmUtZml4dHVyZS0xL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "clnzKE1IrsEPV7FdFBEhZ3smiuYWMAonA6SgdXkbqGpvvcp9FS20PVqtkT70cnsmr8r_3x0V0jpXQvUPkHpJJQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_default_port_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test:443/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
+   "name": "htu_other_port_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3Q6ODQ0My92MS9tYWNoaW5lcy9tYWNoaW5lLWZpeHR1cmUtMS9jb25uZWN0IiwianRpIjoicHJvb2YtMSIsImlhdCI6MTgwMDAwMDAwMH0",
+    "2DKChELjDLwVBicbeUl1HQBbqvuG6iipgC8K0n_dYPDRkhOmhxRn8Rl0751_WRPBOBJp5a5o4OEJbIpopQklCQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_other_port_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test:8443/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_host_case_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9SRUxBWS5FeGFtcGxlLlRFU1QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "eqOvgiPqISQmWzcEQlrcpg1Ovtn7Hr4zLp_5Qp4vJGVHnCl13y67Sgyj7PihdyqgSCKvwmxAHPyHf-_IW4NoJQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_host_case_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://RELAY.Example.TEST/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
+   "name": "htu_scheme_case_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiSFRUUFM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "Ikc6zsoaf1JAkTO9-3KcNxQjJeXM3eMNTfNxgcZwn-ggp72U9y1R5xHeylpJcCoUuTvD-sYFlLEkNjVMdifKZQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_scheme_case_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "HTTPS://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
+   "name": "htu_dot_segments_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvLi9tYWNoaW5lcy94Ly4uL21hY2hpbmUtZml4dHVyZS0xL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "7NSbYlXCPuLiyJns2H45-Rs7pWMUxN0Ug9EUqDxmxKRv9PR98j8ufFXLNkTu9gRgKlN0SMBXDBsi8JiyMvn0Fg"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_dot_segments_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/./machines/x/../machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
+   "name": "htu_percent_unreserved_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZSUyRGZpeHR1cmUlMkQxL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "MrTwhdiCHTQnBdp3qBGTbdJChJ2WSo5Oj9biEE1LxPNd1ItTZ6PVN0PLFbVDs1EnNOKKtTXyguK2Sgf8Fhm1Ig"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_unreserved_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine%2Dfixture%2D1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_lowercase_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZSUyZGZpeHR1cmUlMmQxL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "EqK3jhaoLGfCtkfntgH92gPPIvx32ADF5c3No90pzTBSNQ9LvE467XNHckb_onUbdx3cwlYV2Skqw5n05gWjhg"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_lowercase_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine%2dfixture%2d1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_slash_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMlMkZtYWNoaW5lLWZpeHR1cmUtMS9jb25uZWN0IiwianRpIjoicHJvb2YtMSIsImlhdCI6MTgwMDAwMDAwMH0",
+    "Ogwai9XeVp4s-k6ImoOeXWkTO_7eSuQxCyMmy1ApKp_Ym7ZOpqgryvRQTCoxx7VU-lISXgqhWVsvCuUNz4ZsYg"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_slash_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines%2Fmachine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_space_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTElMjAvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "IS16yXHirLUBWcp-eIp5wuCt67LOCYSmCyn5olBjyG9RtZ177N7ZNhwV4VKCgnKcATevBhS73ZlQFpJ9sYph7Q"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_percent_space_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1%20/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_raw_unicode_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTHDqS9jb25uZWN0IiwianRpIjoicHJvb2YtMSIsImlhdCI6MTgwMDAwMDAwMH0",
+    "jp_dfIgTa3OOvSdnrJxhNAK1R6TTZqurFvskBIAdFmQOnUWCsy-3JsCm-3ybROlCxPkFompD2DUvSz4OSHp5GQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_raw_unicode_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1é/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_trailing_slash_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdC8iLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "X0DfeHfXtym_ccZcTxSH5TmKCZTbEV_rZSnvCHKfM_Hi1oKRMs4YRLhA_L0mQpTg7uwy5LEzCB8iapWinSf2eQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_trailing_slash_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect/",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_userinfo_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly91OnBAcmVsYXkuZXhhbXBsZS50ZXN0L3YxL21hY2hpbmVzL21hY2hpbmUtZml4dHVyZS0xL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "gNmtOanysHh-uZl1YLRFFp-z1MMxlM9IXhyMgy6yZiD2UGH6mWH85CvaozG033INlKQWh0_n3d9W0ItaP-CsNg"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_userinfo_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://u:p@relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_query_and_fragment_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdD9hPTEjZiIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "XPX1U8gXfKQ75In5de54UadCYGWzWycsajSsylzrmEi3cHbvn87_AfcJYxV36tSdLPvRRQKc1HFxWqQ6x6AzyA"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_query_and_fragment_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect?a=1#f",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
+   "name": "htu_http_scheme_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cDovL3JlbGF5LmV4YW1wbGUudGVzdC92MS9tYWNoaW5lcy9tYWNoaW5lLWZpeHR1cmUtMS9jb25uZWN0IiwianRpIjoicHJvb2YtMSIsImlhdCI6MTgwMDAwMDAwMH0",
+    "g6DftyXslKtQ656uPnNcvTWQQ_QCbGXeAjeyCekcJZt40OstVFUJlgqtPsSJiJmiEY78WrhRJdEM6bIqVnoMVg"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_http_scheme_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "http://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_empty_port_in_proof",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3Q6L3YxL21hY2hpbmVzL21hY2hpbmUtZml4dHVyZS0xL2Nvbm5lY3QiLCJqdGkiOiJwcm9vZi0xIiwiaWF0IjoxODAwMDAwMDAwfQ",
+    "AEk_4T-6KATrwIMABIyuIJyup65krRBuYjxao5kPHh_6VJCCVBpWeG3iUhNRMBZHrHPx9VDe_pbFVFGO_i57nQ"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": false,
+    "code": "url_mismatch",
+    "reason": "DPoP URL mismatch."
+   }
+  },
+  {
+   "name": "htu_empty_port_in_request",
+   "parts": [
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
+    "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
+   ],
+   "method": "POST",
+   "url": "https://relay.example.test:/v1/machines/machine-fixture-1/connect",
+   "now": 1800000000,
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+   "expectedAccessToken": null,
+   "shared": {
+    "ok": true,
+    "thumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
+    "jti": "proof-1",
+    "iat": 1800000000
+   }
+  },
+  {
    "name": "method_mismatch",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "GET",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -305,14 +851,14 @@
   {
    "name": "url_mismatch",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/other/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -323,9 +869,9 @@
   {
    "name": "key_mismatch",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
@@ -341,9 +887,9 @@
   {
    "name": "key_mismatch_before_bad_signature",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "vu7naFEmvUNW9B-qSo5_zCSXXVl5JraV7nVJs_dmkm1yfOHd17lvEqVvYvdbxAGTAkaeJTn23ryIJrSkVzkQZA"
+    "7FhZzCtV6l2Q3zvlqS0rSnV8gapJA6uR2moItpiNaSwBQt0_G7YvH-7Hi1gtwqR1nJZ6frUYp_XWtThmtg7i8w"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
@@ -359,14 +905,14 @@
   {
    "name": "method_mismatch_before_bad_signature",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "XPRufHTzeirsRFKAksJTNE75mt4rhvlmiRsPPvSM2tN9aXyZ6KMRCD3Avjt6mIK26yYfigyPvghMdxWCWQvkLg"
+    "f-Cc9F0082n4NZlAGU8Pp-a5DqFBHULWrBaM2Ap9WKke22NwhnP_InRDiiyOA7bUbz6F7BJpLegjnHJgvydF9g"
    ],
    "method": "GET",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -377,14 +923,14 @@
   {
    "name": "ath_missing",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": "relay-access-token-1",
    "shared": {
     "ok": false,
@@ -395,14 +941,14 @@
   {
    "name": "ath_wrong",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAsImF0aCI6IjJTbUtFTkd3YzFnMzNFdllYYXhrR3c4ODd5ZWtmbDFUcFU4dlAxc3Z6X28ifQ",
-    "BqZa9-Hwc2N4Opa5QyUxFYXI8D50lt70JU-wcBjBngF4jup6hKXW7IQyz8FBOPdbRF6f5MFdZDgIE0B1P6k9Zg"
+    "q2Kjf7gkmfxNKahOvUmB0qmYzLj2Yt_5BtChgDUJB3iQoVItTPTJnJPpds6xoiiqn7Exdd02Pqh7I9stTSA5CA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": "relay-access-token-1",
    "shared": {
     "ok": false,
@@ -413,14 +959,14 @@
   {
    "name": "ath_before_bad_signature",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "-dq0ADuTAFpDTuPSOTjuMAwkyj3Vycx1T7leVu6_2Jodzed-EJbeVR4xgFNaCDjs_mFh1lqctjw5MeyW2TGYWg"
+    "fM_NWSgbt6zcy1LcAqzXwjPlokCD98IbwBnbtPUlR9BBal1lVkn6J2IpRGbLJG_nSxHjgIl7xkxydTDt6E9XnA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": "relay-access-token-1",
    "shared": {
     "ok": false,
@@ -431,14 +977,14 @@
   {
    "name": "private_jwk_d",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2IiwiZCI6InBSYTVWcjBlUlRJOXVGa3hETEViblZmQmZmRDFlN1MtTmdZcWgyeVZrOEUifX0",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2IiwiZCI6IkVaQ1BMbmd6MU5PTjdibXFiNVlYb0NtTEJFNGkwMnpfZ3FpcnFmU3ZGV2cifX0",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "jYuZsGc3QvJyWkWamSTGJBnIcIxQDzfzzafasyBQ92i41aV-jysS5XUkL_B5NuHBQZwi9Nq914mfsTgTxkaoUA"
+    "JU9kAb0A7GCdCaqaWaioCwC5P8DHL8S8AIvpVFzpVHyIFimMfDDosFWzk6bsOjsvpgTHScDNJDRgnuHvwjgqQg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -451,12 +997,12 @@
    "parts": [
     "ew",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -467,14 +1013,14 @@
   {
    "name": "malformed_payload_json",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "ew",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -485,14 +1031,14 @@
   {
    "name": "header_not_base64url",
    "parts": [
-    "*eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "*eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "kiFeP4PBVMsUE55q_DSPgwZnBxKGFrz2RnUCdR3rwqgJJ-XLZftHyC4Z6_CjAU37tu9VvUWjQJoasuIrERbPCQ"
+    "avmCNwIwAgxFWv_t0ZCO19Suwao6EvRrMzbNST2zrzZklykemFLPy2DvNQ9aL1OEvgz2ruyEPibTv5J_SQtX4g"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -508,7 +1054,7 @@
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -524,7 +1070,7 @@
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -535,13 +1081,13 @@
   {
    "name": "two_parts",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -552,14 +1098,14 @@
   {
    "name": "empty_signature_part",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
     ""
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -570,14 +1116,14 @@
   {
    "name": "typ_wrong",
    "parts": [
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImp3ayI6eyJrdHkiOiJFQyIsIngiOiI1NzI2THUxZXQ3cWpyc2lEOUgxcVVaVWFzRHhDQS1DaTVIZ3dSRkJKaG9RIiwieSI6Ik91ODdudElMR2s5UzUtbFh2MU1RLXptYU1WLWUyWndNaTdsc29nNHJ5dVEiLCJjcnYiOiJQLTI1NiJ9fQ",
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImp3ayI6eyJrdHkiOiJFQyIsIngiOiJzMEdEVW91b2VtT25fRzJRYUxxbnZFeFJhdXJBeG9hMlBiVmFPREpXUEdFIiwieSI6Im5LWTJmdF9FV1Z6eDVZR0ZNaWxZbnpiN0ZlS1hJVDJfMkI3LVpxb2k1SkEiLCJjcnYiOiJQLTI1NiJ9fQ",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "7q9RvH32QYcI8WS8sH2aGgQHVnvnhrtU3q1sl0xLcVDOMRcftSLFzgS01G1D0Pwo_GSSLlfgzdLtuT3t3bzZ7Q"
+    "Ml-6xjE9sxgH825dnunurhAONDFuqEyrHruqtquk6__Ptz9VRiyYFm1h4SN-fgOhzzcNZpw0NBo00IM2gfIQNA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -588,14 +1134,14 @@
   {
    "name": "alg_es384",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMzg0IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMzg0IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "FJa00Cntw8U4zhakiFM0WcivOMuqqVz_s7p2pRnv4hLj9md2CfrCx6OJ3OFIYnq-sNnSlSn3U0QPuemQ9Ixlsg"
+    "fYi_WtHLCrX4Zo4uUyUXBfccAHvr__HWuXtHhbBWyYW3BOqaZ4wn6axitsMJtVIGF3JLgcAiGr5hFJRec1EMvQ"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -606,14 +1152,14 @@
   {
    "name": "kty_rsa",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IlJTQSIsIngiOiI1NzI2THUxZXQ3cWpyc2lEOUgxcVVaVWFzRHhDQS1DaTVIZ3dSRkJKaG9RIiwieSI6Ik91ODdudElMR2s5UzUtbFh2MU1RLXptYU1WLWUyWndNaTdsc29nNHJ5dVEiLCJjcnYiOiJQLTI1NiJ9fQ",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IlJTQSIsIngiOiJzMEdEVW91b2VtT25fRzJRYUxxbnZFeFJhdXJBeG9hMlBiVmFPREpXUEdFIiwieSI6Im5LWTJmdF9FV1Z6eDVZR0ZNaWxZbnpiN0ZlS1hJVDJfMkI3LVpxb2k1SkEiLCJjcnYiOiJQLTI1NiJ9fQ",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "_w8kjK2snTE5PPatD7rMouYdm5w_I9aPJrXRrzMH8OtqxrReyrdAA04Z2olLuDITO5Oz1zTiei9HVdeiJVcDDw"
+    "0mAcRM32zL0fwz0sVUqVeLFcShYazZpKKS09AYERvIssPk97q9WRenH0CP43kxruWWiglNtsp21QJ7K5K5LZpg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -624,14 +1170,14 @@
   {
    "name": "empty_jti",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6IiIsImlhdCI6MTgwMDAwMDAwMH0",
-    "tzvMLJLlax11n_meVAqaHaP2tSMSDdBeaSLjp8bUfIX35yqpc9sa2DYmmH8jACmjEu-Ux6SJxS3sfpuKISWeZg"
+    "og4fqFIY1CRxKMV7UQT7bBwB3OtpMfmkxI8m45NZBgDnaAIZqq25vZgUoNVKlSLqhWaUWB3cahgdQtHTsC1Hbg"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -642,14 +1188,14 @@
   {
    "name": "empty_htm",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiIiLCJodHUiOiJodHRwczovL3JlbGF5LmV4YW1wbGUudGVzdC92MS9tYWNoaW5lcy9tYWNoaW5lLWZpeHR1cmUtMS9jb25uZWN0IiwianRpIjoicHJvb2YtMSIsImlhdCI6MTgwMDAwMDAwMH0",
-    "aAKQxaW3YAcfJ5e1xo8BD2FAI8LBXJCBW1OjaCu-CylnyNMKq84WtLs9BsiKfZpN0aBfjHac43JgmK1M3qzdWA"
+    "QmUjo-skKBVoYTeR0Wa7dMlmW3YKRbI05WxuFokUE-QfC-OnDpM31-x_xM9Ll49xdl-wuz6MmthZqw0cAz8waA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -660,14 +1206,14 @@
   {
    "name": "iat_fraction",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAuNX0",
-    "Mig8PbziPS3Uhufkxrur2qs0ISHMcEMn-fKuQ_zINQzx1Dibu0usfwrVIieM3a7cTSvNqBGpiSuis3bbmpvzQw"
+    "hgQgsEZ-LgwVOGAJCAjDbd2EMBp1OSHO3dQRakKyrPF26YG0UYNMR1BKix_MsRJ9wUYuinnCdavrE8NJkAmjWw"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -678,14 +1224,14 @@
   {
    "name": "iat_string",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOiIxODAwMDAwMDAwIn0",
-    "eoF_MIlnKcX2y6nrGwV1tHr_kChfmJYCoIp1B-rOJbjzhfskqt8DA3TOG69O_djCkpOB0W0iMfx1WRQ8_mROAQ"
+    "6-LG-mugjCWAmNO8R2yjlhxxer1u3Psp1I-vtL8CWajMMbQ1vW5RaMrt3ZofPO_3ogWhuNUOeoT5AgV-dxh5Lw"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -696,14 +1242,14 @@
   {
    "name": "ath_not_string",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDAsImF0aCI6MX0",
-    "ZPwEWTCuAvz2jhtIDmAE4re0S1mtwJTqFazWNnW52EjfSSUjHUpoDBQvitPyjX5xfutmTxOf-yI0xOqXylrymQ"
+    "MlPHiR0RdqC4LzNDqwhg8rvHW9DksTJ-S9uxPVht-4B1CHva6uNK15wwrOFlx6pctqm9u6rFrP84kz5e_ojlSA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -714,9 +1260,9 @@
   {
    "name": "x_31_bytes",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUSIsInkiOiJPdTg3bnRJTEdrOVM1LWxYdjFNUS16bWFNVi1lMlp3TWk3bHNvZzRyeXVRIiwiY3J2IjoiUC0yNTYifX0",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUSIsInkiOiJuS1kyZnRfRVdWeng1WUdGTWlsWW56YjdGZUtYSVQyXzJCNy1acW9pNUpBIiwiY3J2IjoiUC0yNTYifX0",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "WFpIXfmKK4KS7LFUUo2wuBVyZOA4QXCwalcfSC_bRaWo5ibPeyob5KhEMadEI__6nik9h1pCNM0zsr3r1XSlIA"
+    "2LLqymiwLxyh6Syz-ponVkRjptjgnJ6IMwQSEtJIyY4rCrzAdwrsHs_b7K2GLh7G3sHECz50H3ITyaY8NXZXQQ"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
@@ -732,9 +1278,9 @@
   {
    "name": "point_off_curve",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRSIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoiQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "OvJlxIpc_pFbHXtJEgaTqGcwYYgQVEpibFcsEjMComDheYbZ7xPIfZCdzKvJZYZ8bJ_iHe3INMqO2aAID2_cmg"
+    "C462nTwwlSjrVESAy9DZWyDGkZsKair2osDCtnAT7IXLS36xOPwIp_gEXuHOd17gfgnnRoEgToeBokY_METbCA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
@@ -750,14 +1296,14 @@
   {
    "name": "signature_63_bytes",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "-NrU9sroZYiXYEZCCD7Imi7wn2m-7LFGtJy7zHtbnaKEZXVl0FYTur6EVUxbtCvM0IZkxJd5N0MAdjgs1Lgo"
+    "BddwRY71VeFkxUDFPMtXFM9EoUDu6VZRlgBnHfJFrkrq7KyPU2D-e981UejRz9GR_Ls9POXadNdrjGm6xvgQ"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,
@@ -768,14 +1314,14 @@
   {
    "name": "signature_zero_s",
    "parts": [
-    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IjU3MjZMdTFldDdxanJzaUQ5SDFxVVpVYXNEeENBLUNpNUhnd1JGQkpob1EiLCJ5IjoiT3U4N250SUxHazlTNS1sWHYxTVEtem1hTVYtZTJad01pN2xzb2c0cnl1USIsImNydiI6IlAtMjU2In19",
+    "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6InMwR0RVb3VvZW1Pbl9HMlFhTHFudkV4UmF1ckF4b2EyUGJWYU9ESldQR0UiLCJ5IjoibktZMmZ0X0VXVnp4NVlHRk1pbFluemI3RmVLWElUMl8yQjctWnFvaTVKQSIsImNydiI6IlAtMjU2In19",
     "eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLnRlc3QvdjEvbWFjaGluZXMvbWFjaGluZS1maXh0dXJlLTEvY29ubmVjdCIsImp0aSI6InByb29mLTEiLCJpYXQiOjE4MDAwMDAwMDB9",
-    "4KVWNhK96T_pQ4cXyjT_jISc5vsDrYWCeK6KVppXq4IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "XQOuvzVfHaZZUqvPzcj8nbiCVxmlyCeibwtBOtwCtS4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
    ],
    "method": "POST",
    "url": "https://relay.example.test/v1/machines/machine-fixture-1/connect",
    "now": 1800000000,
-   "expectedThumbprint": "qnNB80GMCBwnl_hah-o15S-4zItoAe5GElG5G1AkdEg",
+   "expectedThumbprint": "QWP4yfRbQz2JEgfaImvtc9B3Fd5V8OZ_jpGxOKR5sqw",
    "expectedAccessToken": null,
    "shared": {
     "ok": false,

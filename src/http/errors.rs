@@ -268,6 +268,28 @@ mod tests {
         ));
     }
 
+    // Vekrel-Engine relay.conformance.test.ts pins the same literal from Shared's
+    // `Schema.encodeSync(RelayInternalError)` and Effect's 32-hex span trace id (Task 13).
+    #[test]
+    fn internal_error_body_is_what_shared_encodes() {
+        let b = RelayError::internal("persistence_failed")
+            .body()
+            .to_string();
+        let (head, trace) = b.split_at(b.len() - 34);
+        assert_eq!(
+            head,
+            r#"{"_tag":"RelayInternalError","code":"internal_error","reason":"persistence_failed","traceId":""#
+        );
+        assert_eq!(trace.len(), 34);
+        assert!(trace.ends_with("\"}"));
+        assert!(
+            trace[..32]
+                .bytes()
+                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)),
+            "{trace}"
+        );
+    }
+
     #[test]
     fn tns_trims_as_js_trim() {
         let tns = |s: &str| serde_json::from_value::<Tns>(Value::String(s.into())).map(|t| t.0);

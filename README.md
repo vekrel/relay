@@ -30,6 +30,7 @@ Environment variables only:
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RELAY_MINT_PRIVATE_KEY` | unset | Required by `serve`. Ed25519 PKCS#8 PEM (`keygen`, first block; literal `\n` allowed). Signs link challenges, relay DPoP tokens and requests to machines; machines pin its public key at link time, so rotating it means relinking every machine |
 | `RELAY_TUNNEL_ZONE_NAME` | unset | Zone holding managed tunnel hosts (T3 `managedEndpointBaseDomain`). Unset: connect and status refuse managed endpoints (`managed_endpoint_base_domain_not_configured`) |
+| `RELAY_DEV_MACHINE_ENDPOINT` | unset | Local conformance runs only: connect and status send their machine requests to this loopback base (`http://127.0.0.1:<port>`) instead of `https://<tunnel host>/`. `serve` refuses it unless both it and `RELAY_ORIGIN` are loopback |
 | `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`, `APNS_ENVIRONMENT` | unset | APNs (iOS alerts and Live Activities): Team ID, the auth key's Key ID, the app's bundle id, the `.p8` (PKCS#8 PEM, literal `\n` allowed, never logged) and `sandbox` or `production`. All or none; none means no iOS push is queued (T3 with APNs off). A device's registered bundle id and APS environment win per device |
 | `APNS_BUNDLE_IDS` | `APNS_BUNDLE_ID` | Comma list of bundle ids a device may register as its APNs topic (dev/preview/prod builds); others get 400 and stored ones are never used (Vekrel; T3 takes any) |
 | `FCM_PACKAGE_NAMES` | unset | Required with `FCM_SERVICE_ACCOUNT`: comma list of Android packages a device may register (Vekrel; T3 takes any) |
@@ -49,6 +50,8 @@ scripts/smoke.sh http://127.0.0.1:8080   # GET /health -> {"ok":true,"service":"
 cargo run -- keygen                      # fresh Ed25519 key: PKCS#8 PEM, then the public JWK
 cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status next; set active for the first key)
 ```
+
+Conformance gate (plan 6A Task 13): Vekrel-Engine `apps/server/test/relay-conformance/relay.conformance.test.ts` drives the Engine's `CloudLink` and client-runtime's `managedRelay` against a running relay and decodes every answer with Shared's schemas in strict mode. Its header lists the relay settings (`RELAY_ORIGIN=https://localhost:<port>`, a fake Cloudflare in `CLOUDFLARE_API_BASE`, `RELAY_DEV_MACHINE_ENDPOINT`) and the `RELAY_CONFORMANCE_*` variables.
 
 ## Accounts
 

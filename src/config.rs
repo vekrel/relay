@@ -58,6 +58,10 @@ pub struct Config {
     /// `RELAY_TUNNEL_ZONE_NAME`: zone that holds managed tunnel hostnames (T3
     /// `managedEndpointBaseDomain`); unset means connect refuses managed endpoints.
     pub tunnel_zone: Option<String>,
+    /// `RELAY_DEV_MACHINE_ENDPOINT`: local conformance runs only. Machine requests (connect, status)
+    /// go to this loopback base instead of `https://<tunnel host>/`. Refused unless `RELAY_ORIGIN`
+    /// and the value are both loopback, so a deployed relay can never use it.
+    pub dev_machine_endpoint: Option<String>,
     /// APNs and FCM (`crate::push::config`).
     pub push: crate::push::PushConfig,
     /// `RELAY_STAGE`: T3's stage, the namespace of tunnel names and hosts (`prod-<digest>`).
@@ -288,6 +292,10 @@ impl Config {
                 ("JWKS_URL", "https://www.googleapis.com/oauth2/v3/certs"),
             ],
         )?;
+        let dev_machine_endpoint = match get("RELAY_DEV_MACHINE_ENDPOINT") {
+            None => None,
+            Some(v) => Some(dev_machine_endpoint(&relay_origin, &v)?),
+        };
         Ok(Self {
             addr: SocketAddr::from(([0, 0, 0, 0], port)),
             relay_origin,
@@ -302,6 +310,7 @@ impl Config {
                 .filter(|s| !s.trim().is_empty())
                 .map(Secret),
             tunnel_zone: get("RELAY_TUNNEL_ZONE_NAME").filter(|s| !s.trim().is_empty()),
+            dev_machine_endpoint,
             push: crate::push::PushConfig::from_lookup(&get)?,
             stage: get("RELAY_STAGE").filter(|s| !s.trim().is_empty()),
             cloudflare: cloudflare(&get)?,
@@ -342,6 +351,24 @@ fn test_lookup(vars: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
         }
     }
     move |k| m.get(k).cloned()
+}
+
+/// A loopback `http(s)://host:port` base with no path, and only next to a loopback `RELAY_ORIGIN`.
+fn dev_machine_endpoint(relay_origin: &str, value: &str) -> Result<String, String> {
+    let url = url::Url::parse(value.trim()).ok().filter(|u| {
+        matches!(u.scheme(), "http" | "https")
+            && u.path() == "/"
+            && u.query().is_none()
+            && u.username().is_empty()
+    });
+    match url {
+        Some(u) if is_loopback_origin(relay_origin) && is_loopback_origin(u.as_str()) => {
+            Ok(u.to_string())
+        }
+        _ => Err(format!(
+            "RELAY_DEV_MACHINE_ENDPOINT must be a loopback http(s) origin and needs a loopback RELAY_ORIGIN, got {value:?} with {relay_origin:?}"
+        )),
+    }
 }
 
 /// `http(s)://localhost`, `127.0.0.1` (any 127/8) or `[::1]`, any port.
@@ -600,5 +627,43 @@ mod tests {
         }
         // The default origin is loopback.
         assert!(load_raw(&[("MAGIC_LINK_TRANSPORT", "log")]).is_ok());
+    }
+
+    #[test]
+    fn dev_machine_endpoint_only_on_loopback() {
+        let load = |origin: &str, endpoint: Option<&str>| {
+            let mut v = vec![
+                ("RELAY_ORIGIN", origin),
+                ("RESEND_API_KEY", "k"),
+                ("MAGIC_LINK_FROM", "a@example.com"),
+            ];
+            v.extend(endpoint.map(|e| ("RELAY_DEV_MACHINE_ENDPOINT", e)));
+            load_raw(&v)
+        };
+        assert_eq!(
+            load("https://localhost:1", None)
+                .unwrap()
+                .dev_machine_endpoint,
+            None
+        );
+        let c = load("https://localhost:18613", Some("http://127.0.0.1:18614")).unwrap();
+        assert_eq!(
+            c.dev_machine_endpoint.as_deref(),
+            Some("http://127.0.0.1:18614/")
+        );
+        for (origin, endpoint) in [
+            ("https://relay.example.com", "http://127.0.0.1:18614"),
+            ("http://10.0.0.5:8080", "http://127.0.0.1:18614"),
+            ("http://localhost:8080", "http://10.0.0.5:18614"),
+            ("http://localhost:8080", "https://machine.example.com"),
+            ("http://localhost:8080", "ftp://127.0.0.1:18614"),
+            ("http://localhost:8080", "http://127.0.0.1:18614/api"),
+        ] {
+            let err = load(origin, Some(endpoint)).unwrap_err();
+            assert!(
+                err.contains("RELAY_DEV_MACHINE_ENDPOINT"),
+                "{origin} {endpoint}: {err}"
+            );
+        }
     }
 }

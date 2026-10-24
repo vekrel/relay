@@ -34,8 +34,8 @@ pub struct Relay {
     pub provider: Arc<dyn provider::ManagedEndpoints>,
     /// Redirects disabled (`withoutRedirects`).
     pub http: reqwest::Client,
-    /// Tests send machine requests to a local fake instead of the managed https endpoint.
-    #[cfg(test)]
+    /// Tests and local conformance runs (`RELAY_DEV_MACHINE_ENDPOINT`, loopback only) send machine
+    /// requests to a local machine instead of the managed https endpoint.
     pub endpoint_override: Option<String>,
 }
 
@@ -66,7 +66,6 @@ impl Relay {
                 .redirect(reqwest::redirect::Policy::none())
                 .build()
                 .expect("HTTP client builds"),
-            #[cfg(test)]
             endpoint_override: None,
         }
     }
