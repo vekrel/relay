@@ -18,12 +18,17 @@ pub enum Refusal {
     /// New email, `SIGNUP_MODE=allowlist`, not in `signup_allowlist`.
     NotAllowed,
     Disabled,
+    /// New identity, its email belongs to an existing user, and the provider may not link it.
+    EmailTaken,
 }
 
+/// With `link_by_email` false a first-seen identity whose email already has a user is refused
+/// instead of attached (Google for addresses it is not authoritative for).
 pub async fn resolve_user(
     pool: &PgPool,
     mode: SignupMode,
     id: &VerifiedIdentity,
+    link_by_email: bool,
 ) -> Result<Result<Uuid, Refusal>, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let known: Option<(Uuid, bool)> = sqlx::query_as(
@@ -44,6 +49,7 @@ pub async fn resolve_user(
             .fetch_optional(&mut *tx)
             .await?;
             let user = match by_email {
+                Some(_) if !link_by_email => return Ok(Err(Refusal::EmailTaken)),
                 Some(u) => u,
                 None => {
                     let allowed = mode == SignupMode::Open
@@ -115,7 +121,7 @@ mod tests {
     async fn allowlist_mode_creates_only_listed_emails(pool: PgPool) {
         let a = SignupMode::Allowlist;
         assert_eq!(
-            resolve_user(&pool, a, &ident("1", "out@example.test"))
+            resolve_user(&pool, a, &ident("1", "out@example.test"), true)
                 .await
                 .unwrap(),
             Err(Refusal::NotAllowed)
@@ -125,12 +131,12 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
-        let id = resolve_user(&pool, a, &ident("2", "in@example.test"))
+        let id = resolve_user(&pool, a, &ident("2", "in@example.test"), true)
             .await
             .unwrap()
             .unwrap();
         // Same identity again: same user, no new row.
-        let again = resolve_user(&pool, a, &ident("2", "in@example.test"))
+        let again = resolve_user(&pool, a, &ident("2", "in@example.test"), true)
             .await
             .unwrap()
             .unwrap();
@@ -140,7 +146,7 @@ mod tests {
 
     #[sqlx::test]
     async fn open_mode_creates_users(pool: PgPool) {
-        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"))
+        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
             .await
             .unwrap();
         assert!(id.is_ok());
@@ -149,7 +155,7 @@ mod tests {
 
     #[sqlx::test]
     async fn existing_user_signs_in_even_when_not_listed(pool: PgPool) {
-        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"))
+        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
             .await
             .unwrap()
             .unwrap();
@@ -158,6 +164,7 @@ mod tests {
             &pool,
             SignupMode::Allowlist,
             &ident("other", "A@example.test"),
+            true,
         )
         .await
         .unwrap()
@@ -173,7 +180,7 @@ mod tests {
 
     #[sqlx::test]
     async fn disabled_user_is_refused(pool: PgPool) {
-        resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"))
+        resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
             .await
             .unwrap()
             .unwrap();
@@ -183,7 +190,9 @@ mod tests {
             .unwrap();
         for i in [ident("1", "a@example.test"), ident("new", "a@example.test")] {
             assert_eq!(
-                resolve_user(&pool, SignupMode::Open, &i).await.unwrap(),
+                resolve_user(&pool, SignupMode::Open, &i, true)
+                    .await
+                    .unwrap(),
                 Err(Refusal::Disabled)
             );
         }
@@ -192,5 +201,35 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(n, 1, "no identity attached to a disabled user");
+    }
+
+    #[sqlx::test]
+    async fn non_linking_identity_never_attaches_by_email(pool: PgPool) {
+        let o = SignupMode::Open;
+        resolve_user(&pool, o, &ident("1", "a@example.test"), true)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            resolve_user(&pool, o, &ident("g", "A@example.test"), false)
+                .await
+                .unwrap(),
+            Err(Refusal::EmailTaken)
+        );
+        let n: i64 = sqlx::query_scalar("SELECT count(*) FROM identities")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(n, 1, "nothing attached");
+        // A new email still signs up, and that identity signs back in.
+        let id = resolve_user(&pool, o, &ident("g", "new@example.test"), false)
+            .await
+            .unwrap()
+            .unwrap();
+        let again = resolve_user(&pool, o, &ident("g", "new@example.test"), false)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(id, again);
     }
 }

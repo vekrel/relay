@@ -3,7 +3,7 @@
 // revoke on reuse), `POST /oauth/revoke`. Our own layer: T3 used Clerk here. The token response
 // keeps the shape Engine `cloud/CliTokenManager.ts` reads.
 //
-// Providers (Tasks 6-8) plug in by calling `complete_sign_in` with a `VerifiedIdentity` from the
+// Providers (Tasks 6-8, `providers/`) plug in by calling `complete_sign_in` with a `VerifiedIdentity` from the
 // browser that opened `/oauth/authorize`: the pending request is bound to that browser by an
 // HttpOnly cookie. Secrets (codes, refresh tokens) are stored as SHA-256 hashes and never logged.
 use std::sync::Arc;
@@ -287,6 +287,17 @@ pub async fn complete_sign_in(
     headers: &HeaderMap,
     identity: VerifiedIdentity,
 ) -> Response {
+    complete_sign_in_linking(s, headers, identity, true).await
+}
+
+/// `complete_sign_in`; with `link_by_email` false a new identity may not attach to an existing
+/// user by email (the provider is not authoritative for that address).
+pub(super) async fn complete_sign_in_linking(
+    s: &AccountsState,
+    headers: &HeaderMap,
+    identity: VerifiedIdentity,
+    link_by_email: bool,
+) -> Response {
     let Some(request_id) = cookie(headers, AUTH_REQUEST_COOKIE) else {
         return expired_page();
     };
@@ -304,7 +315,8 @@ pub async fn complete_sign_in(
     let Some((client_id, redirect_uri, challenge, state, true)) = pending else {
         return expired_page();
     };
-    let user_id = match signup::resolve_user(&s.pool, s.signup_mode, &identity).await {
+    let resolved = signup::resolve_user(&s.pool, s.signup_mode, &identity, link_by_email).await;
+    let user_id = match resolved {
         Err(e) => return internal(e),
         Ok(Err(Refusal::NotAllowed)) => {
             tracing::info!(
@@ -326,6 +338,17 @@ pub async fn complete_sign_in(
                 StatusCode::FORBIDDEN,
                 "Account disabled",
                 "This Vekrel account is disabled.",
+            );
+        }
+        Ok(Err(Refusal::EmailTaken)) => {
+            tracing::info!(
+                provider = identity.provider,
+                "sign-in refused: email belongs to an account this provider may not link"
+            );
+            return message(
+                StatusCode::FORBIDDEN,
+                "Use your usual sign-in",
+                "This email already has a Vekrel account. Sign in with your usual method.",
             );
         }
         Ok(Ok(id)) => id,

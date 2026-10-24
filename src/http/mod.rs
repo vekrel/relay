@@ -13,6 +13,7 @@ use crate::accounts::device;
 use crate::accounts::keys::SigningKeys;
 use crate::accounts::magic_link;
 use crate::accounts::oauth::{self, AccountsState};
+use crate::accounts::providers;
 use crate::config::Config;
 
 pub mod wellknown;
@@ -25,7 +26,8 @@ pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
         .merge(wellknown::router(&keys, &config.relay_origin))
         .merge(oauth::router(accounts.clone()))
         .merge(device::router(accounts.clone()))
-        .merge(magic_link::router(accounts, config))
+        .merge(magic_link::router(accounts.clone(), config))
+        .merge(providers::router(accounts, config))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {

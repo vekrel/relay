@@ -6,6 +6,7 @@ pub mod device;
 pub mod keys;
 pub mod magic_link;
 pub mod oauth;
+pub mod providers;
 pub mod signup;
 #[allow(dead_code)]
 pub mod tokens;

@@ -48,6 +48,58 @@ pub struct Config {
     /// Set true on Railway only once staging shows the edge overwrites a client-sent `X-Real-IP`
     /// (plan 6A Task 2); then the header is used, falling back to the peer.
     pub trust_proxy_ip_header: bool,
+    /// `GITHUB_CLIENT_ID` + `GITHUB_CLIENT_SECRET` (both or neither); endpoints overridable for tests.
+    pub github: Option<OAuthApp>,
+    /// `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (both or neither); endpoints overridable for tests.
+    pub google: Option<OAuthApp>,
+}
+
+/// An upstream OAuth app (plan 6A Task 6). `Debug` leaves the secret out.
+#[derive(Clone)]
+pub struct OAuthApp {
+    pub client_id: String,
+    pub client_secret: String,
+    pub authorize_url: String,
+    pub token_url: String,
+    /// GitHub: the REST API base (`/user`, `/user/emails`). Google: the JWKS URL.
+    pub data_url: String,
+}
+
+impl std::fmt::Debug for OAuthApp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OAuthApp")
+            .field("client_id", &self.client_id)
+            .field("authorize_url", &self.authorize_url)
+            .field("token_url", &self.token_url)
+            .field("data_url", &self.data_url)
+            .finish_non_exhaustive()
+    }
+}
+
+/// `<P>_CLIENT_ID`, `<P>_CLIENT_SECRET`, and `<P>_<url name>` overrides of `urls` (name, default).
+fn oauth_app(
+    get: &impl Fn(&str) -> Option<String>,
+    p: &str,
+    urls: [(&str, &str); 3],
+) -> Result<Option<OAuthApp>, String> {
+    let get = |k: &str| get(&format!("{p}_{k}")).filter(|v| !v.is_empty());
+    let (client_id, client_secret) = match (get("CLIENT_ID"), get("CLIENT_SECRET")) {
+        (None, None) => return Ok(None),
+        (Some(id), Some(secret)) => (id, secret),
+        _ => {
+            return Err(format!(
+                "set both {p}_CLIENT_ID and {p}_CLIENT_SECRET, or neither"
+            ));
+        }
+    };
+    let [a, t, d] = urls.map(|(name, default)| get(name).unwrap_or_else(|| default.to_owned()));
+    Ok(Some(OAuthApp {
+        client_id,
+        client_secret,
+        authorize_url: a,
+        token_url: t,
+        data_url: d,
+    }))
 }
 
 impl Config {
@@ -130,6 +182,27 @@ impl Config {
                 ));
             }
         };
+        let github = oauth_app(
+            &get,
+            "GITHUB",
+            [
+                ("AUTHORIZE_URL", "https://github.com/login/oauth/authorize"),
+                ("TOKEN_URL", "https://github.com/login/oauth/access_token"),
+                ("API_URL", "https://api.github.com"),
+            ],
+        )?;
+        let google = oauth_app(
+            &get,
+            "GOOGLE",
+            [
+                (
+                    "AUTHORIZE_URL",
+                    "https://accounts.google.com/o/oauth2/v2/auth",
+                ),
+                ("TOKEN_URL", "https://oauth2.googleapis.com/token"),
+                ("JWKS_URL", "https://www.googleapis.com/oauth2/v3/certs"),
+            ],
+        )?;
         Ok(Self {
             addr: SocketAddr::from(([0, 0, 0, 0], port)),
             relay_origin,
@@ -138,6 +211,8 @@ impl Config {
             web_origins,
             magic_link_transport,
             trust_proxy_ip_header,
+            github,
+            google,
         })
     }
 
@@ -207,6 +282,32 @@ mod tests {
         assert!(load(&[("MAGIC_LINK_TRANSPORT", "smtp")]).is_err());
         assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "production")]).is_err());
         assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "staging")]).is_ok());
+        assert!(c.github.is_none() && c.google.is_none());
+    }
+
+    #[test]
+    fn oauth_apps() {
+        let c = load(&[
+            ("GITHUB_CLIENT_ID", "gh-id"),
+            ("GITHUB_CLIENT_SECRET", "gh-secret"),
+            ("GOOGLE_CLIENT_ID", "g-id"),
+            ("GOOGLE_CLIENT_SECRET", "g-secret"),
+            ("GOOGLE_JWKS_URL", "http://127.0.0.1:9/certs"),
+        ])
+        .unwrap();
+        let gh = c.github.unwrap();
+        assert_eq!(gh.client_id, "gh-id");
+        assert_eq!(gh.token_url, "https://github.com/login/oauth/access_token");
+        assert_eq!(gh.data_url, "https://api.github.com");
+        let g = c.google.unwrap();
+        assert_eq!(
+            g.authorize_url,
+            "https://accounts.google.com/o/oauth2/v2/auth"
+        );
+        assert_eq!(g.data_url, "http://127.0.0.1:9/certs");
+        assert!(!format!("{g:?}").contains("g-secret"));
+        assert!(load(&[("GITHUB_CLIENT_ID", "x")]).is_err());
+        assert!(load(&[("GOOGLE_CLIENT_SECRET", "x")]).is_err());
     }
 
     #[test]
