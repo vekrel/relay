@@ -3,6 +3,7 @@ FROM rust:1-bookworm AS build
 WORKDIR /src
 COPY Cargo.toml Cargo.lock build.rs ./
 COPY migrations ./migrations
+COPY templates ./templates
 COPY src ./src
 RUN cargo build --release --locked
 
