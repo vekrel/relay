@@ -69,16 +69,42 @@ async fn lock_endpoint(conn: &mut PgConnection, endpoint_key: &str) -> Result<()
     Ok(())
 }
 
-/// `hold`: false when the endpoint's inbox is full (or the id is already held) and nothing was
-/// stored. The first attempt is due after the current backoff.
+/// What `hold` did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Held {
+    Stored,
+    /// The inbox is full (or the id is already held): T3's `false`.
+    Full,
+    /// Vekrel: no active managed link of an enabled user holds webhooks for this endpoint (any
+    /// more). Checked under the endpoint lock, so a hold racing an unlink, opt-out or disable
+    /// (each clears under the same lock) stores nothing.
+    NotAllowed,
+}
+
+/// The endpoint key names an active managed link that opted in, of a user who is not disabled.
+const AUTHORIZED: &str = "EXISTS (SELECT 1 FROM relay_managed_endpoint_allocations a
+    JOIN users u ON u.id = a.user_id AND u.disabled_at IS NULL
+    JOIN relay_machine_links l ON l.user_id = a.user_id AND l.machine_id = a.machine_id
+     AND l.revoked_at IS NULL AND l.hold_webhooks_while_offline
+     AND l.endpoint_provider_kind = 'cloudflare_tunnel'
+    WHERE right(a.tunnel_name, 17) = '-' || $1)";
+
+/// `hold`: stores the request; the first attempt is due after the current backoff.
 pub async fn hold(
     pool: &PgPool,
     endpoint_key: &str,
     base_url: &str,
     hook: &Hook,
-) -> Result<bool, sqlx::Error> {
+) -> Result<Held, sqlx::Error> {
     let mut tx = pool.begin().await?;
     lock_endpoint(&mut tx, endpoint_key).await?;
+    let allowed: bool = sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT {AUTHORIZED}")))
+        .bind(endpoint_key)
+        .fetch_one(&mut *tx)
+        .await?;
+    if !allowed {
+        return Ok(Held::NotAllowed);
+    }
     let inserted = sqlx::query(
         "INSERT INTO relay_held_hooks (id, endpoint_key, received_at, method, raw_hook_id,
             raw_token, hook_key, query, headers, body)
@@ -107,7 +133,7 @@ pub async fn hold(
     .rows_affected();
     if inserted == 0 {
         tracing::info!(endpoint_key, "held webhook refused: inbox full");
-        return Ok(false);
+        return Ok(Held::Full);
     }
     let failures: i32 = sqlx::query_scalar(
         "INSERT INTO relay_held_hook_targets (endpoint_key, base_url) VALUES ($1, $2)
@@ -120,7 +146,7 @@ pub async fn hold(
     .await?;
     schedule_by(&mut tx, endpoint_key, now_ms() + retry_delay_ms(failures)).await?;
     tx.commit().await?;
-    Ok(true)
+    Ok(Held::Stored)
 }
 
 /// `scheduleBy`: never pushes an earlier due time out.
@@ -160,8 +186,10 @@ pub async fn wake(pool: &PgPool, endpoint_key: &str, base_url: &str) -> Result<b
     Ok(pending > 0)
 }
 
-/// `clear`: drops every held request of the endpoint.
+/// `clear`: drops every held request of the endpoint. Takes the endpoint lock (held to the end of
+/// the caller's transaction), so it serializes with `hold`.
 pub async fn clear(conn: &mut PgConnection, endpoint_key: &str) -> Result<u64, sqlx::Error> {
+    lock_endpoint(conn, endpoint_key).await?;
     let n = sqlx::query("DELETE FROM relay_held_hooks WHERE endpoint_key = $1")
         .bind(endpoint_key)
         .execute(&mut *conn)
@@ -272,11 +300,25 @@ async fn reset_failures(pool: &PgPool, endpoint_key: &str) -> Result<(), sqlx::E
 pub async fn deliver_due(
     relay: &Relay,
     endpoint_key: &str,
-    base_url: &str,
     mut failures: i32,
 ) -> Result<Option<i64>, sqlx::Error> {
     let pool = &relay.pool;
     let started_at = now_ms();
+    // Vekrel: the endpoint must still be allowed its held requests (active link, hold on, user
+    // enabled); if not, drop them instead of delivering. The base URL is the one resolved now.
+    let resolved = super::held::resolve_endpoint(relay, endpoint_key).await?;
+    let Some(endpoint) = resolved.filter(|e| e.hold_while_offline) else {
+        let mut tx = pool.begin().await?;
+        let n = clear(&mut tx, endpoint_key).await?;
+        tx.commit().await?;
+        tracing::info!(
+            endpoint_key,
+            dropped = n,
+            "held webhooks dropped: endpoint no longer holds"
+        );
+        return Ok(None);
+    };
+    let base_url = endpoint.http_base_url.as_str();
     let read_page = |after: i64, skip: Vec<String>| {
         sqlx::query(
             "SELECT seq, id, received_at, method, raw_hook_id, raw_token, hook_key, query, headers,
@@ -387,7 +429,7 @@ pub async fn deliver_due(
     }))
 }
 
-/// One due endpoint, leased to this caller: `(endpoint_key, base_url, failures, lease_mark)`.
+/// One due endpoint, leased to this caller: `(endpoint_key, failures, lease_mark)`.
 pub(crate) async fn claim(pool: &PgPool) -> Result<Option<Claim>, sqlx::Error> {
     let now = now_ms();
     let mark = now + LEASE_MS;
@@ -398,13 +440,13 @@ pub(crate) async fn claim(pool: &PgPool) -> Result<Option<Claim>, sqlx::Error> {
             SELECT endpoint_key FROM relay_held_hook_targets
             WHERE next_attempt_at_ms <= $1 AND (locked_until_ms IS NULL OR locked_until_ms <= $1)
             ORDER BY next_attempt_at_ms LIMIT 1 FOR UPDATE SKIP LOCKED)
-         RETURNING endpoint_key, base_url, failures",
+         RETURNING endpoint_key, failures",
     )
     .bind(now)
     .bind(mark)
     .fetch_optional(pool)
     .await?;
-    Ok(row.map(|r| (r.get(0), r.get(1), r.get(2), mark)))
+    Ok(row.map(|r| (r.get(0), r.get(1), mark)))
 }
 
 /// Ends a claim. A hold or wake during the run moved the due time off the lease mark; keep the
@@ -432,13 +474,10 @@ async fn release(
     Ok(())
 }
 
-pub(crate) type Claim = (String, String, i32, i64);
+pub(crate) type Claim = (String, i32, i64);
 
-async fn run_claimed(
-    relay: &Relay,
-    (key, base_url, failures, mark): Claim,
-) -> Result<(), sqlx::Error> {
-    let next = match deliver_due(relay, &key, &base_url, failures).await {
+async fn run_claimed(relay: &Relay, (key, failures, mark): Claim) -> Result<(), sqlx::Error> {
+    let next = match deliver_due(relay, &key, failures).await {
         Ok(next) => next,
         Err(e) => {
             tracing::warn!(error = %e, endpoint_key = %key, "held webhook delivery run failed");

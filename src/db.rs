@@ -53,7 +53,7 @@ mod tests {
     #[sqlx::test(migrations = false)]
     async fn migrations_apply_on_empty_db_and_are_idempotent(pool: PgPool) {
         let first = migrate(&pool).await.unwrap();
-        assert_eq!(first, vec![1, 2, 3, 4]);
+        assert_eq!(first, vec![1, 2, 3, 4, 11]);
         for table in [
             "relay_machine_links",
             "relay_managed_endpoint_allocations",
@@ -82,7 +82,7 @@ mod tests {
         }
         // Second boot: nothing new to apply, nothing fails.
         assert_eq!(migrate(&pool).await.unwrap(), first);
-        assert_eq!(count(&pool, "_sqlx_migrations").await, 4);
+        assert_eq!(count(&pool, "_sqlx_migrations").await, first.len() as i64);
     }
 
     #[sqlx::test(migrator = "MIGRATOR")]

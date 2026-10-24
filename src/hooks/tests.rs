@@ -133,7 +133,9 @@ async fn setup(pool: PgPool, hold: bool) -> T {
             .await
             .unwrap();
     add_link(&pool, user, "m1", hold).await;
-    let credential = credentials::create(&pool, "m1", "mk").await.unwrap();
+    let credential = credentials::create(&mut pool.acquire().await.unwrap(), "m1", "mk")
+        .await
+        .unwrap();
     let mint = test_only_key("relayMint");
     let mut relay = Relay::new(
         pool.clone(),
@@ -475,15 +477,15 @@ async fn a_busy_hook_waits_while_others_go_and_unreachable_backs_off(pool: PgPoo
         hook_row("a2", "hook-a", b"a2"),
         hook_row("b1", "hook-b", b"b1"),
     ] {
-        assert!(inbox::hold(&t.pool, KEY, BASE, &r).await.unwrap());
+        assert_eq!(
+            inbox::hold(&t.pool, KEY, BASE, &r).await.unwrap(),
+            inbox::Held::Stored
+        );
     }
     // hook-a answers 429 (busy): its next request waits, hook-b's goes through.
     t.machine.answer(&[429, 200]);
     let now = now_ms();
-    let next = inbox::deliver_due(&t.relay, KEY, BASE, 0)
-        .await
-        .unwrap()
-        .unwrap();
+    let next = inbox::deliver_due(&t.relay, KEY, 0).await.unwrap().unwrap();
     assert!((now..now + 5_000).contains(&next), "more is due now");
     let ids: Vec<String> = t.held().await.into_iter().map(|h| h.0).collect();
     assert_eq!(ids, ["a1", "a2"]);
@@ -492,18 +494,12 @@ async fn a_busy_hook_waits_while_others_go_and_unreachable_backs_off(pool: PgPoo
     // Only busy hooks left: retry in 30 s.
     t.machine.answer(&[429]);
     let now = now_ms();
-    let next = inbox::deliver_due(&t.relay, KEY, BASE, 0)
-        .await
-        .unwrap()
-        .unwrap();
+    let next = inbox::deliver_due(&t.relay, KEY, 0).await.unwrap().unwrap();
     assert!((now + 30_000..now + 35_000).contains(&next));
     // Unreachable: stop, count the failure, retry in 10 s.
     t.machine.answer(&[530]);
     let now = now_ms();
-    let next = inbox::deliver_due(&t.relay, KEY, BASE, 0)
-        .await
-        .unwrap()
-        .unwrap();
+    let next = inbox::deliver_due(&t.relay, KEY, 0).await.unwrap().unwrap();
     assert!((now + 10_000..now + 15_000).contains(&next));
     let failures: i32 = sqlx::query_scalar("SELECT failures FROM relay_held_hook_targets")
         .fetch_one(&t.pool)
@@ -562,7 +558,10 @@ async fn held_hooks_past_the_ttl_are_pruned(pool: PgPool) {
     ] {
         let mut h = hook_row(id, "hook-1", b"x");
         h.received_at = crate::auth::dpop_proofs::iso_millis(now_ms() - age_ms);
-        assert!(inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap());
+        assert_eq!(
+            inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+            inbox::Held::Stored
+        );
     }
     assert_eq!(inbox::prune_expired(&t.pool).await.unwrap(), 1);
     let ids: Vec<String> = t.held().await.into_iter().map(|h| h.0).collect();
@@ -597,16 +596,19 @@ async fn caps_hold_under_concurrent_requests(pool: PgPool) {
                 t.pool.clone(),
                 hook_row(&format!("c{round}-{i}"), &hook_key, b"x"),
             );
-            set.spawn(async move { inbox::hold(&pool, KEY, BASE, &hook).await.unwrap() });
+            set.spawn(async move {
+                inbox::hold(&pool, KEY, BASE, &hook).await.unwrap() == inbox::Held::Stored
+            });
         }
         let stored = set.join_all().await.into_iter().filter(|s| *s).count();
         assert_eq!(stored, 2, "round {round}");
     }
     // Another hook still has room; a full hook answers inbox_full.
-    assert!(
+    assert_eq!(
         inbox::hold(&t.pool, KEY, BASE, &hook_row("other", "hook-2", b"x"))
             .await
-            .unwrap()
+            .unwrap(),
+        inbox::Held::Stored
     );
     t.machine.always(530);
     let r = t.hook("POST", "hook-1/tok", b"x").await;
@@ -616,9 +618,15 @@ async fn caps_hold_under_concurrent_requests(pool: PgPool) {
     let big = vec![0u8; (inbox::MAX_BYTES / 2) as usize];
     let mut h = hook_row("big1", "hook-3", b"");
     h.body = big.clone();
-    assert!(inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap());
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+        inbox::Held::Stored
+    );
     h.id = "big2".into();
-    assert!(!inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap());
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+        inbox::Held::Full
+    );
 }
 
 #[sqlx::test]
@@ -626,10 +634,11 @@ async fn unlink_hold_opt_out_and_disable_clear_held_hooks(pool: PgPool) {
     let t = setup(pool, true).await;
     let pool = &t.pool;
     let fill = |id: &'static str| async move {
-        assert!(
+        assert_eq!(
             inbox::hold(pool, KEY, BASE, &hook_row(id, "hook-1", b"x"))
                 .await
-                .unwrap()
+                .unwrap(),
+            inbox::Held::Stored
         );
     };
     // Turning the hold on keeps them; turning it off clears them.
@@ -655,6 +664,9 @@ async fn unlink_hold_opt_out_and_disable_clear_held_hooks(pool: PgPool) {
     assert_eq!(targets, 0);
 
     // Unlinking clears them.
+    let on = json!({"holdWebhooksWhileOffline": true});
+    t.machine_call("/v1/machines/m1/link-preferences", Some(on))
+        .await;
     fill("h2").await;
     let claims = AccessClaims::new(
         ORIGIN,
@@ -696,13 +708,17 @@ async fn disable_user_deletes_only_that_users_held_hooks(pool: PgPool) {
     .await
     .unwrap();
     let h = hook_row("mine", "hook-1", b"x");
-    assert!(inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap());
-    let h = hook_row("theirs", "hook-1", b"x");
-    assert!(
-        inbox::hold(&t.pool, "fedcba9876543210", BASE, &h)
-            .await
-            .unwrap()
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+        inbox::Held::Stored
     );
+    exec(
+        &t.pool,
+        "INSERT INTO relay_held_hooks (id, endpoint_key, received_at, method, raw_hook_id, raw_token,
+            hook_key, query, headers, body)
+         VALUES ('theirs', 'fedcba9876543210', 'x', 'POST', 'h', 't', 'h', '', '{}', 'x')",
+    )
+    .await;
     let out = crate::admin::run(
         &t.pool,
         crate::admin::Admin::DisableUser {
@@ -854,10 +870,11 @@ async fn methods_bodies_and_paths_are_refused_as_t3_refuses_them(pool: PgPool) {
 async fn parallel_workers_deliver_once_and_a_crashed_claim_is_retried(pool: PgPool) {
     let t = setup(pool, true).await;
     for id in ["r1", "r2", "r3"] {
-        assert!(
+        assert_eq!(
             inbox::hold(&t.pool, KEY, BASE, &hook_row(id, "hook-1", id.as_bytes()))
                 .await
-                .unwrap()
+                .unwrap(),
+            inbox::Held::Stored
         );
     }
     assert!(inbox::wake(&t.pool, KEY, BASE).await.unwrap());
@@ -867,10 +884,11 @@ async fn parallel_workers_deliver_once_and_a_crashed_claim_is_retried(pool: PgPo
     assert_eq!(sent, [b"r1".to_vec(), b"r2".to_vec(), b"r3".to_vec()]);
 
     // A claim taken and never released (the process died mid-run).
-    assert!(
+    assert_eq!(
         inbox::hold(&t.pool, KEY, BASE, &hook_row("r4", "hook-1", b"r4"))
             .await
-            .unwrap()
+            .unwrap(),
+        inbox::Held::Stored
     );
     assert!(inbox::wake(&t.pool, KEY, BASE).await.unwrap());
     assert!(inbox::claim(&t.pool).await.unwrap().is_some());
@@ -985,4 +1003,101 @@ async fn the_relay_router_serves_hooks_as_t3_does(pool: PgPool) {
     assert_eq!(post.status(), StatusCode::NOT_FOUND);
     let body = post.into_body().collect().await.unwrap().to_bytes();
     assert_eq!(&body[..], br#"{"error":"hook_not_found"}"#);
+}
+
+/// Dot segments would let a URL climb out of `/api/hooks/` on the machine. T3's runtime normalizes
+/// them out of the incoming URL, which then has too few segments: `hook_not_found`.
+#[sqlx::test]
+async fn dot_segments_in_any_spelling_are_not_hooks(pool: PgPool) {
+    let t = setup(pool, false).await;
+    for tail in [
+        "../tok",
+        "hook-1/..",
+        "./tok",
+        "hook-1/.",
+        "%2e%2e/tok",
+        "%2E%2e/tok",
+        ".%2E/tok",
+        "hook-1/%2e",
+        "%2E./tok",
+    ] {
+        let r = t.hook("POST", tail, b"x").await;
+        assert_eq!(r.status, StatusCode::NOT_FOUND, "{tail}");
+        assert_eq!(r.json(), json!({"error": "hook_not_found"}), "{tail}");
+    }
+    assert!(t.machine.seen().is_empty());
+    // Dots inside a segment are an ordinary hook id.
+    assert_eq!(
+        t.hook("POST", "a..b/tok", b"x").await.status,
+        StatusCode::OK
+    );
+}
+
+/// A run re-checks that the endpoint may still get its held requests; if not, they are dropped.
+#[sqlx::test]
+async fn a_delivery_run_drops_what_the_endpoint_may_no_longer_get(pool: PgPool) {
+    let t = setup(pool, true).await;
+    for (i, sql) in [
+        "UPDATE relay_machine_links SET revoked_at = 'x'",
+        "UPDATE relay_machine_links SET hold_webhooks_while_offline = false",
+        "UPDATE users SET disabled_at = now()",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let id = format!("r{i}");
+        assert_eq!(
+            inbox::hold(&t.pool, KEY, BASE, &hook_row(&id, "hook-1", b"x"))
+                .await
+                .unwrap(),
+            inbox::Held::Stored
+        );
+        assert!(inbox::wake(&t.pool, KEY, BASE).await.unwrap());
+        exec(&t.pool, sql).await;
+        assert_eq!(inbox::run_due(&t.relay).await.unwrap(), 1);
+        assert!(t.held().await.is_empty(), "{sql}");
+        exec(
+            &t.pool,
+            "UPDATE relay_machine_links SET revoked_at = NULL, hold_webhooks_while_offline = true",
+        )
+        .await;
+        exec(&t.pool, "UPDATE users SET disabled_at = NULL").await;
+    }
+    assert!(t.machine.seen().is_empty(), "nothing delivered");
+}
+
+/// Hold re-checks the opt-in under the endpoint lock, so a hold racing an unlink, opt-out or
+/// disable stores nothing.
+#[sqlx::test]
+async fn hold_stores_only_for_an_authorized_endpoint(pool: PgPool) {
+    let t = setup(pool, true).await;
+    for sql in [
+        "UPDATE relay_machine_links SET revoked_at = 'x'",
+        "UPDATE relay_machine_links SET hold_webhooks_while_offline = false",
+        "UPDATE users SET disabled_at = now()",
+        "UPDATE relay_machine_links SET endpoint_provider_kind = 'manual'",
+    ] {
+        exec(&t.pool, sql).await;
+        assert_eq!(
+            inbox::hold(&t.pool, KEY, BASE, &hook_row("h", "hook-1", b"x"))
+                .await
+                .unwrap(),
+            inbox::Held::NotAllowed,
+            "{sql}"
+        );
+        exec(
+            &t.pool,
+            "UPDATE relay_machine_links SET revoked_at = NULL, hold_webhooks_while_offline = true,
+                endpoint_provider_kind = 'cloudflare_tunnel'",
+        )
+        .await;
+        exec(&t.pool, "UPDATE users SET disabled_at = NULL").await;
+    }
+    assert!(t.held().await.is_empty());
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &hook_row("h", "hook-1", b"x"))
+            .await
+            .unwrap(),
+        inbox::Held::Stored
+    );
 }

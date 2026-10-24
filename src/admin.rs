@@ -225,7 +225,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             out,
-            "disabled A@example.test: revoked 1 refresh tokens, 2 machine links, 1 machine credentials"
+            "disabled A@example.test: revoked 1 refresh tokens, 2 machine links, 1 machine credentials; deleted 0 held webhooks"
         );
         let revoked: Vec<(String, bool)> =
             sqlx::query_as("SELECT hash, revoked_at IS NOT NULL FROM refresh_tokens ORDER BY hash")

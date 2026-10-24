@@ -113,6 +113,11 @@ fn parse_hook_path(path: &str, query: Option<&str>) -> Option<HookPath> {
     if !super::is_endpoint_key(endpoint_key) || raw_hook_id.is_empty() || raw_token.is_empty() {
         return None;
     }
+    // T3's runtime resolves dot segments (`.`, `..`, `%2e` in any case) out of the incoming URL,
+    // which then has too few segments; refuse them the same way.
+    if super::upstream::is_dot_segment(raw_hook_id) || super::upstream::is_dot_segment(raw_token) {
+        return None;
+    }
     Some(HookPath {
         endpoint_key: endpoint_key.to_owned(),
         hook_id: decode_uri_component(raw_hook_id)?,
@@ -381,11 +386,13 @@ async fn hold_or_fail(
         return (err, error(status, err));
     }
     match inbox::hold(&relay.pool, endpoint_key, &endpoint.http_base_url, hook).await {
-        Ok(true) => (
+        Ok(inbox::Held::Stored) => (
             "held",
             (StatusCode::ACCEPTED, axum::Json(json!({ "queued": true }))).into_response(),
         ),
-        Ok(false) => ("inbox_full", error(503, "inbox_full")),
+        Ok(inbox::Held::Full) => ("inbox_full", error(503, "inbox_full")),
+        // The opt-in went away since the endpoint was resolved: as if never opted in.
+        Ok(inbox::Held::NotAllowed) => (err, error(status, err)),
         Err(e) => {
             tracing::warn!(machine_id = %endpoint.machine_id, error = %e, "could not hold webhook request");
             (err, error(status, err))
