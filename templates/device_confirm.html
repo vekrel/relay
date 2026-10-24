@@ -1,0 +1,11 @@
+{% extends "_layout.html" %}
+{% block title %}Approve sign-in{% endblock %}
+{% block content %}
+<h1>Approve sign-in for {{ client }} on {{ user_agent }}?</h1>
+<p>Signed in as {{ email }}. Check that your terminal shows the code <strong>{{ user_code }}</strong>. Only approve a sign-in you started.</p>
+<form method="post" action="/device/confirm">
+<input type="hidden" name="approval" value="{{ approval }}">
+<button class="primary" type="submit" name="action" value="approve">Approve</button>
+<button type="submit" name="action" value="deny">Deny</button>
+</form>
+{% endblock %}

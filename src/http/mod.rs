@@ -9,6 +9,7 @@ use axum::{Json, Router, routing::get};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
+use crate::accounts::device;
 use crate::accounts::keys::SigningKeys;
 use crate::accounts::oauth::{self, AccountsState};
 use crate::config::Config;
@@ -16,11 +17,13 @@ use crate::config::Config;
 pub mod wellknown;
 
 pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
+    let accounts = AccountsState::new(pool.clone(), keys.clone(), config);
     Router::new()
         .route("/health", get(health))
-        .with_state(pool.clone())
+        .with_state(pool)
         .merge(wellknown::router(&keys, &config.relay_origin))
-        .merge(oauth::router(AccountsState::new(pool, keys, config)))
+        .merge(oauth::router(accounts.clone()))
+        .merge(device::router(accounts))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {

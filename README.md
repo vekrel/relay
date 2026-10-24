@@ -36,6 +36,8 @@ cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status n
 
 `GET /oauth/authorize` (PKCE S256 only, exact redirect URIs per client in `src/accounts/clients.rs`) shows the sign-in page; `POST /oauth/token` handles `authorization_code` and `refresh_token` (rotated on every use; a reused token revokes its whole family); `POST /oauth/revoke` signs out. The web client gets its refresh token only as an `HttpOnly; Secure; SameSite=Lax; Path=/oauth` cookie. Sign-in providers (GitHub, Google, email, device code) arrive in later tasks; the buttons on the page lead nowhere until then.
 
+Device code (RFC 8628, `vekrel-engine connect --headless`, client `vekrel-cli` only): `POST /oauth/device_authorization` returns a device code (stored hashed) and an 8-letter user code (`BCDF-GHJK`, consonants only), valid 10 min, poll every 5 s. The person opens `/device`, enters the code, signs in on the normal page (same sign-up rules), then approves or denies explicitly. The CLI polls `/oauth/token` with `grant_type=urn:ietf:params:oauth:grant-type:device_code` and gets `authorization_pending`, `slow_down` (interval +5 s), `expired_token`, `access_denied`, or tokens once. One account can look up 10 codes per 15 min.
+
 Admin (production: `railway run vekrel-relay admin ...`; needs `DATABASE_URL`):
 
 ```bash

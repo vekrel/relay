@@ -24,6 +24,7 @@ use tower_http::cors::{AllowOrigin, CorsLayer};
 use uuid::Uuid;
 
 use super::clients::{self, Clients};
+use super::device;
 use super::keys::{PublicKeys, SigningKeys};
 use super::signup::{self, Refusal, VerifiedIdentity};
 use super::tokens::{self, ACCESS_TOKEN_TTL_SECS, AccessClaims};
@@ -103,7 +104,7 @@ pub fn random_secret() -> String {
     URL_SAFE_NO_PAD.encode(b)
 }
 
-fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
+pub(super) fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
     headers
         .get_all(header::COOKIE)
         .iter()
@@ -113,7 +114,12 @@ fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
-fn set_cookie(name: &str, value: &str, path: &str, max_age: i64) -> (header::HeaderName, String) {
+pub(super) fn set_cookie(
+    name: &str,
+    value: &str,
+    path: &str,
+    max_age: i64,
+) -> (header::HeaderName, String) {
     (
         header::SET_COOKIE,
         format!("{name}={value}; HttpOnly; Secure; SameSite=Lax; Path={path}; Max-Age={max_age}"),
@@ -131,7 +137,7 @@ struct MessagePage<'a> {
     body: &'a str,
 }
 
-fn html(status: StatusCode, body: String) -> Response {
+pub(super) fn html(status: StatusCode, body: String) -> Response {
     (
         status,
         [
@@ -155,7 +161,7 @@ pub fn message(status: StatusCode, title: &str, body: &str) -> Response {
     )
 }
 
-fn expired_page() -> Response {
+pub(super) fn expired_page() -> Response {
     message(
         StatusCode::BAD_REQUEST,
         "Sign-in expired",
@@ -163,7 +169,7 @@ fn expired_page() -> Response {
     )
 }
 
-fn internal(e: impl std::fmt::Display) -> Response {
+pub(super) fn internal(e: impl std::fmt::Display) -> Response {
     tracing::error!(error = %e, "accounts: database error");
     StatusCode::INTERNAL_SERVER_ERROR.into_response()
 }
@@ -228,16 +234,35 @@ async fn authorize(
             "code_challenge must be a base64url SHA-256",
         );
     }
+    start_sign_in(
+        &s,
+        &client_id,
+        &redirect_uri,
+        &challenge,
+        q.state.as_deref(),
+    )
+    .await
+}
+
+/// Stores a pending sign-in bound to this browser by a cookie and shows the sign-in page. A
+/// provider then ends it with `complete_sign_in`. Callers have checked client and redirect.
+pub(super) async fn start_sign_in(
+    s: &AccountsState,
+    client_id: &str,
+    redirect_uri: &str,
+    challenge: &str,
+    state: Option<&str>,
+) -> Response {
     let id = random_secret();
     let inserted = sqlx::query(
         "INSERT INTO auth_requests (id, client_id, redirect_uri, code_challenge, state, expires_at)
          VALUES ($1, $2, $3, $4, $5, now() + make_interval(secs => $6))",
     )
     .bind(&id)
-    .bind(&client_id)
-    .bind(&redirect_uri)
-    .bind(&challenge)
-    .bind(&q.state)
+    .bind(client_id)
+    .bind(redirect_uri)
+    .bind(challenge)
+    .bind(state)
     .bind(AUTH_REQUEST_TTL_SECS as f64)
     .execute(&s.pool)
     .await;
@@ -344,7 +369,7 @@ fn from_web_origin(s: &AccountsState, headers: &HeaderMap) -> bool {
         .is_some_and(|o| s.web_origins.iter().any(|w| w == o))
 }
 
-fn oauth_error(error: &str, description: &str) -> Response {
+pub(super) fn oauth_error(error: &str, description: &str) -> Response {
     (
         StatusCode::BAD_REQUEST,
         [(header::CACHE_CONTROL, "no-store")],
@@ -361,6 +386,7 @@ struct TokenForm {
     redirect_uri: Option<String>,
     code_verifier: Option<String>,
     refresh_token: Option<String>,
+    device_code: Option<String>,
 }
 
 /// `CliTokenManager` `TokenResponse` (snake_case). `refresh_token` is omitted for the web client,
@@ -423,10 +449,20 @@ async fn token(
             };
             rotate_refresh(&s, &client_id, &presented).await
         }
+        Some(device::GRANT_TYPE) => {
+            let Some(code) = f.device_code else {
+                return oauth_error("invalid_request", "device_code is required");
+            };
+            match device::redeem(&s, &client_id, &code).await {
+                Ok(Err((error, description))) => return oauth_error(error, description),
+                Ok(Ok(issued)) => Ok(Ok(issued)),
+                Err(e) => Err(e),
+            }
+        }
         _ => {
             return oauth_error(
                 "unsupported_grant_type",
-                "grant_type must be authorization_code or refresh_token",
+                "grant_type must be authorization_code, refresh_token or device_code",
             );
         }
     };
@@ -460,7 +496,7 @@ async fn token(
     res
 }
 
-struct Issued {
+pub(super) struct Issued {
     access_token: String,
     refresh_token: String,
     id_token: String,
@@ -572,7 +608,7 @@ async fn rotate_refresh(s: &AccountsState, client_id: &str, presented: &str) -> 
     Ok(Ok(issued))
 }
 
-async fn issue(
+pub(super) async fn issue(
     s: &AccountsState,
     tx: &mut sqlx::PgConnection,
     user_id: Uuid,

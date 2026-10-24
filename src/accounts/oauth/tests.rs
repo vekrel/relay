@@ -9,6 +9,8 @@ use tower::ServiceExt;
 
 use crate::accounts::keys::tests::entry;
 
+mod device;
+
 const ISS: &str = "https://relay.example.test";
 const WEB_ORIGIN: &str = "https://app.example.test";
 const CLI: &str = "vekrel-cli";

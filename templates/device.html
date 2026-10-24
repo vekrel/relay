@@ -1,0 +1,11 @@
+{% extends "_layout.html" %}
+{% block title %}Connect a device{% endblock %}
+{% block content %}
+<h1>Connect a device</h1>
+{% if let Some(e) = error %}<p role="alert">{{ e }}</p>{% else %}<p>Enter the code shown in your terminal.</p>{% endif %}
+<form method="get" action="/device">
+<label for="user_code">Code</label>
+<input id="user_code" name="user_code" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+<button class="primary" type="submit">Continue</button>
+</form>
+{% endblock %}
