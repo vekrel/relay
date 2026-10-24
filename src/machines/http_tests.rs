@@ -286,6 +286,7 @@ struct ProofSpec {
     exp_offset: i64,
     descriptor_machine_id: String,
     aud: String,
+    endpoint_kind: Option<&'static str>,
 }
 
 impl ProofSpec {
@@ -299,6 +300,7 @@ impl ProofSpec {
             exp_offset: 300,
             descriptor_machine_id: machine_id.into(),
             aud: ORIGIN.into(),
+            endpoint_kind: None,
         }
     }
 
@@ -329,7 +331,7 @@ impl ProofSpec {
             "endpoint": {
                 "httpBaseUrl": base,
                 "wsBaseUrl": base.replace("http", "ws"),
-                "providerKind": if self.managed { "cloudflare_tunnel" } else { "manual" },
+                "providerKind": self.endpoint_kind.unwrap_or(if self.managed { "cloudflare_tunnel" } else { "manual" }),
             },
             "origin": {"localHttpHost": self.host, "localHttpPort": 3773},
             "scopes": if self.managed {
@@ -1234,5 +1236,145 @@ async fn secrets_never_reach_the_logs(pool: PgPool) {
         "pairing-credential",
     ] {
         assert!(!logs.contains(secret), "a secret reached the logs");
+    }
+}
+
+#[sqlx::test]
+async fn publish_only_links_may_not_claim_a_managed_endpoint(pool: PgPool) {
+    let app = app(pool);
+    let (_, bearer) = app.user("a@example.test").await;
+    for kind in ["cloudflare_tunnel", "vekrel_relay"] {
+        let c = app.challenge(&bearer, false).await;
+        let mut spec = ProofSpec::new("m", &c, false);
+        spec.endpoint_kind = Some(kind);
+        let r = app.link(&bearer, &spec.sign(), false).await;
+        assert_eq!(
+            tag(&r),
+            (
+                StatusCode::BAD_REQUEST,
+                json!("RelayMachineLinkProofInvalidError"),
+                json!("invalid_signature_or_scope")
+            ),
+            "{kind}"
+        );
+    }
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM relay_machine_links")
+        .fetch_one(&app.pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+}
+
+#[sqlx::test]
+async fn connect_needs_a_link_made_as_managed(pool: PgPool) {
+    let (app, bearer, seen) = connect_app(pool, MachineMode::Honest).await;
+    sqlx::query("UPDATE relay_machine_links SET managed_tunnels_enabled = false")
+        .execute(&app.pool)
+        .await
+        .unwrap();
+    let key = DpopKey::new(7);
+    let token = app.relay_token(&bearer, &key).await;
+    let r = app
+        .dpop_call(
+            "/v1/machines/m/connect",
+            &token,
+            &key,
+            Some(json!({"clientProofKeyThumbprint": key.jkt})),
+        )
+        .await;
+    assert_eq!(
+        tag(&r),
+        (
+            StatusCode::FORBIDDEN,
+            json!("RelayMachineConnectNotAuthorizedError"),
+            json!("endpoint_provider_not_managed")
+        )
+    );
+    assert!(seen.lock().unwrap().is_empty());
+}
+
+/// An Engine `makeManagedTunnelRecoveryProof`.
+fn recovery_proof(user: Uuid, action: &str, host: &str) -> String {
+    let now = now_ms() / 1000;
+    let mut p = json!({
+        "iss": "vekrel-machine:m", "aud": ORIGIN, "sub": "m", "jti": Uuid::new_v4().to_string(),
+        "iat": now, "exp": now + 60, "machineId": "m", "cloudUserId": format!("usr_{user}"),
+        "action": action,
+    });
+    if action == "register" {
+        p["tunnelId"] = "tunnel-1".into();
+    }
+    p["origin"] = json!({"localHttpHost": host, "localHttpPort": 3773});
+    jws::sign(
+        &test_only_key("machine"),
+        jws::RELAY_MANAGED_TUNNEL_RECOVERY_TYP,
+        &p,
+    )
+}
+
+#[sqlx::test]
+async fn tunnel_recovery_needs_loopback_and_a_managed_link(pool: PgPool) {
+    let app = app_with(pool.clone(), Arc::new(FakeTunnels { pool }), None);
+    let (user, bearer) = app.user("a@example.test").await;
+    let credential = app.link_machine(&bearer, "m", true).await["machineCredential"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let machine = format!("Bearer {credential}");
+    let call = |action: &'static str, host: &'static str| {
+        let (path, mut body) = if action == "register" {
+            (
+                "/v1/machines/m/tunnel/recovery",
+                json!({"tunnelId": "tunnel-1"}),
+            )
+        } else {
+            ("/v1/machines/m/tunnel", json!({}))
+        };
+        body["cloudUserId"] = format!("usr_{user}").into();
+        body["origin"] = json!({"localHttpHost": host, "localHttpPort": 3773});
+        body["proof"] = recovery_proof(user, action, host).into();
+        app.call("POST", path, Some(&machine), Some(body))
+    };
+    // Loopback works.
+    let r = call("register", "127.0.0.1").await;
+    assert_eq!(
+        (r.status, r.body.as_slice()),
+        (StatusCode::OK, br#"{"status":"ready"}"#.as_slice())
+    );
+    let r = call("recover", "127.0.0.1").await;
+    assert_eq!(
+        r.status,
+        StatusCode::OK,
+        "{}",
+        String::from_utf8_lossy(&r.body)
+    );
+    assert_eq!(
+        r.json()["endpointRuntime"]["connectorToken"],
+        "connector-token"
+    );
+    // A signed but non-loopback origin is refused before the provider runs.
+    for action in ["register", "recover"] {
+        let r = call(action, "10.0.0.5").await;
+        assert_eq!(
+            tag(&r),
+            (
+                StatusCode::UNAUTHORIZED,
+                json!("RelayAuthInvalidError"),
+                json!("not_authorized")
+            ),
+            "{action}"
+        );
+    }
+    // A link not made as managed cannot recover a tunnel.
+    sqlx::query("UPDATE relay_machine_links SET managed_tunnels_enabled = false")
+        .execute(&app.pool)
+        .await
+        .unwrap();
+    for action in ["register", "recover"] {
+        assert_eq!(
+            tag(&call(action, "127.0.0.1").await).2,
+            "not_authorized",
+            "{action}"
+        );
     }
 }

@@ -16,6 +16,8 @@ pub struct LinkedMachine {
     pub linked_at: String,
     #[serde(skip)]
     pub machine_public_key: String,
+    #[serde(skip)]
+    pub managed_tunnels_enabled: bool,
 }
 
 pub struct UpsertInput<'a> {
@@ -47,6 +49,7 @@ fn record(row: &sqlx::postgres::PgRow) -> LinkedMachine {
         },
         linked_at: row.get("created_at"),
         machine_public_key: row.get("machine_public_key"),
+        managed_tunnels_enabled: row.get("managed_tunnels_enabled"),
     }
 }
 
@@ -100,7 +103,7 @@ pub async fn list_for_user(
 ) -> Result<Vec<LinkedMachine>, sqlx::Error> {
     let rows = sqlx::query(
         "SELECT machine_id, machine_label, machine_public_key, endpoint_http_base_url,
-                endpoint_ws_base_url, endpoint_provider_kind, created_at
+                endpoint_ws_base_url, endpoint_provider_kind, created_at, managed_tunnels_enabled
          FROM relay_machine_links
          WHERE user_id = $1 AND revoked_at IS NULL ORDER BY created_at, machine_id",
     )
@@ -118,7 +121,7 @@ pub async fn get_for_user(
 ) -> Result<Option<LinkedMachine>, sqlx::Error> {
     let row = sqlx::query(
         "SELECT machine_id, machine_label, machine_public_key, endpoint_http_base_url,
-                endpoint_ws_base_url, endpoint_provider_kind, created_at
+                endpoint_ws_base_url, endpoint_provider_kind, created_at, managed_tunnels_enabled
          FROM relay_machine_links
          WHERE user_id = $1 AND machine_id = $2 AND revoked_at IS NULL LIMIT 1",
     )

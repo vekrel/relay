@@ -20,7 +20,7 @@ use super::errors::{RelayError, Tns, credential, json_payload, no_store, persist
 use crate::jws;
 use crate::machines::credentials::{self, Principal};
 use crate::machines::linker::{decode_origin, registered_claims_ok, tns};
-use crate::machines::provider::{OriginSync, ProviderError};
+use crate::machines::provider::{OriginSync, ProviderError, is_loopback_origin};
 use crate::machines::{Origin, links, now_ms, parse_wire_user_id};
 
 pub fn routes() -> Router<MachineState> {
@@ -117,7 +117,13 @@ fn verify_recovery_proof(
             o.local_http_host == origin.local_http_host
                 && o.local_http_port == origin.local_http_port
         });
-    if ok { Ok(()) } else { Err(not_authorized()) }
+    // Vekrel: only loopback origins, checked before any provider call (T3 leaves it to the
+    // provider, `ManagedEndpointOriginNotAllowed` -> 401).
+    if ok && is_loopback_origin(origin) {
+        Ok(())
+    } else {
+        Err(not_authorized())
+    }
 }
 
 /// Recovery errors: `catchTags` then `mapRelayCommonApiErrors("not_authorized")`.
@@ -142,6 +148,7 @@ async fn managed_link(
         .filter(|l| {
             l.machine_public_key == p.machine_public_key
                 && l.endpoint.provider_kind == "cloudflare_tunnel"
+                && l.managed_tunnels_enabled
         })
         .ok_or_else(not_authorized)?;
     Ok((user, link))

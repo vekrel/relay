@@ -221,6 +221,11 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
         return Err(LinkError::Invalid("challenge_invalid"));
     }
     let managed = req.caps.managed_tunnels_enabled;
+    // Vekrel, not T3: a publish-only link may not claim a relay-managed endpoint kind, or connect
+    // and webhooks would treat a machine-chosen URL as a tunnel the relay vouches for.
+    if !managed && verified.endpoint.provider_kind != "manual" {
+        return Err(invalid());
+    }
     if managed && !is_loopback_origin(&verified.origin) {
         return Err(LinkError::Invalid("origin_not_allowed"));
     }

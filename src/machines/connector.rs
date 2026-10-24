@@ -116,7 +116,8 @@ pub fn validate_managed_endpoint(
     allocation: Option<&Allocation>,
     base_domain: Option<&str>,
 ) -> Result<Endpoint, &'static str> {
-    if link.endpoint.provider_kind != "cloudflare_tunnel" {
+    // Vekrel: the link must also have been made as a managed one (T3 checks the kind only).
+    if link.endpoint.provider_kind != "cloudflare_tunnel" || !link.managed_tunnels_enabled {
         return Err("endpoint_provider_not_managed");
     }
     let a = allocation.ok_or("managed_endpoint_allocation_not_found")?;
