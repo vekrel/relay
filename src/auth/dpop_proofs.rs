@@ -86,7 +86,10 @@ pub async fn verify_and_consume(
         tracing::warn!(
             code = failure.code(),
             method = request.method,
-            url = request.url,
+            // Never the raw URL: its query string may carry codes or tokens.
+            url = dpop::normalize_htu(request.url)
+                .as_deref()
+                .unwrap_or("<unparsable>"),
             expected_thumbprint_present = request.expected_thumbprint.is_some(),
             expected_access_token_present = request.expected_access_token.is_some(),
             "relay dpop proof rejected"
@@ -202,6 +205,30 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(n, 0);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR")]
+    async fn rejection_logs_never_carry_the_query_string(pool: PgPool) {
+        crate::test_logs::capture_logs(|| ());
+        let v = vector("method_mismatch");
+        let proof = proof_of(&v);
+        let url = format!(
+            "{}?code=TEST-ONLY-QUERY-SECRET#frag",
+            v["url"].as_str().unwrap()
+        );
+        let r = dpop::Request {
+            url: &url,
+            ..request_of(&v, &proof)
+        };
+        let e = verify_and_consume(&pool, &r, now_ms(&v)).await.unwrap_err();
+        assert_eq!(e.code(), Some("method_mismatch"));
+        let logs = crate::test_logs::capture_logs(|| ());
+        let line = logs
+            .lines()
+            .find(|l| l.contains("relay dpop proof rejected") && l.contains("method_mismatch"))
+            .expect("rejection is logged");
+        assert!(line.contains(v["url"].as_str().unwrap()), "{line}");
+        assert!(!logs.contains("TEST-ONLY-QUERY-SECRET"), "{logs}");
     }
 
     // DpopProofs.verifyAndConsume.test.ts "rejects replays until a future proof's time window closes".

@@ -8,6 +8,8 @@ mod http;
 #[allow(dead_code)]
 mod jws;
 mod keygen;
+#[cfg(test)]
+mod test_logs;
 
 use clap::{Parser, Subcommand};
 
