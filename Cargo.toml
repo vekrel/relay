@@ -31,3 +31,7 @@ http-body-util = "0.1.5"
 rand = "0.8"
 rsa = "0.9"
 tower = { version = "0.5.3", features = ["util"] }
+
+# Test-only RSA key generation (fake Google) is very slow unoptimised.
+[profile.dev.package.num-bigint-dig]
+opt-level = 3

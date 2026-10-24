@@ -181,6 +181,8 @@ impl Res {
 }
 
 async fn setup(pool: PgPool, mode: &str) -> T {
+    // RSA key generation is slow in debug builds; do it before any request can time out on it.
+    keys();
     let mock: M = Arc::new(Mutex::new(Mock {
         gh_id: 4242,
         gh_emails: json!([
