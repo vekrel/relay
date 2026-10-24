@@ -26,7 +26,7 @@ use super::oauth::{
 use super::signup::VerifiedIdentity;
 use crate::config::{Config, MagicLinkTransport};
 use crate::email::{self, Email, Mailer};
-use crate::rate_limit::{self, client_ip};
+use crate::rate_limit::{self, client_ip, ip_bucket};
 
 const LINK_TTL_SECS: i64 = 900;
 const MAX_CODE_ATTEMPTS: i32 = 5;
@@ -158,8 +158,16 @@ async fn request_link(
             "Enter an address like name@example.com, then try again.",
         );
     }
-    let Some(ip) = client_ip(&headers, &extensions, m.trust_ip_header) else {
-        return internal("no client address (serve attaches ConnectInfo)");
+    let ip = match client_ip(&headers, &extensions, m.trust_ip_header) {
+        Ok(Some(ip)) => ip_bucket(ip),
+        Ok(None) => return internal("no client address (serve attaches ConnectInfo)"),
+        Err(_) => {
+            return message(
+                StatusCode::BAD_REQUEST,
+                "Bad request",
+                "The request could not be read.",
+            );
+        }
     };
     // Fixed key order (rate_limit::allow_all locks in this order).
     let limits = [

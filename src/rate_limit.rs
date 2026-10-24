@@ -10,23 +10,46 @@ use sqlx::PgPool;
 /// read only with `TRUST_PROXY_IP_HEADER=true`; every other forwarded header is ignored.
 pub const CLIENT_IP_HEADER: &str = "x-real-ip";
 
-/// With `trust_header`, the edge's header when it holds an IP; else (and as the fallback) the
-/// socket peer, which `serve` attaches as `ConnectInfo`. `None` only when neither exists (tests).
+/// A trusted `X-Real-IP` that is present but not exactly one IP address. Answer 400: falling back
+/// to the peer would put the client in the edge's bucket, shared by everyone.
+#[derive(Debug, PartialEq, Eq)]
+pub struct MalformedIpHeader;
+
+/// With `trust_header`, the edge's header when present (it must hold one IP); without the header,
+/// or untrusted, the socket peer that `serve` attaches as `ConnectInfo`. `Ok(None)` only when
+/// neither exists (tests).
 pub fn client_ip(
     headers: &HeaderMap,
     extensions: &Extensions,
     trust_header: bool,
-) -> Option<IpAddr> {
-    trust_header
-        .then(|| headers.get(CLIENT_IP_HEADER))
-        .flatten()
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.trim().parse().ok())
-        .or_else(|| {
-            extensions
-                .get::<ConnectInfo<SocketAddr>>()
-                .map(|c| c.0.ip())
-        })
+) -> Result<Option<IpAddr>, MalformedIpHeader> {
+    let mut values = headers.get_all(CLIENT_IP_HEADER).iter();
+    if let (true, Some(v)) = (trust_header, values.next()) {
+        if values.next().is_some() {
+            return Err(MalformedIpHeader);
+        }
+        let ip = v.to_str().ok().and_then(|v| v.trim().parse().ok());
+        return ip.map(Some).ok_or(MalformedIpHeader);
+    }
+    Ok(extensions
+        .get::<ConnectInfo<SocketAddr>>()
+        .map(|c| c.0.ip()))
+}
+
+/// The rate-limit bucket of an address: IPv4 as is, IPv6 by its /64 (one customer's prefix holds
+/// any number of addresses). IPv4-mapped IPv6 counts as IPv4.
+pub fn ip_bucket(ip: IpAddr) -> String {
+    match ip {
+        IpAddr::V4(v4) => v4.to_string(),
+        IpAddr::V6(v6) => match v6.to_ipv4_mapped() {
+            Some(v4) => v4.to_string(),
+            None => {
+                let s = v6.segments();
+                let net = std::net::Ipv6Addr::new(s[0], s[1], s[2], s[3], 0, 0, 0, 0);
+                format!("{net}/64")
+            }
+        },
+    }
 }
 
 /// `(key, max hits, window seconds)`, sliding window.
@@ -75,19 +98,41 @@ mod tests {
     fn client_ip_prefers_the_edge_header_then_the_peer() {
         let mut h = HeaderMap::new();
         let mut ext = Extensions::new();
-        assert_eq!(client_ip(&h, &ext, true), None);
+        assert_eq!(client_ip(&h, &ext, true), Ok(None));
         ext.insert(ConnectInfo(SocketAddr::from(([192, 0, 2, 9], 5000))));
-        let peer = Some([192, 0, 2, 9].into());
+        let peer = Ok(Some([192, 0, 2, 9].into()));
         assert_eq!(client_ip(&h, &ext, true), peer);
         h.insert("x-forwarded-for", "198.51.100.1".parse().unwrap());
         assert_eq!(client_ip(&h, &ext, true), peer);
-        h.insert(CLIENT_IP_HEADER, "not an ip".parse().unwrap());
-        assert_eq!(client_ip(&h, &ext, true), peer);
         h.insert(CLIENT_IP_HEADER, "203.0.113.4".parse().unwrap());
-        assert_eq!(client_ip(&h, &ext, true), Some([203, 0, 113, 4].into()));
+        assert_eq!(client_ip(&h, &ext, true), Ok(Some([203, 0, 113, 4].into())));
         // Not trusted (the default): a client-sent header is ignored.
         assert_eq!(client_ip(&h, &ext, false), peer);
-        assert_eq!(client_ip(&h, &Extensions::new(), false), None);
+        assert_eq!(client_ip(&h, &Extensions::new(), false), Ok(None));
+        // Trusted but malformed: an error, never the shared edge peer.
+        for bad in [
+            "not an ip",
+            "",
+            "203.0.113.4, 198.51.100.1",
+            "203.0.113.4:80",
+        ] {
+            h.insert(CLIENT_IP_HEADER, bad.parse().unwrap());
+            assert_eq!(client_ip(&h, &ext, true), Err(MalformedIpHeader), "{bad:?}");
+            assert_eq!(client_ip(&h, &ext, false), peer, "{bad:?}");
+        }
+        h.insert(CLIENT_IP_HEADER, "203.0.113.4".parse().unwrap());
+        h.append(CLIENT_IP_HEADER, "203.0.113.5".parse().unwrap());
+        assert_eq!(client_ip(&h, &ext, true), Err(MalformedIpHeader));
+    }
+
+    #[test]
+    fn ipv6_buckets_by_64_ipv4_as_is() {
+        let b = |s: &str| ip_bucket(s.parse().unwrap());
+        assert_eq!(b("203.0.113.4"), "203.0.113.4");
+        assert_eq!(b("2001:db8:1:2:aaaa::1"), "2001:db8:1:2::/64");
+        assert_eq!(b("2001:db8:1:2:ffff:ffff:ffff:ffff"), "2001:db8:1:2::/64");
+        assert_ne!(b("2001:db8:1:3::1"), b("2001:db8:1:2::1"));
+        assert_eq!(b("::ffff:203.0.113.4"), "203.0.113.4");
     }
 
     /// Many concurrent hits on one key, each on its own pool connection: exactly `max` pass.

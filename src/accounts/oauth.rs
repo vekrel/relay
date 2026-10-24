@@ -168,8 +168,54 @@ pub(super) fn expired_page() -> Response {
     )
 }
 
-pub(super) fn internal(e: impl std::fmt::Display) -> Response {
-    tracing::error!(error = %e, "accounts: database error");
+/// What an internal error may say in the logs: a fixed kind, never the error's own text (a
+/// database error can quote bound values: emails, token hashes).
+pub(super) trait ErrorKind {
+    fn kind(&self) -> &'static str;
+    fn sqlstate(&self) -> Option<String> {
+        None
+    }
+}
+
+/// A fixed message from our own code.
+impl ErrorKind for &'static str {
+    fn kind(&self) -> &'static str {
+        self
+    }
+}
+
+impl ErrorKind for sqlx::Error {
+    fn kind(&self) -> &'static str {
+        match self {
+            sqlx::Error::Configuration(_) => "configuration",
+            sqlx::Error::Database(_) => "database",
+            sqlx::Error::Io(_) => "io",
+            sqlx::Error::Tls(_) => "tls",
+            sqlx::Error::Protocol(_) => "protocol",
+            sqlx::Error::RowNotFound => "row_not_found",
+            sqlx::Error::ColumnNotFound(_) | sqlx::Error::ColumnIndexOutOfBounds { .. } => "column",
+            sqlx::Error::ColumnDecode { .. } | sqlx::Error::Decode(_) => "decode",
+            sqlx::Error::Encode(_) => "encode",
+            sqlx::Error::PoolTimedOut => "pool_timed_out",
+            sqlx::Error::PoolClosed => "pool_closed",
+            sqlx::Error::WorkerCrashed => "worker_crashed",
+            sqlx::Error::Migrate(_) => "migrate",
+            _ => "other",
+        }
+    }
+    fn sqlstate(&self) -> Option<String> {
+        self.as_database_error()
+            .and_then(|d| d.code())
+            .map(|c| c.into_owned())
+    }
+}
+
+pub(super) fn internal(e: impl ErrorKind) -> Response {
+    tracing::error!(
+        kind = e.kind(),
+        sqlstate = e.sqlstate(),
+        "accounts: internal error"
+    );
     StatusCode::INTERNAL_SERVER_ERROR.into_response()
 }
 

@@ -152,22 +152,22 @@ impl Config {
             web_origins.push(o.to_owned());
         }
         let magic_link_transport = match get("MAGIC_LINK_TRANSPORT").as_deref() {
-            None | Some("log") => {
-                // Railway sets RAILWAY_ENVIRONMENT_NAME; production must really send email.
-                if get("RAILWAY_ENVIRONMENT_NAME").as_deref() == Some("production") {
-                    return Err("MAGIC_LINK_TRANSPORT=log is not allowed in production".into());
-                }
-                MagicLinkTransport::Log
+            // The log transport puts sign-in links on the page: local dev only.
+            Some("log") if is_loopback_origin(&relay_origin) => MagicLinkTransport::Log,
+            Some("log") => {
+                return Err(format!(
+                    "MAGIC_LINK_TRANSPORT=log only works with a loopback RELAY_ORIGIN (localhost, 127.0.0.1, [::1]), not {relay_origin:?}; use resend"
+                ));
             }
-            Some("resend") => MagicLinkTransport::Resend {
+            None | Some("resend") => MagicLinkTransport::Resend {
                 api_key: Secret(
                     get("RESEND_API_KEY")
                         .filter(|k| !k.is_empty())
-                        .ok_or("MAGIC_LINK_TRANSPORT=resend needs RESEND_API_KEY")?,
+                        .ok_or("magic links need RESEND_API_KEY (MAGIC_LINK_TRANSPORT defaults to resend; log is for a loopback RELAY_ORIGIN only)")?,
                 ),
                 from: get("MAGIC_LINK_FROM")
                     .filter(|f| f.contains('@'))
-                    .ok_or("MAGIC_LINK_TRANSPORT=resend needs MAGIC_LINK_FROM, e.g. Vekrel <signin@example.com>")?,
+                    .ok_or("magic links need MAGIC_LINK_FROM, e.g. Vekrel <signin@example.com>")?,
                 base_url: get("RESEND_BASE_URL")
                     .unwrap_or_else(|| "https://api.resend.com".into())
                     .trim_end_matches('/')
@@ -226,11 +226,43 @@ impl Config {
         })
     }
 
-    /// Defaults plus `vars`, for tests elsewhere in the crate.
+    /// Defaults plus `vars`, for tests elsewhere in the crate. Without `MAGIC_LINK_TRANSPORT`, a
+    /// Resend transport pointed at a closed port (tests that send email set their own).
     #[cfg(test)]
     pub fn for_tests(vars: &[(&str, &str)]) -> Self {
-        let m: std::collections::HashMap<&str, &str> = vars.iter().copied().collect();
-        Self::from_lookup(|k| m.get(k).map(|v| v.to_string())).unwrap()
+        Self::from_lookup(test_lookup(vars)).unwrap()
+    }
+}
+
+#[cfg(test)]
+fn test_lookup(vars: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+    let mut m: std::collections::HashMap<String, String> = vars
+        .iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+    if !m.contains_key("MAGIC_LINK_TRANSPORT") {
+        for (k, v) in [
+            ("RESEND_API_KEY", "re_test_unused"),
+            ("MAGIC_LINK_FROM", "Vekrel <signin@example.test>"),
+            ("RESEND_BASE_URL", "http://127.0.0.1:1"),
+        ] {
+            m.entry(k.into()).or_insert_with(|| v.into());
+        }
+    }
+    move |k| m.get(k).cloned()
+}
+
+/// `http(s)://localhost`, `127.0.0.1` (any 127/8) or `[::1]`, any port.
+fn is_loopback_origin(origin: &str) -> bool {
+    match url::Url::parse(origin)
+        .ok()
+        .as_ref()
+        .and_then(url::Url::host)
+    {
+        Some(url::Host::Domain(d)) => d.eq_ignore_ascii_case("localhost"),
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        None => false,
     }
 }
 
@@ -239,7 +271,13 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
+    /// With a test Resend key unless the test sets `MAGIC_LINK_TRANSPORT`.
     fn load(vars: &[(&str, &str)]) -> Result<Config, String> {
+        Config::from_lookup(test_lookup(vars))
+    }
+
+    /// Exactly `vars`, nothing filled in.
+    fn load_raw(vars: &[(&str, &str)]) -> Result<Config, String> {
         let m: HashMap<String, String> = vars
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -255,7 +293,10 @@ mod tests {
         assert!(c.database_url.is_none());
         assert_eq!(c.signup_mode, SignupMode::Allowlist);
         assert!(c.web_origins.is_empty());
-        assert_eq!(c.magic_link_transport, MagicLinkTransport::Log);
+        assert!(matches!(
+            c.magic_link_transport,
+            MagicLinkTransport::Resend { .. }
+        ));
         assert!(!c.trust_proxy_ip_header);
         assert!(
             load(&[("TRUST_PROXY_IP_HEADER", "true")])
@@ -290,8 +331,6 @@ mod tests {
         assert!(load(&[("MAGIC_LINK_TRANSPORT", "resend")]).is_err());
         assert!(load(&[("MAGIC_LINK_TRANSPORT", "resend"), ("RESEND_API_KEY", "k")]).is_err());
         assert!(load(&[("MAGIC_LINK_TRANSPORT", "smtp")]).is_err());
-        assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "production")]).is_err());
-        assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "staging")]).is_ok());
         assert!(c.github.is_none() && c.google.is_none());
     }
 
@@ -360,5 +399,55 @@ mod tests {
         ] {
             assert!(load(&[("WEB_ORIGINS", bad)]).is_err(), "{bad}");
         }
+    }
+
+    /// Unset transport means Resend: a deploy without a key fails at boot, never echoes links.
+    #[test]
+    fn unset_transport_is_resend_and_needs_a_key() {
+        let err = load_raw(&[("RELAY_ORIGIN", "https://relay.example.com")]).unwrap_err();
+        assert!(err.contains("RESEND_API_KEY"), "{err}");
+        assert!(
+            load_raw(&[]).is_err(),
+            "localhost too: log must be asked for"
+        );
+        let c = load_raw(&[
+            ("RELAY_ORIGIN", "https://relay.example.com"),
+            ("RESEND_API_KEY", "k"),
+            ("MAGIC_LINK_FROM", "a@example.com"),
+        ])
+        .unwrap();
+        assert!(matches!(
+            c.magic_link_transport,
+            MagicLinkTransport::Resend { .. }
+        ));
+    }
+
+    #[test]
+    fn log_transport_only_with_a_loopback_origin() {
+        for origin in [
+            "https://relay.example.com",
+            "https://relay-staging.example.com",
+            "http://10.0.0.5:8080",
+            "http://localhost.example.com",
+            "http://127.0.0.1.nip.io",
+            "http://[::2]:8080",
+        ] {
+            let err =
+                load_raw(&[("RELAY_ORIGIN", origin), ("MAGIC_LINK_TRANSPORT", "log")]).unwrap_err();
+            assert!(err.contains("loopback"), "{origin}: {err}");
+        }
+        for origin in [
+            "http://localhost:8080",
+            "http://LOCALHOST",
+            "http://127.0.0.1:18777",
+            "http://127.3.4.5",
+            "http://[::1]:8080",
+        ] {
+            let c = load_raw(&[("RELAY_ORIGIN", origin), ("MAGIC_LINK_TRANSPORT", "log")])
+                .unwrap_or_else(|e| panic!("{origin}: {e}"));
+            assert_eq!(c.magic_link_transport, MagicLinkTransport::Log);
+        }
+        // The default origin is loopback.
+        assert!(load_raw(&[("MAGIC_LINK_TRANSPORT", "log")]).is_ok());
     }
 }

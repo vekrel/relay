@@ -20,8 +20,8 @@ Environment variables only:
 | `AUTH_SIGNING_KEYS` | unset | Required by `serve`. JSON list `[{kid, private_jwk, status: next\|active\|retired}]`, exactly one `active`. Rotation: add a `next` key, wait 24 h, make it `active` and the old one `retired`, drop the retired one after 24 h. `/.well-known/jwks.json` publishes all listed keys |
 | `SIGNUP_MODE` | `allowlist` | `allowlist`: only emails added with `admin allow` can create an account; `open`: anyone can. Existing accounts sign in either way |
 | `WEB_ORIGINS` | unset | Comma-separated web app origins (`https://app.<domain>`, `http://localhost:5733` in dev). Each one gets the `vekrel-web` redirect `<origin>/auth/callback` and is the only CORS origin for `/oauth/token` and `/oauth/revoke` |
-| `MAGIC_LINK_TRANSPORT` | `log` | `resend` sends sign-in emails through Resend; `log` sends nothing and shows the link and code on the page (dev and staging only; refused when `RAILWAY_ENVIRONMENT_NAME=production`) |
-| `RESEND_API_KEY` | unset | Required with `resend`. Never logged |
+| `MAGIC_LINK_TRANSPORT` | `resend` | `resend` sends sign-in emails through Resend. `log` sends nothing and shows the link and code on the page; it is accepted only when `RELAY_ORIGIN` is loopback (`localhost`, `127.0.0.1`, `[::1]`), so staging and production always use Resend |
+| `RESEND_API_KEY` | unset | Required with `resend` (so `serve` fails at boot without it, unless local `log`). Never logged |
 | `MAGIC_LINK_FROM` | unset | Required with `resend`: sender on a Resend-verified domain, e.g. `Vekrel <signin@<domain>>` |
 | `RESEND_BASE_URL` | `https://api.resend.com` | Override for tests |
 | `TRUST_PROXY_IP_HEADER` | `false` | `true`: rate limits key on `X-Real-IP` (falling back to the socket peer). Set it on Railway only after the staging check (plan 6A Task 2) shows the edge overwrites a client-sent `X-Real-IP`; until then the peer address is used |
@@ -35,7 +35,7 @@ Environment variables only:
 ## Run locally
 
 ```bash
-cargo run -- serve                       # PORT=8080 by default
+MAGIC_LINK_TRANSPORT=log cargo run -- serve   # PORT=8080; log transport: sign-in links on the page
 scripts/smoke.sh http://127.0.0.1:8080   # GET /health -> {"ok":true,"service":"relay"}
 cargo run -- keygen                      # fresh Ed25519 key: PKCS#8 PEM, then the public JWK
 cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status next; set active for the first key)
@@ -67,7 +67,7 @@ Routes follow Vekrel-Shared `contracts/src/relay.ts` and T3's `infra/relay/src/h
 
 ## Deploy
 
-Railway builds the `Dockerfile` (distroless runtime) and health-checks `/health` (`railway.json`). Staging deploys from `main`. Set `RELAY_ORIGIN`, `DATABASE_URL` (a reference to the Railway Postgres service), `AUTH_SIGNING_KEYS` and `RELAY_MINT_PRIVATE_KEY` as Railway variables; Railway sets `PORT`. Then run `scripts/smoke.sh https://<relay host>`.
+Railway builds the `Dockerfile` (distroless runtime) and health-checks `/health` (`railway.json`). Staging deploys from `main`. Set `RELAY_ORIGIN`, `DATABASE_URL` (a reference to the Railway Postgres service), `AUTH_SIGNING_KEYS`, `RELAY_MINT_PRIVATE_KEY`, `RESEND_API_KEY` and `MAGIC_LINK_FROM` as Railway variables (staging too: the log transport is local only); Railway sets `PORT`. Then run `scripts/smoke.sh https://<relay host>`.
 
 ## License
 

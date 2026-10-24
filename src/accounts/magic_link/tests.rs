@@ -15,7 +15,8 @@ use crate::accounts::oauth::random_secret;
 use crate::config::Config;
 use crate::email::mock::{self, Mock};
 
-const ISS: &str = "https://relay.example.test";
+/// Loopback: the log transport is refused for any other origin.
+const ISS: &str = "http://127.0.0.1:18080";
 const CLI: &str = "vekrel-cli";
 const CLI_REDIRECT: &str = "http://127.0.0.1:34338/callback";
 const API_KEY: &str = "re_test_k3y_never_logged";
@@ -72,6 +73,7 @@ fn app_with(pool: PgPool, vars: &[(&str, &str)]) -> App {
         ("RELAY_ORIGIN", ISS),
         ("SIGNUP_MODE", "open"),
         ("TRUST_PROXY_IP_HEADER", "true"),
+        ("MAGIC_LINK_TRANSPORT", "log"),
     ];
     all.extend_from_slice(vars);
     let config = Config::for_tests(&all);
@@ -773,4 +775,83 @@ async fn spoofed_ip_header_is_ignored_unless_trusted(pool: PgPool) {
             .await,
         0
     );
+}
+
+/// A database failure is logged as a fixed message and kind, never the error text.
+#[sqlx::test]
+async fn internal_errors_log_a_kind_not_the_error_text(pool: PgPool) {
+    crate::test_logs::capture_logs(|| ());
+    let a = log_app(pool);
+    let b = a.browser().await;
+    // The database error quotes a bound value, as constraint errors can.
+    for sql in [
+        "CREATE FUNCTION refuse_link() RETURNS trigger LANGUAGE plpgsql AS $$
+         BEGIN RAISE EXCEPTION '%', 'leak-' || 'xq7 ' || NEW.email; END $$",
+        "CREATE TRIGGER refuse_link BEFORE INSERT ON magic_links
+         FOR EACH ROW EXECUTE FUNCTION refuse_link()",
+    ] {
+        sqlx::query(sql).execute(&a.pool).await.unwrap();
+    }
+    let res = a.request_link(&b, "kind-check@example.test").await;
+    assert_eq!(res.status, StatusCode::INTERNAL_SERVER_ERROR);
+    let logs = crate::test_logs::capture_logs(|| ());
+    assert!(logs.contains("accounts: internal error"), "{logs}");
+    assert!(logs.contains(r#""sqlstate":"P0001""#), "{logs}");
+    assert!(!logs.contains("leak-xq7"), "{logs}");
+    assert!(!logs.contains("kind-check@example.test"), "{logs}");
+}
+
+#[sqlx::test]
+async fn trusted_but_malformed_ip_header_is_400(pool: PgPool) {
+    let a = log_app(pool);
+    let b = a.browser().await;
+    for bad in ["not-an-ip", "203.0.113.4, 10.0.0.1", " "] {
+        let r = a
+            .post(
+                "/auth/email",
+                &[("email", "ann@example.test")],
+                Some(&b),
+                bad,
+            )
+            .await;
+        assert_eq!(r.status, StatusCode::BAD_REQUEST, "{bad:?}");
+    }
+    assert_eq!(a.count("SELECT count(*) FROM relay_rate_limits").await, 0);
+    assert_eq!(a.count("SELECT count(*) FROM magic_links").await, 0);
+}
+
+#[sqlx::test]
+async fn ipv6_clients_share_a_limit_per_64(pool: PgPool) {
+    let a = log_app(pool);
+    let b = a.browser().await;
+    for i in 0..20 {
+        let ip = format!("2001:db8:7:7::{:x}", i + 1);
+        let r = a
+            .post(
+                "/auth/email",
+                &[("email", &format!("u{i}@example.test"))],
+                Some(&b),
+                &ip,
+            )
+            .await;
+        assert_eq!(r.status, StatusCode::OK, "{ip}");
+    }
+    let same64 = a
+        .post(
+            "/auth/email",
+            &[("email", "x@example.test")],
+            Some(&b),
+            "2001:db8:7:7:dead:beef::1",
+        )
+        .await;
+    assert_eq!(same64.status, StatusCode::TOO_MANY_REQUESTS);
+    let other64 = a
+        .post(
+            "/auth/email",
+            &[("email", "y@example.test")],
+            Some(&b),
+            "2001:db8:7:8::1",
+        )
+        .await;
+    assert_eq!(other64.status, StatusCode::OK);
 }
