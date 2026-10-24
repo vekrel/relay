@@ -6,6 +6,8 @@ use sqlx::postgres::PgPoolOptions;
 
 pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!();
 
+// TLS follows the URL's own `sslmode`: Railway's private network (postgres.railway.internal) is
+// WireGuard-encrypted and its Postgres has no TLS, so forcing `require` would break boot.
 pub async fn connect(url: &str) -> Result<PgPool, String> {
     PgPoolOptions::new()
         .connect(url)
