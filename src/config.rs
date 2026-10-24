@@ -8,6 +8,29 @@ pub enum SignupMode {
     Open,
 }
 
+/// A secret setting; `Debug` never prints it.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Secret(pub String);
+
+impl std::fmt::Debug for Secret {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Secret([redacted])")
+    }
+}
+
+/// How magic-link emails leave the relay (`MAGIC_LINK_TRANSPORT`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MagicLinkTransport {
+    /// Nothing is sent; the sign-in page shows the link and code. Refused in production.
+    Log,
+    /// Resend's HTTP API. `base_url` is `https://api.resend.com` unless tests point it elsewhere.
+    Resend {
+        api_key: Secret,
+        from: String,
+        base_url: String,
+    },
+}
+
 #[derive(Debug, Clone)]
 pub struct Config {
     pub addr: SocketAddr,
@@ -20,6 +43,7 @@ pub struct Config {
     /// `WEB_ORIGINS`: comma-separated origins of the web app (`https://app.<domain>`). Each gets the
     /// `vekrel-web` redirect `<origin>/auth/callback` and is the only CORS origin for `/oauth/token`.
     pub web_origins: Vec<String>,
+    pub magic_link_transport: MagicLinkTransport,
 }
 
 impl Config {
@@ -65,12 +89,41 @@ impl Config {
             }
             web_origins.push(o.to_owned());
         }
+        let magic_link_transport = match get("MAGIC_LINK_TRANSPORT").as_deref() {
+            None | Some("log") => {
+                // Railway sets RAILWAY_ENVIRONMENT_NAME; production must really send email.
+                if get("RAILWAY_ENVIRONMENT_NAME").as_deref() == Some("production") {
+                    return Err("MAGIC_LINK_TRANSPORT=log is not allowed in production".into());
+                }
+                MagicLinkTransport::Log
+            }
+            Some("resend") => MagicLinkTransport::Resend {
+                api_key: Secret(
+                    get("RESEND_API_KEY")
+                        .filter(|k| !k.is_empty())
+                        .ok_or("MAGIC_LINK_TRANSPORT=resend needs RESEND_API_KEY")?,
+                ),
+                from: get("MAGIC_LINK_FROM")
+                    .filter(|f| f.contains('@'))
+                    .ok_or("MAGIC_LINK_TRANSPORT=resend needs MAGIC_LINK_FROM, e.g. Vekrel <signin@example.com>")?,
+                base_url: get("RESEND_BASE_URL")
+                    .unwrap_or_else(|| "https://api.resend.com".into())
+                    .trim_end_matches('/')
+                    .to_owned(),
+            },
+            Some(other) => {
+                return Err(format!(
+                    "MAGIC_LINK_TRANSPORT must be resend or log: {other:?}"
+                ));
+            }
+        };
         Ok(Self {
             addr: SocketAddr::from(([0, 0, 0, 0], port)),
             relay_origin,
             database_url: get("DATABASE_URL").filter(|s| !s.is_empty()),
             signup_mode,
             web_origins,
+            magic_link_transport,
         })
     }
 
@@ -103,6 +156,31 @@ mod tests {
         assert!(c.database_url.is_none());
         assert_eq!(c.signup_mode, SignupMode::Allowlist);
         assert!(c.web_origins.is_empty());
+        assert_eq!(c.magic_link_transport, MagicLinkTransport::Log);
+    }
+
+    #[test]
+    fn magic_link_transport() {
+        let c = load(&[
+            ("MAGIC_LINK_TRANSPORT", "resend"),
+            ("RESEND_API_KEY", "re_test_secret"),
+            ("MAGIC_LINK_FROM", "Vekrel <signin@example.com>"),
+        ])
+        .unwrap();
+        assert_eq!(
+            c.magic_link_transport,
+            MagicLinkTransport::Resend {
+                api_key: Secret("re_test_secret".into()),
+                from: "Vekrel <signin@example.com>".into(),
+                base_url: "https://api.resend.com".into(),
+            }
+        );
+        assert!(!format!("{c:?}").contains("re_test_secret"));
+        assert!(load(&[("MAGIC_LINK_TRANSPORT", "resend")]).is_err());
+        assert!(load(&[("MAGIC_LINK_TRANSPORT", "resend"), ("RESEND_API_KEY", "k")]).is_err());
+        assert!(load(&[("MAGIC_LINK_TRANSPORT", "smtp")]).is_err());
+        assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "production")]).is_err());
+        assert!(load(&[("RAILWAY_ENVIRONMENT_NAME", "staging")]).is_ok());
     }
 
     #[test]

@@ -4,6 +4,7 @@ pub mod device;
 // shortcut: access-token verification has no non-test caller until Task 9 (bearer routes); drop the allow then.
 #[allow(dead_code)]
 pub mod keys;
+pub mod magic_link;
 pub mod oauth;
 pub mod signup;
 #[allow(dead_code)]

@@ -1,0 +1,13 @@
+{% extends "_layout.html" %}
+{% block title %}Check your email{% endblock %}
+{% block content %}
+<h1>Check your email</h1>
+<p>If that address can receive email, a sign-in link is on its way. Open it on this device, or type the 6-character code from the email here.</p>
+{% if let Some(error) = error %}<p role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/auth/email/code">
+<label for="code">Code</label>
+<input id="code" name="code" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="12" required>
+<button class="primary" type="submit">Continue</button>
+</form>
+{% if let Some((link, code)) = dev %}<p>Dev only (MAGIC_LINK_TRANSPORT=log), no email was sent: <a href="{{ link }}" id="dev-link">{{ link }}</a> code <code id="dev-code">{{ code }}</code></p>{% endif %}
+{% endblock %}

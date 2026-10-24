@@ -35,7 +35,7 @@ const CODE_TTL_SECS: i64 = 60;
 const REFRESH_TTL_DAYS: i64 = 30;
 /// A pending sign-in must outlive a magic link (15 min, Task 7) requested late in it.
 const AUTH_REQUEST_TTL_SECS: i64 = 1800;
-const AUTH_REQUEST_COOKIE: &str = "vekrel_auth_request";
+pub(crate) const AUTH_REQUEST_COOKIE: &str = "vekrel_auth_request";
 pub const REFRESH_COOKIE: &str = "vekrel_refresh";
 const MAX_STATE_LEN: usize = 512;
 const PAGE_CSP: &str = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
@@ -282,8 +282,6 @@ pub(super) async fn start_sign_in(
 /// Ends a sign-in: called by a provider once it has a verified identity for the browser that
 /// opened `/oauth/authorize`. Consumes the pending request, applies the sign-up rules, and
 /// redirects to the client with a 60 s single-use code and the client's `state`.
-// shortcut: only the test provider calls this until Tasks 6-8 add GitHub, Google, email, device; drop the allow then.
-#[cfg_attr(not(test), allow(dead_code))]
 pub async fn complete_sign_in(
     s: &AccountsState,
     headers: &HeaderMap,

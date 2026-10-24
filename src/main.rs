@@ -5,6 +5,7 @@ mod admin;
 mod auth;
 mod config;
 mod db;
+mod email;
 mod http;
 #[allow(dead_code)]
 mod jws;
