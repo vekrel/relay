@@ -73,7 +73,7 @@ pub struct StatusResponse {
     pub trace_id: Option<String>,
 }
 
-fn normalize_zone(name: &str) -> String {
+pub fn normalize_zone(name: &str) -> String {
     name.trim().to_lowercase().trim_matches('.').to_owned()
 }
 

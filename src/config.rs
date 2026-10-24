@@ -60,6 +60,83 @@ pub struct Config {
     pub tunnel_zone: Option<String>,
     /// APNs and FCM (`crate::push::config`).
     pub push: crate::push::PushConfig,
+    /// `RELAY_STAGE`: T3's stage, the namespace of tunnel names and hosts (`prod-<digest>`).
+    /// Managed tunnels need it and `RELAY_TUNNEL_ZONE_NAME`.
+    pub stage: Option<String>,
+    /// `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_TUNNEL_ZONE_ID` + `CLOUDFLARE_API_TOKEN` (all or
+    /// none). Unset: the relay provisions no tunnels (managed links answer 503).
+    pub cloudflare: Option<CloudflareConfig>,
+    /// `RELAY_TUNNEL_CLEANUP_MODE` and `RELAY_LEGACY_TUNNEL_CLEANUP_MODE` (`off|dry-run|enabled`,
+    /// default off), `RELAY_LEGACY_TUNNEL_GRACE_MINUTES` (T3 `Config.ts`).
+    pub cleanup: CleanupConfig,
+}
+
+#[derive(Debug, Clone)]
+pub struct CloudflareConfig {
+    pub account_id: String,
+    pub zone_id: String,
+    /// Never logged (`Secret`).
+    pub api_token: Secret,
+    /// `CLOUDFLARE_API_BASE`, default `https://api.cloudflare.com/client/v4`; tests point it at a fake.
+    pub api_base: String,
+}
+
+/// `ManagedEndpointCleanupMode`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CleanupMode {
+    #[default]
+    Off,
+    DryRun,
+    Enabled,
+}
+
+impl CleanupMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Off => "off",
+            Self::DryRun => "dry-run",
+            Self::Enabled => "enabled",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CleanupConfig {
+    pub mode: CleanupMode,
+    pub legacy_mode: CleanupMode,
+    pub legacy_grace_minutes: Option<i64>,
+}
+
+/// `cleanupModeConfig`: unset or blank is off.
+fn cleanup_mode(get: &impl Fn(&str) -> Option<String>, name: &str) -> Result<CleanupMode, String> {
+    match get(name).as_deref().map(str::trim) {
+        None | Some("") | Some("off") => Ok(CleanupMode::Off),
+        Some("dry-run") => Ok(CleanupMode::DryRun),
+        Some("enabled") => Ok(CleanupMode::Enabled),
+        Some(other) => Err(format!("{name} must be off, dry-run or enabled: {other:?}")),
+    }
+}
+
+fn cloudflare(get: &impl Fn(&str) -> Option<String>) -> Result<Option<CloudflareConfig>, String> {
+    let get = |k: &str| get(k).filter(|v| !v.trim().is_empty());
+    let names = [
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CLOUDFLARE_TUNNEL_ZONE_ID",
+        "CLOUDFLARE_API_TOKEN",
+    ];
+    match names.map(get) {
+        [None, None, None] => Ok(None),
+        [Some(account_id), Some(zone_id), Some(token)] => Ok(Some(CloudflareConfig {
+            account_id,
+            zone_id,
+            api_token: Secret(token),
+            api_base: get("CLOUDFLARE_API_BASE")
+                .unwrap_or_else(|| "https://api.cloudflare.com/client/v4".into())
+                .trim_end_matches('/')
+                .to_owned(),
+        })),
+        _ => Err(format!("set all of {}, or none", names.join(", "))),
+    }
 }
 
 /// An upstream OAuth app (plan 6A Task 6). `Debug` leaves the secret out.
@@ -226,6 +303,18 @@ impl Config {
                 .map(Secret),
             tunnel_zone: get("RELAY_TUNNEL_ZONE_NAME").filter(|s| !s.trim().is_empty()),
             push: crate::push::PushConfig::from_lookup(&get)?,
+            stage: get("RELAY_STAGE").filter(|s| !s.trim().is_empty()),
+            cloudflare: cloudflare(&get)?,
+            cleanup: CleanupConfig {
+                mode: cleanup_mode(&get, "RELAY_TUNNEL_CLEANUP_MODE")?,
+                legacy_mode: cleanup_mode(&get, "RELAY_LEGACY_TUNNEL_CLEANUP_MODE")?,
+                legacy_grace_minutes: match get("RELAY_LEGACY_TUNNEL_GRACE_MINUTES") {
+                    None => None,
+                    Some(v) => Some(v.trim().parse().ok().filter(|m: &i64| *m > 0).ok_or_else(
+                        || format!("RELAY_LEGACY_TUNNEL_GRACE_MINUTES must be a positive integer: {v:?}"),
+                    )?),
+                },
+            },
         })
     }
 
@@ -312,6 +401,34 @@ mod tests {
                 .trust_proxy_ip_header
         );
         assert!(load(&[("TRUST_PROXY_IP_HEADER", "yes")]).is_err());
+    }
+
+    #[test]
+    fn cloudflare_and_cleanup() {
+        let c = load(&[]).unwrap();
+        assert!(c.cloudflare.is_none());
+        assert_eq!(c.cleanup.mode, CleanupMode::Off);
+        assert_eq!(c.cleanup.legacy_mode, CleanupMode::Off);
+        let all = [
+            ("CLOUDFLARE_ACCOUNT_ID", "acct"),
+            ("CLOUDFLARE_TUNNEL_ZONE_ID", "zone"),
+            ("CLOUDFLARE_API_TOKEN", "cf-secret-token"),
+        ];
+        let cf = load(&all).unwrap().cloudflare.unwrap();
+        assert_eq!(cf.api_base, "https://api.cloudflare.com/client/v4");
+        assert!(!format!("{cf:?}").contains("cf-secret-token"));
+        assert!(load(&all[..2]).is_err());
+        let c = load(&[
+            ("RELAY_TUNNEL_CLEANUP_MODE", "dry-run"),
+            ("RELAY_LEGACY_TUNNEL_CLEANUP_MODE", " "),
+            ("RELAY_LEGACY_TUNNEL_GRACE_MINUTES", "30"),
+        ])
+        .unwrap();
+        assert_eq!(c.cleanup.mode, CleanupMode::DryRun);
+        assert_eq!(c.cleanup.legacy_mode, CleanupMode::Off);
+        assert_eq!(c.cleanup.legacy_grace_minutes, Some(30));
+        assert!(load(&[("RELAY_TUNNEL_CLEANUP_MODE", "on")]).is_err());
+        assert!(load(&[("RELAY_LEGACY_TUNNEL_GRACE_MINUTES", "0")]).is_err());
     }
 
     #[test]

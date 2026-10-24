@@ -308,7 +308,7 @@ fn link_error(e: LinkError) -> RelayError {
         LinkError::Provider(ProviderError::NotConfigured) => {
             unavailable("managed_endpoint_not_configured")
         }
-        LinkError::Provider(ProviderError::Failed { stage }) => {
+        LinkError::Provider(ProviderError::Failed { stage, .. }) => {
             let mut e = unavailable("managed_endpoint_provisioning_failed");
             e.fields.push(("provisioningStage", stage.into()));
             e
@@ -367,7 +367,13 @@ async fn link_machine(State(s): State<MachineState>, headers: HeaderMap, body: B
             "cloudMintPublicKey": s.relay.mint_public_key_pem,
         }))
         .into_response(),
-        Err(e) => link_error(e).into_response(),
+        Err(e) => {
+            let retry = match &e {
+                LinkError::Provider(p) => p.retry_after_ms(),
+                _ => None,
+            };
+            link_error(e).with_retry_after_ms(retry).into_response()
+        }
     })
 }
 

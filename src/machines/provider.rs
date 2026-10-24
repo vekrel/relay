@@ -1,12 +1,12 @@
 // The managed-endpoint (Cloudflare tunnel) seam: the interface of T3 Code's
 // `infra/relay/src/environments/ManagedEndpointProvider.ts` (MIT, Copyright (c) T3 Tools Inc.;
-// see NOTICE). Task 10 implements it against the Cloudflare API (`src/tunnels/*`); until then the
+// see NOTICE). `src/tunnels/*` implements it against the Cloudflare API; without `CLOUDFLARE_*` the
 // relay runs `NoTunnels`, which answers as T3 does when Cloudflare is not configured.
 use std::future::Future;
 use std::pin::Pin;
 
 use serde::Serialize;
-use sqlx::{PgPool, Row};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::{Endpoint, Origin};
@@ -34,12 +34,15 @@ pub struct Provisioned {
 
 /// `ManagedEndpointProviderError`.
 #[derive(Debug)]
-#[cfg_attr(not(test), allow(dead_code))] // `Failed`, `LimitExceeded`: the Cloudflare provider (Task 10)
 pub enum ProviderError {
     /// `ManagedEndpointProvisioningNotConfigured`.
     NotConfigured,
-    /// `ManagedEndpointProvisioningFailed` with its stage (e.g. `ensure-tunnel`).
-    Failed { stage: &'static str },
+    /// `ManagedEndpointProvisioningFailed` with its stage (e.g. `ensure-tunnel`), and how long the
+    /// caller should wait when the cause is a Cloudflare rate limit (`cloudflareRetryAfterMillis`).
+    Failed {
+        stage: &'static str,
+        retry_after_ms: Option<i64>,
+    },
     /// `ManagedEndpointOriginNotAllowed`.
     OriginNotAllowed,
     /// `ManagedTunnelLimitExceeded`.
@@ -50,6 +53,17 @@ pub enum ProviderError {
 #[derive(Debug)]
 pub struct DeprovisionFailed {
     pub stage: &'static str,
+    pub retry_after_ms: Option<i64>,
+}
+
+impl ProviderError {
+    /// `cloudflareRetryAfterMillis` of the cause.
+    pub fn retry_after_ms(&self) -> Option<i64> {
+        match self {
+            Self::Failed { retry_after_ms, .. } => *retry_after_ms,
+            _ => None,
+        }
+    }
 }
 
 /// `ManagedEndpointOriginSyncResult`.
@@ -78,6 +92,7 @@ pub struct Allocation {
     pub ready_at: Option<String>,
     pub tunnel_released_at: Option<String>,
     pub generation: i32,
+    pub origin: Option<Origin>,
 }
 
 /// `ManagedEndpointAllocations.get`.
@@ -86,28 +101,11 @@ pub async fn allocation(
     user_id: Uuid,
     machine_id: &str,
 ) -> Result<Option<Allocation>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT hostname, tunnel_id, tunnel_name, dns_record_id, ready_at, tunnel_released_at,
-                generation
-         FROM relay_managed_endpoint_allocations WHERE user_id = $1 AND machine_id = $2",
-    )
-    .bind(user_id)
-    .bind(machine_id)
-    .fetch_optional(pool)
-    .await?;
-    Ok(row.map(|r| Allocation {
-        hostname: r.get(0),
-        tunnel_id: r.get(1),
-        tunnel_name: r.get(2),
-        dns_record_id: r.get(3),
-        ready_at: r.get(4),
-        tunnel_released_at: r.get(5),
-        generation: r.get(6),
-    }))
+    crate::tunnels::allocations::get(&mut *pool.acquire().await?, user_id, machine_id).await
 }
 
 /// `ManagedEndpointProvider` (plus `ManagedEndpointAllocations.enableRecovery`, which only the
-/// recovery routes call and which belongs with the allocations Task 10 owns).
+/// recovery routes call and which `src/tunnels/allocations.rs` implements).
 pub trait ManagedEndpoints: Send + Sync {
     fn provision<'a>(
         &'a self,
@@ -172,7 +170,8 @@ pub fn is_loopback_origin(origin: &Origin) -> bool {
 
 /// No Cloudflare: `provision` checks the origin, then answers `NotConfigured` as T3's
 /// `requireCloudflareSettings` does; nothing was ever allocated, so teardown has nothing to do.
-// shortcut: assumes no allocation rows exist (only Task 10 writes them); Task 10 replaces this.
+// shortcut: assumes no allocation rows exist (only the Cloudflare provider writes them); turning
+// Cloudflare off after tunnels were made leaves them to be removed by hand.
 pub struct NoTunnels;
 
 impl ManagedEndpoints for NoTunnels {

@@ -53,7 +53,7 @@ mod tests {
     #[sqlx::test(migrations = false)]
     async fn migrations_apply_on_empty_db_and_are_idempotent(pool: PgPool) {
         let first = migrate(&pool).await.unwrap();
-        assert_eq!(first, vec![1, 2, 3, 4, 11]);
+        assert_eq!(first, vec![1, 2, 3, 4, 11, 12]);
         for table in [
             "relay_machine_links",
             "relay_managed_endpoint_allocations",

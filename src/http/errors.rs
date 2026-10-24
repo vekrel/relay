@@ -23,6 +23,8 @@ pub struct RelayError {
     pub status: StatusCode,
     pub tag: &'static str,
     pub fields: Vec<(&'static str, Value)>,
+    /// `retry-after` seconds (`appendCloudflareRetryAfter`).
+    pub retry_after: Option<String>,
 }
 
 impl RelayError {
@@ -31,7 +33,15 @@ impl RelayError {
             status: StatusCode::from_u16(status).expect("valid status"),
             tag,
             fields,
+            retry_after: None,
         }
+    }
+
+    /// `appendCloudflareRetryAfter`: hosts never retry sooner than `retry-after`, so during a
+    /// Cloudflare rate limit they wait the pause out instead of retrying into it.
+    pub fn with_retry_after_ms(mut self, ms: Option<i64>) -> Self {
+        self.retry_after = ms.map(|ms| (ms.max(1) + 999).div_euclid(1000).to_string());
+        self
     }
 
     /// `RelayAuthInvalidError` (401).
@@ -81,7 +91,14 @@ impl RelayError {
 
 impl IntoResponse for RelayError {
     fn into_response(self) -> Response {
-        (self.status, axum::Json(self.body())).into_response()
+        let mut r = (self.status, axum::Json(self.body())).into_response();
+        if let Some(v) = self
+            .retry_after
+            .and_then(|v| HeaderValue::from_str(&v).ok())
+        {
+            r.headers_mut().insert(header::RETRY_AFTER, v);
+        }
+        r
     }
 }
 

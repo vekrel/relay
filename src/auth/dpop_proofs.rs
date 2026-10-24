@@ -115,8 +115,6 @@ pub async fn verify_and_consume(
 }
 
 /// `pruneExpired`: drops spent proofs whose window has closed (ISO strings sort by time).
-// shortcut: no caller until the 5-minute prune task (Task 10 reaper); drop the allow then.
-#[allow(dead_code)]
 pub async fn prune_expired(pool: &PgPool, now_ms: i64) -> Result<u64, sqlx::Error> {
     Ok(
         sqlx::query("DELETE FROM relay_dpop_proofs WHERE expires_at < $1")

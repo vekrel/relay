@@ -38,7 +38,7 @@ fn spki(key: &SigningKey) -> String {
         .to_owned()
 }
 
-/// Allocates a ready tunnel row per machine, after the cap check, as Task 10's provider will.
+/// Allocates a ready tunnel row per machine, after the cap check, as the Cloudflare provider does.
 struct FakeTunnels {
     pool: PgPool,
 }
@@ -59,6 +59,7 @@ impl ManagedEndpoints for FakeTunnels {
                 Err(limits::LimitError::Persistence(_)) => {
                     return Err(ProviderError::Failed {
                         stage: "check-tunnel-limit",
+                        retry_after_ms: None,
                     });
                 }
                 Ok(()) => {}
@@ -539,7 +540,7 @@ async fn managed_links_need_a_loopback_origin_and_a_provider(pool: PgPool) {
             json!("origin_not_allowed")
         )
     );
-    // Loopback, but no tunnel provider is configured (until Task 10).
+    // Loopback, but no tunnel provider is configured (no `CLOUDFLARE_*`).
     let c = app.challenge(&bearer, true).await;
     let r = app
         .link(&bearer, &ProofSpec::new("m", &c, true).sign(), true)
@@ -1429,4 +1430,39 @@ async fn new_credential_and_revocation_commit_together(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(rows, 1, "the second credential rolled back with its revoke");
+}
+
+#[sqlx::test]
+async fn managed_links_provision_through_cloudflare_and_wait_out_its_rate_limit(pool: PgPool) {
+    use crate::tunnels::tests::{Fake, provider};
+    let (fake, base) = Fake::start().await;
+    let app = app_with(pool.clone(), Arc::new(provider(&pool, &base)), None);
+    let (_, bearer) = app.user("a@example.test").await;
+    // A 429: 503 with the stage, and `retry-after` so the machine waits the pause out.
+    fake.set(|s| s.rate_limit = Some((1, 1)));
+    let challenge = app.challenge(&bearer, true).await;
+    let r = app
+        .link(&bearer, &ProofSpec::new("m", &challenge, true).sign(), true)
+        .await;
+    assert_eq!(r.status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(r.json()["reason"], "managed_endpoint_provisioning_failed");
+    assert_eq!(r.json()["provisioningStage"], "ensure-tunnel");
+    assert_eq!(r.headers[header::RETRY_AFTER], "1");
+    // After the pause the link goes through, and unlink removes tunnel and CNAME.
+    tokio::time::sleep(std::time::Duration::from_millis(1_100)).await;
+    let linked = app.link_machine(&bearer, "m", true).await;
+    assert_eq!(linked["endpointRuntime"]["tunnelId"], "tun-1");
+    assert!(
+        linked["endpoint"]["httpBaseUrl"]
+            .as_str()
+            .unwrap()
+            .ends_with(&format!(".{ZONE}/"))
+    );
+    assert_eq!(fake.0.lock().unwrap().records.len(), 1);
+    let r = app
+        .call("DELETE", "/v1/client/machine-links/m", Some(&bearer), None)
+        .await;
+    assert_eq!(r.status, StatusCode::OK);
+    let s = fake.0.lock().unwrap();
+    assert!(s.tunnels.is_empty() && s.records.is_empty());
 }

@@ -12,10 +12,8 @@ use crate::auth::relay_tokens::RelayTokens;
 
 pub mod connector;
 pub mod credentials;
-// shortcut: the Cloudflare provider (Task 10) calls `ensure_capacity` while provisioning; drop the allow then.
 #[cfg(test)]
 mod http_tests;
-#[allow(dead_code)]
 pub mod limits;
 pub mod linker;
 pub mod links;

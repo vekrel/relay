@@ -2,6 +2,7 @@ mod accounts;
 mod admin;
 mod auth;
 mod config;
+mod cron;
 mod db;
 mod email;
 mod hooks;
@@ -13,6 +14,8 @@ mod push;
 mod rate_limit;
 #[cfg(test)]
 mod test_logs;
+mod tunnels;
+mod zone;
 
 use clap::{Parser, Subcommand};
 
@@ -105,6 +108,11 @@ async fn serve() -> Result<(), String> {
     let pool = db::connect(database_url).await?;
     let versions = db::migrate(&pool).await?;
     tracing::info!(?versions, "migrations applied");
+    cron::spawn(
+        pool.clone(),
+        tunnels::from_config(&pool, &config),
+        config.cleanup,
+    );
     let listener = tokio::net::TcpListener::bind(config.addr)
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;

@@ -134,10 +134,12 @@ fn verify_recovery_proof(
 
 /// Recovery errors: `catchTags` then `mapRelayCommonApiErrors("not_authorized")`.
 fn provider_error(e: ProviderError) -> RelayError {
+    let retry = e.retry_after_ms();
     match e {
         ProviderError::OriginNotAllowed => not_authorized(),
         _ => RelayError::internal("upstream_unavailable"),
     }
+    .with_retry_after_ms(retry)
 }
 
 /// The active managed link this machine key proved for that user.
@@ -294,7 +296,10 @@ async fn recover(
                 let target = provider
                     .prepare_deprovision(user, &p.machine_id)
                     .await
-                    .map_err(|_| RelayError::internal("upstream_unavailable"))?;
+                    .map_err(|e| {
+                        RelayError::internal("upstream_unavailable")
+                            .with_retry_after_ms(e.retry_after_ms)
+                    })?;
                 if target.is_some() {
                     let mut conn = s.relay.pool.acquire().await.map_err(persistence)?;
                     let current = links::get_for_user(&mut conn, user, &p.machine_id)

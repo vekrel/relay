@@ -36,6 +36,9 @@ Environment variables only:
 | `FCM_SERVICE_ACCOUNT` | unset | Firebase service-account JSON (FCM v1). Unset: Android pushes answer `ok: false` (T3) |
 | `APNS_ENABLED`, `FCM_ENABLED` | `true` | `false` pauses delivery: jobs keep queueing in `relay_push_jobs` and go out when switched back on (APNs jobs expire 10 min after queueing, FCM 5 min, as in T3) |
 | `APNS_API_BASE`, `FCM_API_BASE`, `FCM_TOKEN_URL` | Apple's hosts, `https://fcm.googleapis.com`, `https://oauth2.googleapis.com/token` | Overrides for tests |
+| `RELAY_STAGE` | unset | Namespace of tunnel hosts and names (`<stage>-<digest>.<zone>`, `vekrelrelay-managedendpoint-<stage>-<digest>`), e.g. `prod`, `staging`. Managed tunnels need it and the zone; the reaper only sees its own stage |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_TUNNEL_ZONE_ID`, `CLOUDFLARE_API_TOKEN` | unset | All or none. Token needs *Account: Cloudflare Tunnel: Edit* and *Zone: DNS: Edit* on the tunnel zone; never logged. Unset: managed links answer 503 `managed_endpoint_not_configured`. Tests set `CLOUDFLARE_API_BASE` (default `https://api.cloudflare.com/client/v4`) to a fake |
+| `RELAY_TUNNEL_CLEANUP_MODE`, `RELAY_LEGACY_TUNNEL_CLEANUP_MODE` | `off` | `off`, `dry-run` (logs what it would delete) or `enabled`. Every 5 min one replica (advisory lock) prunes expired relay state and, with Cloudflare set, deletes this stage's tunnels idle past T3's grace (5 min down, 60 min never connected; legacy: machines without recovery, 7 days or `RELAY_LEGACY_TUNNEL_GRACE_MINUTES` off `prod`). Run `dry-run` first |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
 ## Run locally
@@ -53,7 +56,7 @@ cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status n
 
 Device code (RFC 8628, `vekrel-engine connect --headless`, client `vekrel-cli` only): `POST /oauth/device_authorization` returns a device code (stored hashed) and an 8-letter user code (`BCDF-GHJK`, consonants only), valid 10 min, poll every 5 s. The person opens `/device`, enters the code, signs in on the normal page (same sign-up rules), then approves or denies explicitly. The CLI polls `/oauth/token` with `grant_type=urn:ietf:params:oauth:grant-type:device_code` and gets `authorization_pending`, `slow_down` (interval +5 s), `expired_token`, `access_denied`, or tokens once. One account can look up 10 codes per 15 min.
 
-Admin (production: `railway run vekrel-relay admin ...`; needs `DATABASE_URL`):
+Admin (production: `railway run vekrel-relay admin ...`; needs `DATABASE_URL`). `admin tunnel-test` creates one throwaway tunnel and CNAME with the configured Cloudflare token, checks both, and deletes them:
 
 ```bash
 vekrel-relay admin allow someone@example.com [--note "why"]

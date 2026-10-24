@@ -54,12 +54,16 @@ pub fn build(
     let mint_key =
         crate::jws::signing_key_from_pem(&pem.0).expect("serve validated RELAY_MINT_PRIVATE_KEY");
     let push = Arc::new(crate::push::Push::new(pool.clone(), config.push.clone()));
+    let pool_for_tunnels = pool.clone();
     let relay = Arc::new(Relay::new(
         pool,
         mint_key,
         &config.relay_origin,
         config.tunnel_zone.clone(),
-        Arc::new(NoTunnels),
+        match crate::tunnels::from_config(&pool_for_tunnels, config) {
+            Some(t) => t,
+            None => Arc::new(NoTunnels),
+        },
     ));
     // Held webhooks are delivered in the background (T3: the inbox objects' alarms).
     tokio::spawn(hooks::inbox::worker(relay.clone()));

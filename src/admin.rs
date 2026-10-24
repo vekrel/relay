@@ -22,10 +22,111 @@ pub enum Admin {
     PushTest { email: String },
     /// Re-enable a disabled account (revoked links stay revoked).
     EnableUser { email: String },
+    /// Create one throwaway tunnel and its CNAME in the tunnel zone, check both, then delete both
+    /// (needs `CLOUDFLARE_*` and `RELAY_TUNNEL_ZONE_NAME`). Writes no relay rows.
+    TunnelTest,
 }
 
 pub async fn run(pool: &PgPool, cmd: Admin) -> Result<String, String> {
+    if let Admin::TunnelTest = cmd {
+        return tunnel_test(pool, &crate::config::Config::from_env()?).await;
+    }
     run_db(pool, cmd).await.map_err(|e| e.to_string())?
+}
+
+/// `admin tunnel-test`: the live Cloudflare check of plan 6A Task 10. The tunnel name is outside
+/// the managed prefix, so the reaper never sees it; the connector token is fetched, never printed.
+pub async fn tunnel_test(pool: &PgPool, config: &crate::config::Config) -> Result<String, String> {
+    use crate::tunnels::cloudflare::{Cloudflare, cname_record};
+    let cf = config
+        .cloudflare
+        .clone()
+        .ok_or("set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_TUNNEL_ZONE_ID and CLOUDFLARE_API_TOKEN")?;
+    let zone = config
+        .tunnel_zone
+        .as_deref()
+        .ok_or("set RELAY_TUNNEL_ZONE_NAME")?;
+    let cf = Cloudflare::new(cf, pool.clone());
+    let tag = &Uuid::new_v4().simple().to_string()[..8];
+    let name = format!("vekrelrelay-tunneltest-{tag}");
+    let host = format!("tunnel-test-{tag}.{zone}");
+    let e = |step: &str, e: crate::tunnels::cloudflare::ApiError| {
+        format!("{step} failed: {:?}", e.failure)
+    };
+    let mut out = Vec::new();
+    let tunnel = cf
+        .create_tunnel(&name)
+        .await
+        .map_err(|x| e("create tunnel", x))?;
+    let id = tunnel.id.ok_or("create tunnel returned no id")?;
+    out.push(format!("created tunnel {name} ({id})"));
+    let checks = async {
+        cf.put_configuration(&id, &host, "http://127.0.0.1:9")
+            .await
+            .map_err(|x| e("configure ingress", x))?;
+        let token = cf.get_token(&id).await.map_err(|x| e("get token", x))?;
+        out.push(format!(
+            "ingress set, connector token fetched ({} chars)",
+            token.len()
+        ));
+        let record = cf
+            .create_record(&cname_record(&host, &id))
+            .await
+            .map_err(|x| e("create CNAME", x))?;
+        let listed = cf
+            .list_records(&host)
+            .await
+            .map_err(|x| e("list CNAME", x))?;
+        out.push(format!(
+            "CNAME {host} -> {id}.cfargotunnel.com ({record}) {}",
+            if listed.contains(&record) {
+                "appears"
+            } else {
+                "MISSING"
+            }
+        ));
+        cf.delete_record(&record)
+            .await
+            .map_err(|x| e("delete CNAME", x))?;
+        let listed = cf
+            .list_records(&host)
+            .await
+            .map_err(|x| e("list CNAME", x))?;
+        out.push(format!(
+            "CNAME {}",
+            if listed.is_empty() {
+                "disappears"
+            } else {
+                "STILL LISTED"
+            }
+        ));
+        Ok::<_, String>(())
+    }
+    .await;
+    // Always try to remove the tunnel, even after a failed check.
+    let deleted = cf
+        .delete_tunnel(&id)
+        .await
+        .map_err(|x| e("delete tunnel", x));
+    checks?;
+    deleted?;
+    let gone = matches!(cf.get_tunnel(&id).await, Err(x) if x.is_not_found())
+        || cf
+            .get_tunnel(&id)
+            .await
+            .is_ok_and(|t| t.deleted_at.is_some());
+    out.push(format!(
+        "tunnel {}",
+        if gone { "deleted" } else { "STILL PRESENT" }
+    ));
+    if !gone
+        || out
+            .iter()
+            .any(|l| l.contains("MISSING") || l.contains("STILL"))
+    {
+        return Err(out.join("\n"));
+    }
+    Ok(out.join("\n"))
 }
 
 async fn run_db(pool: &PgPool, cmd: Admin) -> Result<Result<String, String>, sqlx::Error> {
@@ -135,6 +236,7 @@ async fn run_db(pool: &PgPool, cmd: Admin) -> Result<Result<String, String>, sql
         Admin::PushTest { .. } => {
             Err("push-test runs through main (it needs the push settings)".into())
         }
+        Admin::TunnelTest => unreachable!("run handles tunnel-test"),
         Admin::EnableUser { email } => {
             let n = sqlx::query("UPDATE users SET disabled_at = NULL WHERE email = $1::citext")
                 .bind(&email)
