@@ -52,7 +52,9 @@ impl ManagedEndpoints for FakeTunnels {
         _: bool,
     ) -> BoxFuture<'a, Result<Provisioned, ProviderError>> {
         Box::pin(async move {
-            match limits::ensure_capacity(&self.pool, user, machine_id).await {
+            match limits::ensure_capacity(&mut self.pool.acquire().await.unwrap(), user, machine_id)
+                .await
+            {
                 Err(limits::LimitError::Exceeded { max_tunnels, .. }) => {
                     return Err(ProviderError::LimitExceeded { max_tunnels });
                 }
@@ -1465,4 +1467,40 @@ async fn managed_links_provision_through_cloudflare_and_wait_out_its_rate_limit(
     assert_eq!(r.status, StatusCode::OK);
     let s = fake.0.lock().unwrap();
     assert!(s.tunnels.is_empty() && s.records.is_empty());
+}
+
+/// A first managed link that fails after provisioning frees its tunnel and DNS record.
+#[sqlx::test]
+async fn a_failed_first_link_frees_its_tunnel(pool: PgPool) {
+    use crate::tunnels::tests::{Fake, provider};
+    let (fake, base) = Fake::start().await;
+    let app = app_with(pool.clone(), Arc::new(provider(&pool, &base)), None);
+    let (_, bearer) = app.user("a@example.test").await;
+    for sql in [
+        "CREATE FUNCTION refuse_credential() RETURNS trigger LANGUAGE plpgsql AS $$
+         BEGIN RAISE EXCEPTION 'refused'; END $$",
+        "CREATE TRIGGER refuse_credential BEFORE INSERT ON relay_machine_credentials
+         FOR EACH ROW EXECUTE FUNCTION refuse_credential()",
+    ] {
+        sqlx::query(sql).execute(&pool).await.unwrap();
+    }
+    let challenge = app.challenge(&bearer, true).await;
+    let r = app
+        .link(&bearer, &ProofSpec::new("m", &challenge, true).sign(), true)
+        .await;
+    assert_eq!(r.status, StatusCode::INTERNAL_SERVER_ERROR);
+    {
+        let s = fake.0.lock().unwrap();
+        assert_eq!(
+            s.calls.iter().filter(|c| c.method == "POST").count(),
+            2,
+            "it was provisioned"
+        );
+        assert!(s.tunnels.is_empty() && s.records.is_empty());
+    }
+    let rows: i64 = sqlx::query_scalar("SELECT count(*) FROM relay_managed_endpoint_allocations")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(rows, 0);
 }

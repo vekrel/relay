@@ -253,9 +253,53 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
     } else {
         None
     };
-    let endpoint = provisioned
-        .as_ref()
-        .map_or_else(|| verified.endpoint.clone(), |p| p.endpoint.clone());
+    let finished = finish(relay, user, req, &verified, provisioned.as_ref(), managed).await;
+    if let (Err(_), Some(_)) = (&finished, &provisioned) {
+        // Vekrel, not T3 (which leaves it): a first link that failed after provisioning frees its
+        // tunnel, so it neither lingers nor holds a slot of the tunnel cap. A relink keeps it; the
+        // machine's live link still uses it. Best effort: a cancelled request skips this, and the
+        // cap stops counting an unlinked allocation after 10 minutes.
+        let mut conn = relay
+            .pool
+            .acquire()
+            .await
+            .map_err(LinkError::LinkPersistence)?;
+        let linked = links::get_for_user(&mut conn, user, &verified.machine_id)
+            .await
+            .map_err(LinkError::LinkPersistence)?;
+        drop(conn);
+        if linked.is_none()
+            && let Err(e) = relay
+                .provider
+                .deprovision(user, &verified.machine_id, None)
+                .await
+        {
+            tracing::warn!(
+                machine_id = %verified.machine_id,
+                stage = e.stage,
+                "managed endpoint cleanup after a failed link failed"
+            );
+        }
+    }
+    let (endpoint, machine_credential) = finished?;
+    Ok(Linked {
+        machine_id: verified.machine_id,
+        endpoint,
+        runtime: provisioned.map(|p| p.runtime),
+        machine_credential,
+    })
+}
+
+/// After provisioning: the endpoint check, then link and credential in one transaction.
+async fn finish(
+    relay: &Relay,
+    user: Uuid,
+    req: &LinkRequest,
+    verified: &LinkProof,
+    provisioned: Option<&Provisioned>,
+    managed: bool,
+) -> Result<(Endpoint, String), LinkError> {
+    let endpoint = provisioned.map_or_else(|| verified.endpoint.clone(), |p| p.endpoint.clone());
     // Publish-only links are reached out of band; their nominal endpoint is never routed to.
     if managed && !is_secure(&endpoint) {
         return Err(LinkError::Invalid("endpoint_not_secure"));
@@ -291,10 +335,5 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
     tx.commit()
         .await
         .map_err(LinkError::CredentialPersistence)?;
-    Ok(Linked {
-        machine_id: verified.machine_id,
-        endpoint,
-        runtime: provisioned.map(|p| p.runtime),
-        machine_credential,
-    })
+    Ok((endpoint, machine_credential))
 }

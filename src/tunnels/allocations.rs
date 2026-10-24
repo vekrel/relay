@@ -51,7 +51,7 @@ pub async fn get(
 
 /// `reserve`: the existing row when there is one (the hostname of a machine never changes).
 pub async fn reserve(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     user: Uuid,
     machine_id: &str,
     hostname: &str,
@@ -68,11 +68,11 @@ pub async fn reserve(
     .bind(hostname)
     .bind(tunnel_name)
     .bind(&now)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *conn)
     .await?;
     match inserted {
         Some(r) => Ok(Some(from_row(&r))),
-        None => get(&mut *pool.acquire().await?, user, machine_id).await,
+        None => get(conn, user, machine_id).await,
     }
 }
 

@@ -1296,6 +1296,7 @@ impl ManagedEndpoints for FailingTeardown {
         Box::pin(async {
             Err(DeprovisionFailed {
                 stage: "delete-tunnel",
+                retry_after_ms: None,
             })
         })
     }

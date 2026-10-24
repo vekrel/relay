@@ -240,7 +240,13 @@ impl CloudflareTunnels {
         let hash = zone::machine_hash(namespace, &wire_user_id(user), machine_id);
         let hostname = zone::hostname(namespace, base_domain, &hash);
         let tunnel_name = zone::tunnel_name(namespace, &hash);
-        match limits::ensure_capacity(&self.pool, user, machine_id).await {
+        // Cap check and reservation commit together under the per-user lock.
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| failed_db("check-tunnel-limit", e))?;
+        match limits::ensure_capacity(&mut tx, user, machine_id).await {
             Ok(()) => {}
             Err(LimitError::Exceeded {
                 max_tunnels,
@@ -251,10 +257,13 @@ impl CloudflareTunnels {
             }
             Err(LimitError::Persistence(e)) => return Err(failed_db("check-tunnel-limit", e)),
         }
-        let a = allocations::reserve(&self.pool, user, machine_id, &hostname, &tunnel_name)
+        let a = allocations::reserve(&mut tx, user, machine_id, &hostname, &tunnel_name)
             .await
             .map_err(|e| failed_db("reserve-allocation", e))?
             .ok_or_else(|| claim_lost("reserve-allocation"))?;
+        tx.commit()
+            .await
+            .map_err(|e| failed_db("reserve-allocation", e))?;
         let (hostname, tunnel_name) = (a.hostname.clone(), a.tunnel_name.clone());
 
         if reuse_ready_tunnel && let Some(p) = self.reuse_ready_tunnel(&a, origin).await? {

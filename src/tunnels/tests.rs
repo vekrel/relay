@@ -864,3 +864,39 @@ async fn admin_tunnel_test_creates_and_removes_one_tunnel(pool: PgPool) {
         .unwrap();
     assert_eq!(rows, 0);
 }
+
+#[sqlx::test]
+async fn parallel_first_links_cannot_pass_the_tunnel_cap(pool: PgPool) {
+    let (fake, base) = Fake::start().await;
+    // Widen the window between reservation and the rest of provisioning.
+    fake.set(|s| s.list_delay = Duration::from_millis(100));
+    let p = Arc::new(provider(&pool, &base));
+    let u = user(&pool, "a@example.test").await;
+    let tasks: Vec<_> = (0..6)
+        .map(|i| {
+            let p = p.clone();
+            tokio::spawn(async move {
+                p.provision(u, &format!("m{i}"), &loopback(3773), false)
+                    .await
+            })
+        })
+        .collect();
+    let mut ok = 0;
+    let mut refused = 0;
+    for t in tasks {
+        match t.await.unwrap() {
+            Ok(_) => ok += 1,
+            Err(ProviderError::LimitExceeded { max_tunnels: 3 }) => refused += 1,
+            Err(e) => panic!("{e:?}"),
+        }
+    }
+    assert_eq!((ok, refused), (3, 3));
+    // An allocation whose link never came stops counting after 10 minutes.
+    sqlx::query("UPDATE relay_managed_endpoint_allocations SET updated_at = '2000-01-01T00:00:00.000Z' WHERE machine_id IN (SELECT machine_id FROM relay_managed_endpoint_allocations LIMIT 1)")
+        .execute(&pool)
+        .await
+        .unwrap();
+    p.provision(u, "late", &loopback(3773), false)
+        .await
+        .unwrap();
+}
