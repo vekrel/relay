@@ -16,7 +16,8 @@ Environment variables only:
 | Variable | Default | Meaning |
 |---|---|---|
 | `PORT` | `8080` | Listen port (all interfaces) |
-| `RELAY_ORIGIN` | `http://localhost:$PORT` | Public origin of the relay, no trailing slash |
+| `RELAY_ORIGIN` | `http://localhost:$PORT` | Public origin of the relay, no trailing slash. Account tokens use it as `iss` |
+| `AUTH_SIGNING_KEYS` | unset | Required by `serve`. JSON list `[{kid, private_jwk, status: next\|active\|retired}]`, exactly one `active`. Rotation: add a `next` key, wait 24 h, make it `active` and the old one `retired`, drop the retired one after 24 h. `/.well-known/jwks.json` publishes all listed keys |
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
@@ -26,6 +27,7 @@ Environment variables only:
 cargo run -- serve                       # PORT=8080 by default
 scripts/smoke.sh http://127.0.0.1:8080   # GET /health -> {"ok":true,"service":"relay"}
 cargo run -- keygen                      # fresh Ed25519 key: PKCS#8 PEM, then the public JWK
+cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status next; set active for the first key)
 ```
 
 Checks: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo sqlx prepare --check` (CI runs the same). Tests need a Postgres in `DATABASE_URL` (e.g. `postgres://localhost/postgres`); each test creates and drops its own database.

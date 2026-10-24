@@ -1,3 +1,4 @@
+mod accounts;
 mod config;
 mod db;
 mod http;
@@ -17,13 +18,20 @@ enum Command {
     /// Run the HTTP server (default).
     Serve,
     /// Print a fresh Ed25519 private key (PKCS#8 PEM) and its public JWK.
-    Keygen,
+    Keygen {
+        /// Instead print one `AUTH_SIGNING_KEYS` entry (`status: next`) with this kid.
+        #[arg(long, value_name = "KID")]
+        auth_kid: Option<String>,
+    },
 }
 
 #[tokio::main]
 async fn main() {
     match Cli::parse().command.unwrap_or(Command::Serve) {
-        Command::Keygen => {
+        Command::Keygen {
+            auth_kid: Some(kid),
+        } => println!("{}", keygen::auth_signing_key(&kid)),
+        Command::Keygen { auth_kid: None } => {
             let kp = keygen::generate();
             print!("{}", kp.private_pem);
             println!("{}", kp.public_jwk);
@@ -50,6 +58,7 @@ async fn serve() -> Result<(), String> {
         .database_url
         .as_deref()
         .ok_or("DATABASE_URL is required")?;
+    let keys = accounts::keys::SigningKeys::from_env()?;
     let pool = db::connect(database_url).await?;
     let versions = db::migrate(&pool).await?;
     tracing::info!(?versions, "migrations applied");
@@ -57,7 +66,7 @@ async fn serve() -> Result<(), String> {
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;
     tracing::info!(addr = %config.addr, origin = %config.relay_origin, "relay listening");
-    axum::serve(listener, http::router(pool))
+    axum::serve(listener, http::router(pool, &keys, &config.relay_origin))
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|e| e.to_string())

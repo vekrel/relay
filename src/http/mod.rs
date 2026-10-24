@@ -7,8 +7,15 @@ use axum::{Json, Router, routing::get};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
-pub fn router(pool: PgPool) -> Router {
-    Router::new().route("/health", get(health)).with_state(pool)
+use crate::accounts::keys::SigningKeys;
+
+pub mod wellknown;
+
+pub fn router(pool: PgPool, keys: &SigningKeys, origin: &str) -> Router {
+    Router::new()
+        .route("/health", get(health))
+        .with_state(pool)
+        .merge(wellknown::router(keys, origin))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
@@ -47,6 +54,12 @@ mod tests {
     use axum::http::{Request, StatusCode, header};
     use http_body_util::BodyExt;
     use tower::ServiceExt;
+
+    fn router(pool: PgPool) -> Router {
+        let (a, _) = crate::accounts::keys::tests::entry("a", "active");
+        let keys = SigningKeys::from_json(&json!([a]).to_string()).unwrap();
+        super::router(pool, &keys, "http://localhost:8080")
+    }
 
     #[sqlx::test]
     async fn health_returns_ok(pool: PgPool) {
