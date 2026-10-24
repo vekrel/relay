@@ -244,6 +244,13 @@ pub async fn process(push: &Push, payload: &Value) -> Result<(), JobError> {
     }) else {
         return Ok(());
     };
+    if !push
+        .config
+        .app_allowed("android", target.bundle_id.as_deref())
+    {
+        tracing::warn!(device_id = %job.device_id, "Android package not in FCM_PACKAGE_NAMES; push dropped");
+        return Ok(());
+    }
     let Some(prefs) = target.preferences else {
         return Ok(());
     };

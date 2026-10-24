@@ -773,6 +773,9 @@ pub async fn process(push: &Push, job_id: Uuid, payload: &Value) -> Result<(), J
     }) else {
         return skip(&mut conn, &job, "Stale APNs delivery job skipped.").await;
     };
+    if !push.config.app_allowed("ios", current.bundle_id.as_deref()) {
+        return skip(&mut conn, &job, "Bundle id not allowed.").await;
+    }
     let prefs = current.preferences;
     let request = if job.kind == Kind::PushNotification {
         let n = notification.expect("verified");

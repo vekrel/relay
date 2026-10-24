@@ -59,6 +59,15 @@ pub struct Device {
     pub aps_environment: Option<&'static str>,
 }
 
+impl Device {
+    pub fn platform_str(&self) -> &'static str {
+        match self.r.platform {
+            Platform::Ios => "ios",
+            Platform::Android => "android",
+        }
+    }
+}
+
 impl Registration {
     /// `Schema.Int` minimums and the platform filter of `RelayDeviceRegistrationRequest`.
     pub fn check(self) -> Option<Device> {
@@ -94,7 +103,9 @@ impl Registration {
     }
 }
 
-/// `Devices.register`: a token moves to the device that registers it last.
+/// `Devices.register`: a token moves to the device that registers it last, whoever's it was, so a
+/// phone that changes account stops getting the old account's pushes (T3 `Devices.ts` register,
+/// stages `claim-push-token` / `claim-push-to-start-token`). Tokens are never returned or logged.
 pub async fn register(conn: &mut PgConnection, user: Uuid, d: &Device) -> Result<(), sqlx::Error> {
     let now = now_iso();
     let r = &d.r;
@@ -172,7 +183,8 @@ pub async fn unregister(
     Ok(())
 }
 
-/// `LiveActivities.register`. Re-registering the current card's token keeps its arming time, so
+/// `LiveActivities.register`. The token is taken from any earlier card holding it (T3
+/// `LiveActivities.ts` register, the `update ... where activityPushToken`). Re-registering the current card's token keeps its arming time, so
 /// the arming grace cannot swallow the end a replay owes a card whose work is gone.
 pub async fn register_live_activity(
     conn: &mut PgConnection,

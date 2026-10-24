@@ -223,6 +223,7 @@ async fn harness_with(pool: PgPool, extra: &[(&str, &str)]) -> H {
         ("FCM_SERVICE_ACCOUNT", &sa),
         ("FCM_API_BASE", &fcm_fake.url),
         ("FCM_TOKEN_URL", &token_url),
+        ("FCM_PACKAGE_NAMES", "com.example.vekrel"),
     ];
     for (k, v) in extra {
         vars.retain(|(vk, _)| vk != k);
@@ -373,7 +374,8 @@ impl H {
         .execute(&self.pool)
         .await
         .unwrap();
-        crate::machines::credentials::create(&self.pool, MACHINE, &key)
+        let mut conn = self.pool.acquire().await.unwrap();
+        crate::machines::credentials::create(&mut conn, MACHINE, &key)
             .await
             .unwrap()
     }
@@ -626,6 +628,7 @@ async fn fcm_requests_equal_t3() {
         "FCM_SERVICE_ACCOUNT" => Some(sa.clone()),
         "FCM_API_BASE" => Some(fake.url.clone()),
         "FCM_TOKEN_URL" => Some(token_url.clone()),
+        "FCM_PACKAGE_NAMES" => Some("com.example.vekrel".into()),
         _ => None,
     })
     .unwrap();
@@ -1430,7 +1433,7 @@ async fn disabling_a_user_removes_their_phones(pool: PgPool) {
     )
     .await
     .unwrap();
-    assert!(out.ends_with("removed 1 mobile devices"), "{out}");
+    assert!(out.contains("; removed 1 mobile devices;"), "{out}");
     let n: i64 = sqlx::query_scalar("SELECT (SELECT count(*) FROM relay_mobile_devices) + (SELECT count(*) FROM relay_live_activities)")
         .fetch_one(&h.pool)
         .await
@@ -1492,5 +1495,91 @@ async fn keys_and_tokens_never_reach_the_logs(pool: PgPool) {
     assert!(
         logs.contains("push job failed"),
         "the failure was logged, without its token"
+    );
+}
+
+#[sqlx::test]
+async fn devices_may_only_route_to_listed_apps(pool: PgPool) {
+    let h = harness_with(
+        pool,
+        &[(
+            "APNS_BUNDLE_IDS",
+            "com.example.vekrel, com.example.vekrel.dev",
+        )],
+    )
+    .await;
+    let u = h.user("a@example.test", &["mobile:registration"]).await;
+    let cred = h.link(u.id, true, false).await;
+    let reg = |platform: &str, bundle: &str| {
+        let mut v = json!({"deviceId": format!("{platform}-{bundle}"), "label": "x", "platform": platform,
+            "bundleId": bundle, "pushToken": format!("tok-{platform}-{bundle}"), "preferences": prefs_json()});
+        if platform == "ios" {
+            v["iosMajorVersion"] = json!(18)
+        } else {
+            v["androidApiLevel"] = json!(34)
+        }
+        v
+    };
+    for (platform, bundle, ok) in [
+        ("ios", "com.example.vekrel.dev", true),
+        ("ios", "com.attacker.app", false),
+        ("android", "com.example.vekrel", true),
+        ("android", "com.attacker.app", false),
+    ] {
+        let r = h
+            .mobile(
+                &u,
+                "POST",
+                "/v1/mobile/devices",
+                Some(reg(platform, bundle)),
+            )
+            .await;
+        assert_eq!(
+            r.status == StatusCode::OK,
+            ok,
+            "{platform} {bundle}: {}",
+            r.status
+        );
+    }
+    // A value stored before the list existed is never used to send.
+    sqlx::query("INSERT INTO relay_mobile_devices (user_id, device_id, platform, ios_major_version, bundle_id, push_token, preferences_json, created_at, updated_at)
+                 VALUES ($1, 'old-ios', 'ios', 18, 'com.attacker.app', 'tok-old-ios', $2, 'x', 'x'),
+                        ($1, 'old-android', 'android', NULL, 'com.attacker.app', 'tok-old-android', $2, 'x', 'x')")
+        .bind(u.id)
+        .bind(prefs_json())
+        .execute(&h.pool)
+        .await
+        .unwrap();
+    h.publish(
+        &cred,
+        "thread-1",
+        Some(&state("thread-1", "waiting_for_input", 1000)),
+    )
+    .await;
+    while h.work().await > 0 {}
+    let apns: Vec<String> = h.apns.seen().iter().map(|s| s.path.clone()).collect();
+    assert!(
+        apns.contains(&"/3/device/tok-ios-com.example.vekrel.dev".to_string()),
+        "{apns:?}"
+    );
+    let dev = h
+        .apns
+        .seen()
+        .into_iter()
+        .find(|s| s.path.ends_with("com.example.vekrel.dev"))
+        .unwrap();
+    assert_eq!(dev.headers["apns-topic"], "com.example.vekrel.dev");
+    assert!(!apns.iter().any(|p| p.contains("old-ios")), "{apns:?}");
+    assert!(
+        !h.fcm
+            .seen()
+            .iter()
+            .any(|s| s.body.contains("tok-old-android"))
+    );
+    assert!(
+        h.fcm
+            .seen()
+            .iter()
+            .any(|s| s.body.contains("tok-android-com.example.vekrel"))
     );
 }

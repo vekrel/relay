@@ -52,6 +52,22 @@ pub struct PushConfig {
     pub fcm_api_base: String,
     /// `FCM_TOKEN_URL`, default `https://oauth2.googleapis.com/token`.
     pub fcm_token_url: String,
+    /// `APNS_BUNDLE_IDS` (comma list, default `APNS_BUNDLE_ID`): the bundle ids a device may
+    /// register as its APNs topic. Vekrel, not T3 (T3 takes any): our key could otherwise push to
+    /// any app of the team.
+    pub apns_bundle_ids: Vec<String>,
+    /// `FCM_PACKAGE_NAMES` (comma list, required with `FCM_SERVICE_ACCOUNT`): the Android packages
+    /// a device may register (`restricted_package_name`). Vekrel, not T3.
+    pub fcm_package_names: Vec<String>,
+}
+
+fn list(v: Option<String>) -> Vec<String> {
+    v.unwrap_or_default()
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 fn flag(get: &impl Fn(&str) -> Option<String>, name: &str) -> Result<bool, String> {
@@ -105,7 +121,19 @@ impl PushConfig {
                     .ok_or("FCM_SERVICE_ACCOUNT is not a service-account JSON with project_id, client_email and an RSA private_key")?,
             ),
         };
+        let mut apns_bundle_ids = list(val("APNS_BUNDLE_IDS"));
+        if let Some(a) = &apns
+            && apns_bundle_ids.is_empty()
+        {
+            apns_bundle_ids.push(a.bundle_id.clone());
+        }
+        let fcm_package_names = list(val("FCM_PACKAGE_NAMES"));
+        if fcm.is_some() && fcm_package_names.is_empty() {
+            return Err("FCM_SERVICE_ACCOUNT needs FCM_PACKAGE_NAMES (the Android package names devices may register)".into());
+        }
         Ok(Self {
+            apns_bundle_ids,
+            fcm_package_names,
             apns,
             apns_enabled: flag(get, "APNS_ENABLED")?,
             apns_api_base: val("APNS_API_BASE").map(|b| b.trim_end_matches('/').to_owned()),
@@ -118,6 +146,19 @@ impl PushConfig {
             fcm_token_url: val("FCM_TOKEN_URL")
                 .unwrap_or_else(|| "https://oauth2.googleapis.com/token".into()),
         })
+    }
+}
+
+impl PushConfig {
+    /// Whether a device's own bundle id / package may route its pushes. Without credentials
+    /// nothing is sent, so anything is kept until an operator configures the list.
+    pub fn app_allowed(&self, platform: &str, app: Option<&str>) -> bool {
+        let Some(app) = app else { return true };
+        if platform == "android" {
+            self.fcm.is_none() || self.fcm_package_names.iter().any(|p| p == app)
+        } else {
+            self.apns.is_none() || self.apns_bundle_ids.iter().any(|b| b == app)
+        }
     }
 }
 

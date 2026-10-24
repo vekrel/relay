@@ -89,7 +89,12 @@ async fn register_device(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
+    let config = &s.push.config;
     let decode = || match json_payload::<Registration>(&headers, &body).map(Registration::check) {
+        // Vekrel: the bundle id / package must be one the operator listed (T3 takes any).
+        Ok(Some(d)) if !config.app_allowed(d.platform_str(), d.r.bundle_id.as_deref()) => {
+            Err(super::errors::bad_request())
+        }
         Ok(Some(d)) => Ok(d),
         Ok(None) => Err(super::errors::bad_request()),
         Err(r) => Err(r),

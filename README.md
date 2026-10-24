@@ -31,6 +31,8 @@ Environment variables only:
 | `RELAY_MINT_PRIVATE_KEY` | unset | Required by `serve`. Ed25519 PKCS#8 PEM (`keygen`, first block; literal `\n` allowed). Signs link challenges, relay DPoP tokens and requests to machines; machines pin its public key at link time, so rotating it means relinking every machine |
 | `RELAY_TUNNEL_ZONE_NAME` | unset | Zone holding managed tunnel hosts (T3 `managedEndpointBaseDomain`). Unset: connect and status refuse managed endpoints (`managed_endpoint_base_domain_not_configured`) |
 | `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`, `APNS_ENVIRONMENT` | unset | APNs (iOS alerts and Live Activities): Team ID, the auth key's Key ID, the app's bundle id, the `.p8` (PKCS#8 PEM, literal `\n` allowed, never logged) and `sandbox` or `production`. All or none; none means no iOS push is queued (T3 with APNs off). A device's registered bundle id and APS environment win per device |
+| `APNS_BUNDLE_IDS` | `APNS_BUNDLE_ID` | Comma list of bundle ids a device may register as its APNs topic (dev/preview/prod builds); others get 400 and stored ones are never used (Vekrel; T3 takes any) |
+| `FCM_PACKAGE_NAMES` | unset | Required with `FCM_SERVICE_ACCOUNT`: comma list of Android packages a device may register (Vekrel; T3 takes any) |
 | `FCM_SERVICE_ACCOUNT` | unset | Firebase service-account JSON (FCM v1). Unset: Android pushes answer `ok: false` (T3) |
 | `APNS_ENABLED`, `FCM_ENABLED` | `true` | `false` pauses delivery: jobs keep queueing in `relay_push_jobs` and go out when switched back on (APNs jobs expire 10 min after queueing, FCM 5 min, as in T3) |
 | `APNS_API_BASE`, `FCM_API_BASE`, `FCM_TOKEN_URL` | Apple's hosts, `https://fcm.googleapis.com`, `https://oauth2.googleapis.com/token` | Overrides for tests |
