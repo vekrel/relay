@@ -198,7 +198,11 @@ async fn authorize(
     if !s.clients.redirect_allowed(&client_id, &redirect_uri) {
         return bad("This app or return address is not registered with Vekrel.");
     }
-    if q.state.as_ref().is_some_and(|st| st.len() > MAX_STATE_LEN) {
+    // Postgres `text` cannot hold NUL: refuse it here rather than fail the insert with a 500.
+    if q.state
+        .as_ref()
+        .is_some_and(|st| st.len() > MAX_STATE_LEN || st.contains('\0'))
+    {
         return bad("The sign-in request is malformed.");
     }
     let fail = |error: &str, description: &str| {
@@ -332,6 +336,14 @@ pub async fn complete_sign_in(
     res
 }
 
+/// The browser request comes from the web app (cookie-only requests are accepted from it alone).
+fn from_web_origin(s: &AccountsState, headers: &HeaderMap) -> bool {
+    headers
+        .get(header::ORIGIN)
+        .and_then(|o| o.to_str().ok())
+        .is_some_and(|o| s.web_origins.iter().any(|w| w == o))
+}
+
 fn oauth_error(error: &str, description: &str) -> Response {
     (
         StatusCode::BAD_REQUEST,
@@ -401,12 +413,7 @@ async fn token(
             let presented = match f.refresh_token {
                 Some(t) => Some(t),
                 // The web app sends only its cookie; accept it from the web origins only.
-                None if client_id == clients::WEB
-                    && headers
-                        .get(header::ORIGIN)
-                        .and_then(|o| o.to_str().ok())
-                        .is_some_and(|o| s.web_origins.iter().any(|w| w == o)) =>
-                {
+                None if client_id == clients::WEB && from_web_origin(&s, &headers) => {
                     cookie(&headers, REFRESH_COOKIE)
                 }
                 None => None,
@@ -517,7 +524,7 @@ async fn redeem_code(
     Ok(Ok(issued))
 }
 
-/// family, user, client, rotated, revoked, live, email, disabled.
+/// family, user, client, rotated, family revoked, live, email, disabled.
 type RefreshRow = (Uuid, Uuid, String, bool, bool, bool, String, bool);
 
 async fn rotate_refresh(s: &AccountsState, client_id: &str, presented: &str) -> Grant {
@@ -525,7 +532,9 @@ async fn rotate_refresh(s: &AccountsState, client_id: &str, presented: &str) -> 
     // Row lock: two refreshes with one token run one after the other, and the second is reuse.
     let row: Option<RefreshRow> = sqlx::query_as(
         "SELECT r.family_id, r.user_id, r.client_id, r.rotated_at IS NOT NULL,
-                r.revoked_at IS NOT NULL, r.expires_at > now(), u.email::text, u.disabled_at IS NOT NULL
+                EXISTS (SELECT 1 FROM refresh_tokens f
+                        WHERE f.family_id = r.family_id AND f.revoked_at IS NOT NULL),
+                r.expires_at > now(), u.email::text, u.disabled_at IS NOT NULL
          FROM refresh_tokens r JOIN users u ON u.id = r.user_id
          WHERE r.hash = $1 FOR UPDATE OF r",
     )
@@ -535,10 +544,9 @@ async fn rotate_refresh(s: &AccountsState, client_id: &str, presented: &str) -> 
     let Some((family, user_id, token_client, rotated, revoked, live, email, disabled)) = row else {
         return Ok(Err("refresh token is invalid"));
     };
-    if revoked {
-        return Ok(Err("refresh token is revoked"));
-    }
-    if rotated {
+    // Any revoked token ends the family: a revoke racing a rotation can miss the new head (its
+    // snapshot predates it), so the head is refused here and the family finished off below.
+    if revoked || rotated {
         sqlx::query(
             "UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = $1 AND revoked_at IS NULL",
         )
@@ -546,6 +554,9 @@ async fn rotate_refresh(s: &AccountsState, client_id: &str, presented: &str) -> 
         .execute(&mut *tx)
         .await?;
         tx.commit().await?;
+        if revoked {
+            return Ok(Err("refresh token is revoked"));
+        }
         tracing::warn!(family_id = %family, %user_id, "refresh token reused; family revoked");
         return Ok(Err("refresh token was already used"));
     }
@@ -622,7 +633,13 @@ async fn revoke(
     let Ok(Form(f)) = form else {
         return oauth_error("invalid_request", "malformed form body");
     };
-    if let Some(t) = f.token.or_else(|| cookie(&headers, REFRESH_COOKIE)) {
+    // The cookie only from the web app, so a cross-site form post cannot sign the user out.
+    let from_cookie = || {
+        from_web_origin(&s, &headers)
+            .then(|| cookie(&headers, REFRESH_COOKIE))
+            .flatten()
+    };
+    if let Some(t) = f.token.or_else(from_cookie) {
         let done = sqlx::query(
             "UPDATE refresh_tokens SET revoked_at = now()
              WHERE revoked_at IS NULL
@@ -634,6 +651,9 @@ async fn revoke(
         if let Err(e) = done {
             return internal(e);
         }
+    }
+    if !from_web_origin(&s, &headers) {
+        return StatusCode::OK.into_response();
     }
     let (k, v) = set_cookie(REFRESH_COOKIE, "", "/oauth", 0);
     (StatusCode::OK, [(k, v)]).into_response()

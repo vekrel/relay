@@ -854,3 +854,156 @@ async fn secrets_never_reach_the_logs(pool: PgPool) {
         assert!(!logs.contains(&s), "secret in logs: {s}");
     }
 }
+
+#[sqlx::test]
+async fn concurrent_refreshes_of_one_token_let_exactly_one_win(pool: PgPool) {
+    let a = app(pool);
+    let t = a.login("a@example.test").await;
+    let r0 = t["refresh_token"].as_str().unwrap();
+    let (x, y) = tokio::join!(a.refresh(r0), a.refresh(r0));
+    let ok: Vec<_> = [&x, &y]
+        .into_iter()
+        .filter(|r| r.status == StatusCode::OK)
+        .collect();
+    assert_eq!(ok.len(), 1, "{} / {}", x.body, y.body);
+    // The loser is reuse of a rotated token: the whole family, the winner's new head too, is revoked.
+    let winner = ok[0].json();
+    assert_eq!(
+        a.refresh(winner["refresh_token"].as_str().unwrap())
+            .await
+            .json()["error"],
+        "invalid_grant"
+    );
+    let live: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM refresh_tokens WHERE revoked_at IS NULL")
+            .fetch_one(&a.state.pool)
+            .await
+            .unwrap();
+    assert_eq!(live, 0);
+}
+
+/// The state a revoke racing a rotation leaves (the revoke's snapshot predates the new head): the
+/// old token revoked, the new head not. The new head must not refresh, and the family ends revoked.
+#[sqlx::test]
+async fn refresh_is_refused_when_any_token_of_the_family_is_revoked(pool: PgPool) {
+    let a = app(pool);
+    let t = a.login("a@example.test").await;
+    let r0 = t["refresh_token"].as_str().unwrap();
+    let r1 = a.refresh(r0).await.json()["refresh_token"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    sqlx::query("UPDATE refresh_tokens SET revoked_at = now() WHERE hash = $1")
+        .bind(hash(r0))
+        .execute(&a.state.pool)
+        .await
+        .unwrap();
+    assert_eq!(a.refresh(&r1).await.json()["error"], "invalid_grant");
+    let live: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM refresh_tokens WHERE revoked_at IS NULL")
+            .fetch_one(&a.state.pool)
+            .await
+            .unwrap();
+    assert_eq!(live, 0);
+}
+
+/// Revoke and rotate fired together, many times: whatever the interleaving, nothing of the family
+/// stays usable afterwards.
+#[sqlx::test]
+async fn revoke_racing_a_rotation_leaves_nothing_usable(pool: PgPool) {
+    let a = app(pool);
+    for _ in 0..30 {
+        let t = a.login("a@example.test").await;
+        let r0 = t["refresh_token"].as_str().unwrap();
+        let form = [("token", r0)];
+        let (rotated, revoked) = tokio::join!(a.refresh(r0), a.post("/oauth/revoke", &form, &[]));
+        assert_eq!(revoked.status, StatusCode::OK);
+        if rotated.status == StatusCode::OK {
+            let head = rotated.json();
+            assert_eq!(
+                a.refresh(head["refresh_token"].as_str().unwrap())
+                    .await
+                    .json()["error"],
+                "invalid_grant"
+            );
+            assert_eq!(
+                a.whoami(head["access_token"].as_str().unwrap()).await,
+                StatusCode::UNAUTHORIZED
+            );
+        }
+    }
+}
+
+#[sqlx::test]
+async fn state_postgres_cannot_store_is_a_400_not_a_500(pool: PgPool) {
+    let a = app(pool.clone());
+    let (_, c) = pkce();
+    let q = form_urlencoded::Serializer::new(String::new())
+        .extend_pairs([
+            ("response_type", "code"),
+            ("client_id", CLI),
+            ("redirect_uri", CLI_REDIRECT),
+            ("code_challenge", c.as_str()),
+            ("code_challenge_method", "S256"),
+            ("state", "a\0b"),
+        ])
+        .finish();
+    let res = a.get(&format!("/oauth/authorize?{q}"), None).await;
+    assert_eq!(res.status, StatusCode::BAD_REQUEST, "{}", res.body);
+    assert!(res.headers.get(header::LOCATION).is_none());
+    assert_eq!(count(&pool, "auth_requests").await, 0);
+}
+
+#[sqlx::test]
+async fn cookie_revoke_needs_a_web_origin(pool: PgPool) {
+    let a = app(pool);
+    let redirect = format!("{WEB_ORIGIN}/auth/callback");
+    let (v, c) = pkce();
+    let res = a
+        .sign_in("vekrel-web", &redirect, &c, "a@example.test")
+        .await;
+    let code = res.redirect_query(&redirect)["code"].clone();
+    let res = a
+        .post(
+            "/oauth/token",
+            &[
+                ("grant_type", "authorization_code"),
+                ("code", &code),
+                ("redirect_uri", &redirect),
+                ("client_id", "vekrel-web"),
+                ("code_verifier", &v),
+            ],
+            &[("origin", WEB_ORIGIN)],
+        )
+        .await;
+    let jar = format!("vekrel_refresh={}", res.cookie(REFRESH_COOKIE));
+    // A cross-site form post (or no Origin at all) cannot sign the user out.
+    for headers in [
+        vec![("cookie", jar.as_str())],
+        vec![("cookie", jar.as_str()), ("origin", "https://evil.test")],
+    ] {
+        let res = a.post("/oauth/revoke", &[], &headers).await;
+        assert_eq!(res.status, StatusCode::OK);
+        assert!(res.set_cookies().is_empty(), "cookie cleared: {headers:?}");
+        let live: i64 =
+            sqlx::query_scalar("SELECT count(*) FROM refresh_tokens WHERE revoked_at IS NULL")
+                .fetch_one(&a.state.pool)
+                .await
+                .unwrap();
+        assert_eq!(live, 1, "revoked without a web Origin: {headers:?}");
+    }
+    // A body token needs no Origin (CLI, desktop, mobile).
+    let t = a.login("b@example.test").await;
+    let res = a
+        .post(
+            "/oauth/revoke",
+            &[("token", t["refresh_token"].as_str().unwrap())],
+            &[],
+        )
+        .await;
+    assert_eq!(res.status, StatusCode::OK);
+    assert_eq!(
+        a.refresh(t["refresh_token"].as_str().unwrap()).await.json()["error"],
+        "invalid_grant"
+    );
+}
