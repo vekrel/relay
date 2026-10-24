@@ -60,6 +60,8 @@ pub async fn tunnel_test(pool: &PgPool, config: &crate::config::Config) -> Resul
         .map_err(|x| e("create tunnel", x))?;
     let id = tunnel.id.ok_or("create tunnel returned no id")?;
     out.push(format!("created tunnel {name} ({id})"));
+    // The CNAME while it exists, so a failed check still removes it.
+    let mut created_record: Option<String> = None;
     let checks = async {
         cf.put_configuration(&id, &host, "http://127.0.0.1:9")
             .await
@@ -73,6 +75,7 @@ pub async fn tunnel_test(pool: &PgPool, config: &crate::config::Config) -> Resul
             .create_record(&cname_record(&host, &id))
             .await
             .map_err(|x| e("create CNAME", x))?;
+        created_record = Some(record.clone());
         let listed = cf
             .list_records(&host)
             .await
@@ -88,6 +91,7 @@ pub async fn tunnel_test(pool: &PgPool, config: &crate::config::Config) -> Resul
         cf.delete_record(&record)
             .await
             .map_err(|x| e("delete CNAME", x))?;
+        created_record = None;
         let listed = cf
             .list_records(&host)
             .await
@@ -103,7 +107,12 @@ pub async fn tunnel_test(pool: &PgPool, config: &crate::config::Config) -> Resul
         Ok::<_, String>(())
     }
     .await;
-    // Always try to remove the tunnel, even after a failed check.
+    // Always try to remove the CNAME and the tunnel, even after a failed check.
+    if let Some(record) = created_record
+        && let Err(x) = cf.delete_record(&record).await
+    {
+        out.push(e("delete CNAME after a failed check", x));
+    }
     let deleted = cf
         .delete_tunnel(&id)
         .await

@@ -56,6 +56,8 @@ pub struct FakeState {
     pub in_use: Vec<String>,
     /// Each list request waits this long (holds a sweep inside its lock).
     pub list_delay: Duration,
+    /// DNS record listing answers 500.
+    pub fail_dns_list: bool,
     next: u32,
 }
 
@@ -187,6 +189,9 @@ async fn handle(
             } else {
                 ok(json!({"id": id}))
             }
+        }
+        ("GET", ["dns_records"]) if s.fail_dns_list => {
+            err(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
         }
         ("GET", ["dns_records"]) => {
             let search = qv("search").unwrap_or_default();
@@ -768,15 +773,36 @@ async fn two_reapers_in_parallel_act_once(pool: PgPool) {
     let (fake, base) = Fake::start().await;
     let (p, ids) = reaper_fixture(&pool, &base, &fake).await;
     let p2 = provider(&pool, &base);
-    fake.set(|s| s.list_delay = Duration::from_millis(300));
     fake.clear_calls();
     let enabled = cleanup(CleanupMode::Enabled);
-    let (a, b) = tokio::join!(
-        crate::cron::run_once(&pool, Some(&p), enabled),
-        crate::cron::run_once(&pool, Some(&p2), enabled)
+    // While another replica holds the pass lock, this one does nothing at all.
+    let mut other = pool.begin().await.unwrap();
+    sqlx::query("SELECT pg_advisory_xact_lock($1)")
+        .bind(crate::cron::LOCK_KEY)
+        .execute(&mut *other)
+        .await
+        .unwrap();
+    assert!(
+        !crate::cron::run_once(&pool, Some(&p2), enabled)
+            .await
+            .unwrap()
     );
-    let (a, b) = (a.unwrap(), b.unwrap());
-    assert!(a ^ b, "exactly one replica runs the pass ({a}, {b})");
+    assert!(
+        fake.calls().is_empty(),
+        "a skipped pass makes no Cloudflare call"
+    );
+    other.rollback().await.unwrap();
+    // The lock holder's pass deletes the two idle tunnels once; a later pass finds nothing left.
+    assert!(
+        crate::cron::run_once(&pool, Some(&p), enabled)
+            .await
+            .unwrap()
+    );
+    assert!(
+        crate::cron::run_once(&pool, Some(&p2), enabled)
+            .await
+            .unwrap()
+    );
     let deletes: Vec<String> = fake
         .calls()
         .into_iter()
@@ -806,7 +832,6 @@ async fn two_reapers_in_parallel_act_once(pool: PgPool) {
         fake.set(|s| s.tunnels.clear());
         reaper_fixture(&pool, &base, &fake).await
     };
-    fake.set(|s| s.list_delay = Duration::ZERO);
     fake.clear_calls();
     let (a, b) = tokio::join!(reaper::sweep(&p, enabled), reaper::sweep(&p2, enabled));
     // A replica that claims after the other deleted finds the tunnel gone and counts it too, but
@@ -899,4 +924,27 @@ async fn parallel_first_links_cannot_pass_the_tunnel_cap(pool: PgPool) {
     p.provision(u, "late", &loopback(3773), false)
         .await
         .unwrap();
+}
+
+#[sqlx::test]
+async fn admin_tunnel_test_cleans_up_after_a_failed_check(pool: PgPool) {
+    let (fake, base) = Fake::start().await;
+    let config = crate::config::Config::for_tests(&[
+        ("CLOUDFLARE_ACCOUNT_ID", "acct-1"),
+        ("CLOUDFLARE_TUNNEL_ZONE_ID", "zone-1"),
+        ("CLOUDFLARE_API_TOKEN", API_TOKEN),
+        ("CLOUDFLARE_API_BASE", &base),
+        ("RELAY_TUNNEL_ZONE_NAME", ZONE),
+    ]);
+    fake.set(|s| s.fail_dns_list = true);
+    let err = crate::admin::tunnel_test(&pool, &config).await.unwrap_err();
+    assert!(err.contains("list CNAME failed"), "{err}");
+    let s = fake.0.lock().unwrap();
+    assert!(
+        s.calls
+            .iter()
+            .any(|c| c.method == "POST" && c.path.ends_with("/dns_records"))
+    );
+    assert!(s.records.is_empty(), "the CNAME is removed");
+    assert!(s.tunnels.is_empty(), "the tunnel is removed");
 }

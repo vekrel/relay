@@ -16,7 +16,7 @@ pub const INTERVAL: Duration = Duration::from_secs(5 * 60);
 /// `reaper.sweep.pipe(Effect.timeout("2 minutes"))`.
 const SWEEP_TIMEOUT: Duration = Duration::from_secs(120);
 /// `pg_try_advisory_xact_lock` key ("vekrel-relay-cron").
-const LOCK_KEY: i64 = 0x7665_6b72_656c_6372;
+pub(crate) const LOCK_KEY: i64 = 0x7665_6b72_656c_6372;
 
 /// Rows a pass removed, per table.
 #[derive(Debug, Default, PartialEq, Eq)]

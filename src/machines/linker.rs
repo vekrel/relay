@@ -242,6 +242,19 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
             "managed endpoint deprovision on publish-only link failed"
         );
     }
+    // Whether this is the machine's first live link, read before provisioning so the cleanup
+    // below never needs the database after a failure.
+    let first_link = managed && {
+        let mut conn = relay
+            .pool
+            .acquire()
+            .await
+            .map_err(LinkError::LinkPersistence)?;
+        links::get_for_user(&mut conn, user, &verified.machine_id)
+            .await
+            .map_err(LinkError::LinkPersistence)?
+            .is_none()
+    };
     let provisioned: Option<Provisioned> = if managed {
         Some(
             relay
@@ -254,25 +267,16 @@ pub async fn link(relay: &Relay, user: Uuid, req: &LinkRequest) -> Result<Linked
         None
     };
     let finished = finish(relay, user, req, &verified, provisioned.as_ref(), managed).await;
-    if let (Err(_), Some(_)) = (&finished, &provisioned) {
+    if finished.is_err() && provisioned.is_some() && first_link {
         // Vekrel, not T3 (which leaves it): a first link that failed after provisioning frees its
         // tunnel, so it neither lingers nor holds a slot of the tunnel cap. A relink keeps it; the
-        // machine's live link still uses it. Best effort: a cancelled request skips this, and the
-        // cap stops counting an unlinked allocation after 10 minutes.
-        let mut conn = relay
-            .pool
-            .acquire()
+        // machine's live link still uses it. Best effort, and the link's own error is returned: a
+        // cancelled request skips this, and the cap stops counting an unlinked allocation after
+        // 10 minutes.
+        if let Err(e) = relay
+            .provider
+            .deprovision(user, &verified.machine_id, None)
             .await
-            .map_err(LinkError::LinkPersistence)?;
-        let linked = links::get_for_user(&mut conn, user, &verified.machine_id)
-            .await
-            .map_err(LinkError::LinkPersistence)?;
-        drop(conn);
-        if linked.is_none()
-            && let Err(e) = relay
-                .provider
-                .deprovision(user, &verified.machine_id, None)
-                .await
         {
             tracing::warn!(
                 machine_id = %verified.machine_id,
