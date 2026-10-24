@@ -356,6 +356,8 @@ async fn handle(relay: &Relay, request: Request) -> (&'static str, Response) {
         .insert(DELIVERY_PROOF_HEADER.to_owned(), Value::String(proof));
 
     let offline = match upstream::send(relay, &endpoint.http_base_url, &hook).await {
+        // Never deliverable, so never held: answered as a path that names no hook.
+        Err(upstream::INVALID_URL) => return ("invalid_path", hook_not_found()),
         Err(_) => (503, "environment_unavailable"),
         Ok(None) => (504, "environment_timeout"),
         Ok(Some(r)) if matches!(r.status, 502 | 503 | 504 | TUNNEL_OFFLINE_STATUS) => {

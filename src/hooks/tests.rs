@@ -28,7 +28,6 @@ use crate::machines::{Relay, credentials, now_ms};
 const ORIGIN: &str = "https://relay.example.test";
 const ZONE: &str = "tunnels.example.test";
 const KEY: &str = "0123456789abcdef";
-const HOST: &str = "prod-0123456789abcdef.tunnels.example.test";
 
 #[derive(Debug, Clone)]
 struct Seen {
@@ -44,6 +43,13 @@ struct Machine {
     seen: Arc<Mutex<Vec<Seen>>>,
     statuses: Arc<Mutex<VecDeque<u16>>>,
     fallback: Arc<Mutex<Option<u16>>>,
+    /// Revokes every link (without clearing held hooks) when the first request arrives.
+    revoke_on_first: Arc<Mutex<Option<PgPool>>>,
+    /// Requests in progress now, and the most seen at once.
+    inflight: Arc<std::sync::atomic::AtomicUsize>,
+    max_inflight: Arc<std::sync::atomic::AtomicUsize>,
+    /// Extra time each answer takes, in ms.
+    delay_ms: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl Machine {
@@ -61,13 +67,22 @@ impl Machine {
 async fn machine_route(State(m): State<Machine>, req: Request<Body>) -> Response {
     let (parts, body) = req.into_parts();
     let body = body.collect().await.unwrap().to_bytes().to_vec();
+    use std::sync::atomic::Ordering::SeqCst;
+    let now = m.inflight.fetch_add(1, SeqCst) + 1;
+    m.max_inflight.fetch_max(now, SeqCst);
+    let revoke = m.revoke_on_first.lock().unwrap().take();
+    if let Some(pool) = revoke {
+        exec(&pool, "UPDATE relay_machine_links SET revoked_at = 'x'").await;
+    }
     m.seen.lock().unwrap().push(Seen {
         method: parts.method.to_string(),
         uri: parts.uri.to_string(),
         headers: parts.headers,
         body,
     });
-    tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    let extra = m.delay_ms.load(SeqCst);
+    tokio::time::sleep(std::time::Duration::from_millis(20 + extra)).await;
+    m.inflight.fetch_sub(1, SeqCst);
     let queued = m.statuses.lock().unwrap().pop_front();
     let status = queued.or(*m.fallback.lock().unwrap()).unwrap_or(200);
     (
@@ -123,9 +138,17 @@ async fn exec(pool: &PgPool, sql: &str) {
         .unwrap();
 }
 
-/// User `a@example.test` links machine `m1` (key `mk`) as a managed endpoint on `HOST`, whose
+/// User `a@example.test` links machine `m1` (key `mk`) as a managed endpoint on `prod-<KEY>.<ZONE>`, whose
 /// tunnel name ends with `KEY`. `hold`: the link opted in to held webhooks.
 async fn setup(pool: PgPool, hold: bool) -> T {
+    setup_with(pool, hold, Arc::new(NoTunnels)).await
+}
+
+async fn setup_with(
+    pool: PgPool,
+    hold: bool,
+    provider: Arc<dyn crate::machines::provider::ManagedEndpoints>,
+) -> T {
     let (machine, url) = start_machine().await;
     let user: Uuid =
         sqlx::query_scalar("INSERT INTO users (email) VALUES ('a@example.test') RETURNING id")
@@ -137,13 +160,7 @@ async fn setup(pool: PgPool, hold: bool) -> T {
         .await
         .unwrap();
     let mint = test_only_key("relayMint");
-    let mut relay = Relay::new(
-        pool.clone(),
-        mint,
-        ORIGIN,
-        Some(ZONE.into()),
-        Arc::new(NoTunnels),
-    );
+    let mut relay = Relay::new(pool.clone(), mint, ORIGIN, Some(ZONE.into()), provider);
     relay.endpoint_override = Some(url);
     let relay = Arc::new(relay);
     let (a, _) = crate::accounts::keys::tests::entry("a", "active");
@@ -166,6 +183,12 @@ async fn setup(pool: PgPool, hold: bool) -> T {
 }
 
 async fn add_link(pool: &PgPool, user: Uuid, machine_id: &str, hold: bool) {
+    add_link_with_key(pool, user, machine_id, hold, KEY).await
+}
+
+/// A managed link whose endpoint key is `key`, on `prod-<key>.<ZONE>`.
+async fn add_link_with_key(pool: &PgPool, user: Uuid, machine_id: &str, hold: bool, key: &str) {
+    let host = format!("prod-{key}.{ZONE}");
     sqlx::query(
         "INSERT INTO relay_machine_links (user_id, machine_id, machine_public_key,
             endpoint_http_base_url, endpoint_ws_base_url, endpoint_provider_kind,
@@ -174,8 +197,8 @@ async fn add_link(pool: &PgPool, user: Uuid, machine_id: &str, hold: bool) {
     )
     .bind(user)
     .bind(machine_id)
-    .bind(format!("https://{HOST}/"))
-    .bind(format!("wss://{HOST}/ws"))
+    .bind(format!("https://{host}/"))
+    .bind(format!("wss://{host}/ws"))
     .bind(hold)
     .execute(pool)
     .await
@@ -187,8 +210,8 @@ async fn add_link(pool: &PgPool, user: Uuid, machine_id: &str, hold: bool) {
     )
     .bind(user)
     .bind(machine_id)
-    .bind(HOST)
-    .bind(format!("vekrelrelay-managedendpoint-test-{KEY}"))
+    .bind(&host)
+    .bind(format!("vekrelrelay-managedendpoint-test-{key}"))
     .execute(pool)
     .await
     .unwrap();
@@ -1100,4 +1123,234 @@ async fn hold_stores_only_for_an_authorized_endpoint(pool: PgPool) {
             .unwrap(),
         inbox::Held::Stored
     );
+}
+
+// ---- Fix round 1 ----
+
+/// The link is revoked (without a clear) while a run is sending: the run stops before the next
+/// send and drops what is left.
+#[sqlx::test]
+async fn a_run_rechecks_authorization_before_each_send(pool: PgPool) {
+    let t = setup(pool, true).await;
+    for id in ["s1", "s2", "s3"] {
+        let h = hook_row(id, "hook-1", id.as_bytes());
+        assert_eq!(
+            inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+            inbox::Held::Stored
+        );
+    }
+    assert!(inbox::wake(&t.pool, KEY, BASE).await.unwrap());
+    *t.machine.revoke_on_first.lock().unwrap() = Some(t.pool.clone());
+    assert_eq!(inbox::run_due(&t.relay).await.unwrap(), 1);
+    assert_eq!(t.machine.seen().len(), 1, "no send after the revoke");
+    assert!(t.held().await.is_empty(), "the rest is dropped");
+}
+
+/// Every run prunes its endpoint's expired requests first (T3 `deliverDue`), so none is sent.
+#[sqlx::test]
+async fn a_run_never_sends_an_expired_request(pool: PgPool) {
+    let t = setup(pool, true).await;
+    let mut old = hook_row("old", "hook-1", b"old");
+    old.received_at = crate::auth::dpop_proofs::iso_millis(now_ms() - inbox::TTL_MS - 1_000);
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &old).await.unwrap(),
+        inbox::Held::Stored
+    );
+    let fresh = hook_row("fresh", "hook-1", b"fresh");
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &fresh).await.unwrap(),
+        inbox::Held::Stored
+    );
+    assert!(inbox::wake(&t.pool, KEY, BASE).await.unwrap());
+    assert_eq!(inbox::run_due(&t.relay).await.unwrap(), 1);
+    let sent: Vec<Vec<u8>> = t.machine.seen().into_iter().map(|s| s.body).collect();
+    assert_eq!(sent, [b"fresh".to_vec()]);
+    assert!(t.held().await.is_empty());
+}
+
+/// A held request whose machine URL is refused can never be delivered: it is dropped and the
+/// queue goes on, instead of counting as an outage.
+#[sqlx::test]
+async fn an_undeliverable_url_is_dropped_not_retried(pool: PgPool) {
+    let t = setup(pool, true).await;
+    let mut bad = hook_row("bad", "hook-1", b"bad");
+    bad.raw_hook_id = "..".into();
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &bad).await.unwrap(),
+        inbox::Held::Stored
+    );
+    let good = hook_row("good", "hook-1", b"good");
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &good).await.unwrap(),
+        inbox::Held::Stored
+    );
+    assert_eq!(inbox::deliver_due(&t.relay, KEY, 0).await.unwrap(), None);
+    let sent: Vec<Vec<u8>> = t.machine.seen().into_iter().map(|s| s.body).collect();
+    assert_eq!(sent, [b"good".to_vec()]);
+    assert!(t.held().await.is_empty());
+    let failures: i32 = sqlx::query_scalar("SELECT failures FROM relay_held_hook_targets")
+        .fetch_one(&t.pool)
+        .await
+        .unwrap();
+    assert_eq!(failures, 0);
+}
+
+/// Turning the hold off runs on one connection: it works with a pool of one.
+#[sqlx::test]
+async fn hold_opt_out_needs_one_connection(pool: PgPool) {
+    let t = setup(pool, true).await;
+    let h = hook_row("h", "hook-1", b"x");
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+        inbox::Held::Stored
+    );
+    let one = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(1)
+        .acquire_timeout(std::time::Duration::from_secs(3))
+        .connect_with((*t.pool.connect_options()).clone())
+        .await
+        .unwrap();
+    held::set_hold_while_offline(&one, "m1", "mk", false)
+        .await
+        .unwrap();
+    assert!(t.held().await.is_empty());
+}
+
+/// The worker runs at most `MAX_CONCURRENT_RUNS` endpoints at once.
+#[sqlx::test]
+async fn concurrent_delivery_runs_are_bounded(pool: PgPool) {
+    let t = setup(pool, true).await;
+    t.machine
+        .delay_ms
+        .store(300, std::sync::atomic::Ordering::SeqCst);
+    let n = inbox::MAX_CONCURRENT_RUNS + 4;
+    for i in 0..n {
+        let key = format!("{i:016x}");
+        let machine = format!("mc{i}");
+        add_link_with_key(&t.pool, t.user, &machine, true, &key).await;
+        let h = hook_row(&format!("h{i}"), "hook-1", b"x");
+        assert_eq!(
+            inbox::hold(&t.pool, &key, "unused", &h).await.unwrap(),
+            inbox::Held::Stored
+        );
+        assert!(inbox::wake(&t.pool, &key, "unused").await.unwrap());
+    }
+    let sem = Arc::new(tokio::sync::Semaphore::new(inbox::MAX_CONCURRENT_RUNS));
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
+    while t.machine.seen().len() < n && tokio::time::Instant::now() < deadline {
+        inbox::dispatch_due(&t.relay, &sem).await;
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+    assert_eq!(t.machine.seen().len(), n);
+    let max = t
+        .machine
+        .max_inflight
+        .load(std::sync::atomic::Ordering::SeqCst);
+    assert!(
+        (2..=inbox::MAX_CONCURRENT_RUNS).contains(&max),
+        "max in flight {max}"
+    );
+}
+
+use crate::machines::provider::{
+    Allocation, BoxFuture, DeprovisionFailed, ManagedEndpoints, OriginSync, ProviderError,
+    Provisioned,
+};
+
+/// Tunnel teardown that always fails (Cloudflare down); everything else as `NoTunnels`.
+struct FailingTeardown;
+
+impl ManagedEndpoints for FailingTeardown {
+    fn provision<'a>(
+        &'a self,
+        u: Uuid,
+        m: &'a str,
+        o: &'a crate::machines::Origin,
+        r: bool,
+    ) -> BoxFuture<'a, Result<Provisioned, ProviderError>> {
+        NoTunnels.provision(u, m, o, r)
+    }
+    fn reconcile_origin<'a>(
+        &'a self,
+        u: Uuid,
+        m: &'a str,
+        t: &'a str,
+        o: &'a crate::machines::Origin,
+        e: &'a crate::machines::Endpoint,
+    ) -> BoxFuture<'a, Result<OriginSync, ProviderError>> {
+        NoTunnels.reconcile_origin(u, m, t, o, e)
+    }
+    fn prepare_deprovision<'a>(
+        &'a self,
+        u: Uuid,
+        m: &'a str,
+    ) -> BoxFuture<'a, Result<Option<Allocation>, DeprovisionFailed>> {
+        NoTunnels.prepare_deprovision(u, m)
+    }
+    fn deprovision<'a>(
+        &'a self,
+        _: Uuid,
+        _: &'a str,
+        _: Option<Option<Allocation>>,
+    ) -> BoxFuture<'a, Result<bool, DeprovisionFailed>> {
+        Box::pin(async {
+            Err(DeprovisionFailed {
+                stage: "delete-tunnel",
+            })
+        })
+    }
+    fn release<'a>(
+        &'a self,
+        u: Uuid,
+        m: &'a str,
+        t: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<bool, DeprovisionFailed>> {
+        NoTunnels.release(u, m, t)
+    }
+    fn enable_recovery<'a>(
+        &'a self,
+        u: Uuid,
+        m: &'a str,
+        t: &'a str,
+        k: &'a str,
+        o: &'a crate::machines::Origin,
+    ) -> BoxFuture<'a, Result<bool, sqlx::Error>> {
+        NoTunnels.enable_recovery(u, m, t, k, o)
+    }
+}
+
+/// Unlink clears held hooks in the revoke transaction, so a failed tunnel teardown cannot leave
+/// them behind.
+#[sqlx::test]
+async fn unlink_clears_held_hooks_even_when_teardown_fails(pool: PgPool) {
+    let t = setup_with(pool, true, Arc::new(FailingTeardown)).await;
+    let h = hook_row("h", "hook-1", b"x");
+    assert_eq!(
+        inbox::hold(&t.pool, KEY, BASE, &h).await.unwrap(),
+        inbox::Held::Stored
+    );
+    let claims = AccessClaims::new(
+        ORIGIN,
+        t.user,
+        Uuid::new_v4(),
+        "vekrel-cli",
+        "a@example.test",
+        crate::accounts::tokens::now_secs(),
+    );
+    let req = Request::builder()
+        .method("DELETE")
+        .uri("/v1/client/machine-links/m1")
+        .header(
+            header::AUTHORIZATION,
+            format!("Bearer {}", sign_access_token(&t.keys, &claims)),
+        )
+        .body(Body::empty())
+        .unwrap();
+    let r = t.send(req).await;
+    assert_eq!(
+        r.status,
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "teardown failed"
+    );
+    assert!(t.held().await.is_empty());
 }

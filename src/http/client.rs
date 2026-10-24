@@ -439,19 +439,20 @@ async fn unlink(s: &MachineState, user: Uuid, machine_id: &str) -> Result<bool, 
                 .await
                 .map_err(persistence)?;
             }
+            // Nobody links the endpoint now, so its held webhooks go (`HookInbox.clear`), in the
+            // same transaction, before a teardown that can fail.
+            if let Some(key) = &endpoint_key {
+                inbox::clear(&mut tx, key).await.map_err(persistence)?;
+            }
             tx.commit().await.map_err(tx_failed)?;
             revoked
         }
     };
-    let deprovisioned = provider
-        .deprovision(user, machine_id, Some(target))
-        .await
-        .map_err(upstream)?;
-    // Nobody links the endpoint now, so its held webhooks go (`HookInbox.clear`).
-    if let Some(key) = endpoint_key {
+    // Already revoked (a retry after a failed teardown): clear anything left all the same.
+    if !unlinked && let Some(key) = &endpoint_key {
         let cleared = async {
             let mut tx = s.relay.pool.begin().await?;
-            inbox::clear(&mut tx, &key).await?;
+            inbox::clear(&mut tx, key).await?;
             tx.commit().await
         }
         .await;
@@ -459,6 +460,10 @@ async fn unlink(s: &MachineState, user: Uuid, machine_id: &str) -> Result<bool, 
             tracing::warn!(machine_id, error = %e, "could not clear held webhook requests");
         }
     }
+    let deprovisioned = provider
+        .deprovision(user, machine_id, Some(target))
+        .await
+        .map_err(upstream)?;
     if !deprovisioned {
         let retry = provider
             .prepare_deprovision(user, machine_id)

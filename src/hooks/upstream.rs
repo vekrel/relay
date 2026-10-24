@@ -50,6 +50,9 @@ pub struct Response {
 /// Why a send failed (the `_tag` T3 annotates); never the error text, which carries the URL.
 pub type Failure = &'static str;
 
+/// The machine URL was refused by `checked_url`: nothing was sent, and nothing ever will be.
+pub const INVALID_URL: Failure = "InvalidUrl";
+
 /// `.` or `..`, also spelled with `%2e` in any case: a URL parser would resolve it.
 pub fn is_dot_segment(raw: &str) -> bool {
     matches!(
@@ -121,7 +124,7 @@ fn hook_url(base_url: &str, hook: &Hook) -> String {
 pub async fn send(relay: &Relay, base_url: &str, hook: &Hook) -> Result<Option<Response>, Failure> {
     #[cfg(test)]
     let base_url = relay.endpoint_override.as_deref().unwrap_or(base_url);
-    let url = checked_url(base_url, hook).ok_or("InvalidUrl")?;
+    let url = checked_url(base_url, hook).ok_or(INVALID_URL)?;
     let method = reqwest::Method::from_bytes(hook.method.as_bytes()).map_err(|_| "InvalidUrl")?;
     let mut headers = reqwest::header::HeaderMap::new();
     for (name, value) in &hook.headers {

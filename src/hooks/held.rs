@@ -70,7 +70,7 @@ pub async fn resolve_endpoint(
 /// `ownEndpointKeys`: the endpoint keys of the managed links this machine key proved. The machine
 /// id alone would also match other accounts' links of it.
 pub async fn own_endpoint_keys(
-    pool: &PgPool,
+    conn: &mut sqlx::PgConnection,
     machine_id: &str,
     machine_public_key: &str,
 ) -> Result<Vec<String>, sqlx::Error> {
@@ -84,7 +84,7 @@ pub async fn own_endpoint_keys(
     )
     .bind(machine_id)
     .bind(machine_public_key)
-    .fetch_all(pool)
+    .fetch_all(conn)
     .await?;
     Ok(names
         .iter()
@@ -104,7 +104,7 @@ pub async fn set_hold_while_offline(
     let mut tx = pool.begin().await?;
     links::set_hold_webhooks_while_offline(&mut tx, machine_id, machine_public_key, hold).await?;
     if !hold {
-        for key in own_endpoint_keys(pool, machine_id, machine_public_key).await? {
+        for key in own_endpoint_keys(&mut tx, machine_id, machine_public_key).await? {
             inbox::clear(&mut tx, &key).await?;
         }
     }
@@ -118,7 +118,13 @@ pub async fn wake(
     machine_public_key: &str,
 ) -> Result<bool, sqlx::Error> {
     let mut pending = false;
-    for key in own_endpoint_keys(&relay.pool, machine_id, machine_public_key).await? {
+    let keys = own_endpoint_keys(
+        &mut *relay.pool.acquire().await?,
+        machine_id,
+        machine_public_key,
+    )
+    .await?;
+    for key in keys {
         let Some(endpoint) = resolve_endpoint(relay, &key).await? else {
             continue;
         };

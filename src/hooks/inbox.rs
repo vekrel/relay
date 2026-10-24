@@ -38,6 +38,8 @@ const MAX_COUNTED_FAILURES: i32 = 25;
 const RUN_FAILURE_RETRY_MS: i64 = 60_000;
 /// A claim covers one run: at most 20 sends of 8 s each, plus database time.
 const LEASE_MS: i64 = 5 * 60_000;
+/// At most this many endpoints are delivered at once per replica.
+pub const MAX_CONCURRENT_RUNS: usize = 8;
 /// How often the background task looks for due endpoints (T3's alarm fires at the due time; a wake
 /// sets the due time to now, so it waits at most this long).
 const POLL: Duration = Duration::from_secs(1);
@@ -240,11 +242,14 @@ pub enum Outcome {
     /// delivery id it already ran, so retrying is safe.
     Busy,
     Unreachable,
+    /// Vekrel: the machine URL is refused (`upstream::checked_url`); it can never be delivered.
+    Refused,
 }
 
 /// `HookInboxObject` `deliver`.
 async fn deliver(relay: &Relay, base_url: &str, hook: &Hook) -> Outcome {
     let (outcome, reason) = match upstream::send(relay, base_url, hook).await {
+        Err(upstream::INVALID_URL) => (Outcome::Refused, upstream::INVALID_URL.to_owned()),
         Err(tag) => (Outcome::Unreachable, tag.to_owned()),
         Ok(None) => (Outcome::Unreachable, "timeout".to_owned()),
         Ok(Some(r)) => {
@@ -279,6 +284,23 @@ async fn still_held(pool: &PgPool, seq: i64) -> Result<bool, sqlx::Error> {
     )
 }
 
+/// The endpoint may still get its held requests (the hold's `AUTHORIZED` check).
+async fn authorized(pool: &PgPool, endpoint_key: &str) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT {AUTHORIZED}")))
+        .bind(endpoint_key)
+        .fetch_one(pool)
+        .await
+}
+
+/// Drops everything held for the endpoint (its own transaction).
+async fn drop_all(pool: &PgPool, endpoint_key: &str, why: &'static str) -> Result<(), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let n = clear(&mut tx, endpoint_key).await?;
+    tx.commit().await?;
+    tracing::info!(endpoint_key, dropped = n, why, "held webhooks dropped");
+    Ok(())
+}
+
 async fn has_pending(pool: &PgPool, endpoint_key: &str) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM relay_held_hooks WHERE endpoint_key = $1)")
         .bind(endpoint_key)
@@ -308,16 +330,15 @@ pub async fn deliver_due(
     // enabled); if not, drop them instead of delivering. The base URL is the one resolved now.
     let resolved = super::held::resolve_endpoint(relay, endpoint_key).await?;
     let Some(endpoint) = resolved.filter(|e| e.hold_while_offline) else {
-        let mut tx = pool.begin().await?;
-        let n = clear(&mut tx, endpoint_key).await?;
-        tx.commit().await?;
-        tracing::info!(
-            endpoint_key,
-            dropped = n,
-            "held webhooks dropped: endpoint no longer holds"
-        );
+        drop_all(pool, endpoint_key, "endpoint no longer holds").await?;
         return Ok(None);
     };
+    // T3 `deliverDue` starts by deleting what is past the TTL.
+    sqlx::query("DELETE FROM relay_held_hooks WHERE endpoint_key = $1 AND received_at < $2")
+        .bind(endpoint_key)
+        .bind(iso(started_at - TTL_MS))
+        .execute(pool)
+        .await?;
     let base_url = endpoint.http_base_url.as_str();
     let read_page = |after: i64, skip: Vec<String>| {
         sqlx::query(
@@ -366,6 +387,12 @@ pub async fn deliver_due(
                     .await?;
                 continue;
             };
+            // Vekrel: authorization is re-checked before every send, so an unlink, opt-out or
+            // disable during a run stops it (and drops the rest).
+            if !authorized(pool, endpoint_key).await? {
+                drop_all(pool, endpoint_key, "endpoint no longer holds").await?;
+                return Ok(None);
+            }
             sent += 1;
             let hook = Hook {
                 id: id.clone(),
@@ -403,6 +430,7 @@ pub async fn deliver_due(
                 busy.insert(hook_key);
                 continue;
             }
+            // Refused: dropped like a delivered request, never retried and never an outage.
             sqlx::query("DELETE FROM relay_held_hooks WHERE id = $1")
                 .bind(&id)
                 .execute(pool)
@@ -498,9 +526,37 @@ pub async fn run_due(relay: &Relay) -> Result<usize, sqlx::Error> {
     Ok(runs)
 }
 
+/// Claims due endpoints while a run slot is free and runs each on its own task, so one slow
+/// machine never holds up the others. A slot is taken before the claim, so no lease ticks while
+/// a claimed endpoint waits for one.
+pub async fn dispatch_due(relay: &Arc<Relay>, runs: &Arc<tokio::sync::Semaphore>) {
+    loop {
+        let Ok(slot) = runs.clone().acquire_owned().await else {
+            return;
+        };
+        match claim(&relay.pool).await {
+            Ok(Some(c)) => {
+                let relay = relay.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = run_claimed(&relay, c).await {
+                        tracing::warn!(error = %e, "held webhook claim release failed");
+                    }
+                    drop(slot);
+                });
+            }
+            Ok(None) => return,
+            Err(e) => {
+                tracing::warn!(error = %e, "held webhook claim failed");
+                return;
+            }
+        }
+    }
+}
+
 /// The background task: prunes expired requests and delivers due endpoints. Safe on any number of
 /// replicas (claims are leased with `SKIP LOCKED`).
 pub async fn worker(relay: Arc<Relay>) {
+    let runs = Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_RUNS));
     let mut last_prune: Option<tokio::time::Instant> = None;
     loop {
         if last_prune.is_none_or(|t| t.elapsed() >= PRUNE_EVERY) {
@@ -511,24 +567,7 @@ pub async fn worker(relay: Arc<Relay>) {
                 Err(e) => tracing::warn!(error = %e, "held webhook prune failed"),
             }
         }
-        // Each due endpoint runs on its own, so one slow machine never holds up the others.
-        loop {
-            match claim(&relay.pool).await {
-                Ok(Some(c)) => {
-                    let relay = relay.clone();
-                    tokio::spawn(async move {
-                        if let Err(e) = run_claimed(&relay, c).await {
-                            tracing::warn!(error = %e, "held webhook claim release failed");
-                        }
-                    });
-                }
-                Ok(None) => break,
-                Err(e) => {
-                    tracing::warn!(error = %e, "held webhook claim failed");
-                    break;
-                }
-            }
-        }
+        dispatch_due(&relay, &runs).await;
         tokio::time::sleep(POLL).await;
     }
 }
