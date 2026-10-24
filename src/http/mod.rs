@@ -22,12 +22,23 @@ use crate::machines::provider::NoTunnels;
 
 pub mod client;
 pub mod errors;
+pub mod push;
 pub mod server;
 pub mod token_exchange;
 pub mod wellknown;
 
 /// The relay. Machine routes need `RELAY_MINT_PRIVATE_KEY` (`serve` requires it).
+#[cfg(test)]
 pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
+    build(pool, keys, config).0
+}
+
+/// The router, and the push service whose workers `serve` starts (none without a mint key).
+pub fn build(
+    pool: PgPool,
+    keys: Arc<SigningKeys>,
+    config: &Config,
+) -> (Router, Option<Arc<crate::push::Push>>) {
     let accounts = AccountsState::new(pool.clone(), keys.clone(), config);
     let r = Router::new()
         .route("/health", get(health))
@@ -38,10 +49,11 @@ pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
         .merge(magic_link::router(accounts.clone(), config))
         .merge(providers::router(accounts.clone(), config));
     let Some(pem) = &config.mint_private_key else {
-        return global(r);
+        return (global(r), None);
     };
     let mint_key =
         crate::jws::signing_key_from_pem(&pem.0).expect("serve validated RELAY_MINT_PRIVATE_KEY");
+    let push = Arc::new(crate::push::Push::new(pool.clone(), config.push.clone()));
     let relay = Arc::new(Relay::new(
         pool,
         mint_key,
@@ -51,10 +63,15 @@ pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
     ));
     // Held webhooks are delivered in the background (T3: the inbox objects' alarms).
     tokio::spawn(hooks::inbox::worker(relay.clone()));
-    global(
-        r.merge(hooks::forwarder::router(relay.clone()))
-            .merge(client::router(client::MachineState { relay, accounts })),
-    )
+    let machines = client::MachineState { relay, accounts };
+    let r = r
+        .merge(hooks::forwarder::router(machines.relay.clone()))
+        .merge(client::router(machines.clone()))
+        .merge(push::router(push::PushState {
+            machines,
+            push: push.clone(),
+        }));
+    (global(r), Some(push))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {

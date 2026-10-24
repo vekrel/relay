@@ -12,7 +12,7 @@ ed25519-dalek = { version = "3.0.0", features = ["pkcs8", "pem"] }
 form_urlencoded = "1.2"
 getrandom = "0.3"
 http-body-util = "0.1.5"
-jsonwebtoken = { version = "10", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "10", default-features = false, features = ["rust_crypto", "use_pem"] }
 percent-encoding = "2"
 p256 = { version = "0.14", features = ["ecdsa"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "http2"] }
@@ -25,9 +25,11 @@ tower-http = { version = "0.7.1", features = ["cors"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
 url = "2"
-uuid = { version = "1.29.0", features = ["v4"] }
+uuid = { version = "1.29.0", features = ["v4", "serde"] }
 
 [dev-dependencies]
+# The fake APNs server speaks HTTP/2 (APNs is HTTP/2 only).
+axum = { version = "0.8", features = ["http2"] }
 # Test-only RS256 keys for the fake Google (both already in the tree through jsonwebtoken).
 rand = "0.8"
 rsa = "0.9"

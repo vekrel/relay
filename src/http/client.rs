@@ -142,7 +142,7 @@ pub struct DpopPrincipal {
 
 /// `layerDpopClientAuth`. Vekrel also refuses tokens of disabled users, so `disable-user` cuts
 /// off the 30-minute token at once.
-async fn dpop_principal(
+pub(crate) async fn dpop_principal(
     s: &MachineState,
     headers: &HeaderMap,
 ) -> Result<DpopPrincipal, RelayError> {
@@ -183,7 +183,7 @@ async fn dpop_principal(
 }
 
 /// `appendRelayDpopChallengeHeader`: every 401 after the DPoP middleware starts says `DPoP`.
-fn dpop_challenge(mut r: Response) -> Response {
+pub(crate) fn dpop_challenge(mut r: Response) -> Response {
     if r.status() == StatusCode::UNAUTHORIZED {
         r.headers_mut()
             .insert(header::WWW_AUTHENTICATE, HeaderValue::from_static("DPoP"));
@@ -594,7 +594,7 @@ fn connect_error(e: ConnectError) -> RelayError {
 }
 
 /// `requireDpopPrincipalScope` + `requireDpopThumbprint`.
-async fn require_dpop(
+pub(crate) async fn require_dpop(
     s: &MachineState,
     p: &DpopPrincipal,
     scope: &str,

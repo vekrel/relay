@@ -30,6 +30,10 @@ Environment variables only:
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RELAY_MINT_PRIVATE_KEY` | unset | Required by `serve`. Ed25519 PKCS#8 PEM (`keygen`, first block; literal `\n` allowed). Signs link challenges, relay DPoP tokens and requests to machines; machines pin its public key at link time, so rotating it means relinking every machine |
 | `RELAY_TUNNEL_ZONE_NAME` | unset | Zone holding managed tunnel hosts (T3 `managedEndpointBaseDomain`). Unset: connect and status refuse managed endpoints (`managed_endpoint_base_domain_not_configured`) |
+| `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`, `APNS_ENVIRONMENT` | unset | APNs (iOS alerts and Live Activities): Team ID, the auth key's Key ID, the app's bundle id, the `.p8` (PKCS#8 PEM, literal `\n` allowed, never logged) and `sandbox` or `production`. All or none; none means no iOS push is queued (T3 with APNs off). A device's registered bundle id and APS environment win per device |
+| `FCM_SERVICE_ACCOUNT` | unset | Firebase service-account JSON (FCM v1). Unset: Android pushes answer `ok: false` (T3) |
+| `APNS_ENABLED`, `FCM_ENABLED` | `true` | `false` pauses delivery: jobs keep queueing in `relay_push_jobs` and go out when switched back on (APNs jobs expire 10 min after queueing, FCM 5 min, as in T3) |
+| `APNS_API_BASE`, `FCM_API_BASE`, `FCM_TOKEN_URL` | Apple's hosts, `https://fcm.googleapis.com`, `https://oauth2.googleapis.com/token` | Overrides for tests |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
 ## Run locally
@@ -64,6 +68,10 @@ Protocol vectors: `tests/fixtures/relay/{jws,dpop}.json` hold TEST-ONLY tokens a
 ## Machines
 
 Routes follow Vekrel-Shared `contracts/src/relay.ts` and T3's `infra/relay/src/http/Api.ts`. Client (account access token as `Bearer`): `GET /v1/machines`, `GET /v1/client/devices`, `GET /v2/client/devices`, `POST /v1/client/machine-link-challenges`, `POST /v1/client/machine-links`, `DELETE /v1/client/machine-links/:machineId[/tunnel]`. Token exchange: `POST /v1/client/dpop-token` (form, account token as `subject_token`, DPoP proof) returns a 30-minute relay DPoP token. DPoP client: `POST /v1/machines/:machineId/connect` and `/status` (the relay signs a request, POSTs it to the machine's `/api/vekrel-connect/*` over its tunnel, and checks the signed answer). Machine (machine credential as `Bearer`): `POST /v1/machines/:machineId/tunnel/recovery`, `/tunnel`, `/link-preferences`. A machine credential works only while an active link proven by the same machine key exists and that link's user is not disabled. Managed tunnels need the Cloudflare provider (Task 10); until then a managed link answers 503 `managed_endpoint_not_configured` and publish-only links work. DPoP `htu` is checked against `RELAY_ORIGIN` plus the request path.
+
+## Push
+
+`POST /v1/machines/:id/threads/:tid/agent-activity` (machine credential + machine-signed proof) stores the thread's state and queues one `relay_push_jobs` row per delivery in the same transaction; `/v1/mobile/devices`, `/v1/mobile/live-activities` and `/v1/mobile/agent-activity` (relay DPoP token with `mobile:registration`) register phones. A worker in each `serve` process claims due jobs with `FOR UPDATE SKIP LOCKED` for 2 minutes; a job whose worker died is claimed again after that and re-sent with the same `apns-id`. Failures retry 30 s apart, six deliveries in all, then the job is `dead` (T3's queue settings). APNs 410 / bad-token and FCM `UNREGISTERED` clear the device's token. Payloads are T3's: ids, phases, statuses and the project, thread and model titles the machine publishes; never message content. `vekrel-relay admin push-test <email>` sends one alert to each registered phone and prints APNs/FCM's answers.
 
 ## Deploy
 

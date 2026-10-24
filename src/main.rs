@@ -9,6 +9,7 @@ mod http;
 mod jws;
 mod keygen;
 mod machines;
+mod push;
 mod rate_limit;
 #[cfg(test)]
 mod test_logs;
@@ -78,7 +79,11 @@ async fn admin_cli(cmd: admin::Admin) -> Result<String, String> {
         .as_ref()
         .map(|s| s.0.as_str())
         .ok_or("DATABASE_URL is required")?;
-    admin::run(&db::connect(url).await?, cmd).await
+    let pool = db::connect(url).await?;
+    if let admin::Admin::PushTest { email } = &cmd {
+        return push::push_test(&push::Push::new(pool, config.push), email).await;
+    }
+    admin::run(&pool, cmd).await
 }
 
 async fn serve() -> Result<(), String> {
@@ -104,10 +109,13 @@ async fn serve() -> Result<(), String> {
         .await
         .map_err(|e| format!("bind {}: {e}", config.addr))?;
     tracing::info!(addr = %config.addr, origin = %config.relay_origin, signup_mode = ?config.signup_mode, "relay listening");
+    let (router, push) = http::build(pool, keys, &config);
+    if let Some(push) = push {
+        push::spawn(push);
+    }
     axum::serve(
         listener,
-        http::router(pool, keys, &config)
-            .into_make_service_with_connect_info::<std::net::SocketAddr>(),
+        router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
     .with_graceful_shutdown(shutdown())
     .await

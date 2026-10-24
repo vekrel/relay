@@ -18,6 +18,8 @@ pub enum Admin {
     ListAllowed,
     /// Disable an account: refuse sign-in, revoke its refresh tokens, machine links and machine credentials, and delete its held webhooks.
     DisableUser { email: String },
+    /// Send a test push to every registered phone of this account and print APNs/FCM's answers.
+    PushTest { email: String },
     /// Re-enable a disabled account (revoked links stay revoked).
     EnableUser { email: String },
 }
@@ -114,11 +116,24 @@ async fn run_db(pool: &PgPool, cmd: Admin) -> Result<Result<String, String>, sql
             .execute(&mut *tx)
             .await?
             .rows_affected();
+            // No more pushes to the account's phones: queued jobs find no device and are skipped.
+            sqlx::query("DELETE FROM relay_live_activities WHERE user_id = $1")
+                .bind(user)
+                .execute(&mut *tx)
+                .await?;
+            let devices = sqlx::query("DELETE FROM relay_mobile_devices WHERE user_id = $1")
+                .bind(user)
+                .execute(&mut *tx)
+                .await?
+                .rows_affected();
             let held = crate::hooks::inbox::clear_for_user(&mut tx, user).await?;
             tx.commit().await?;
             Ok(format!(
-                "disabled {email}: revoked {tokens} refresh tokens, {links} machine links, {credentials} machine credentials; deleted {held} held webhooks"
+                "disabled {email}: revoked {tokens} refresh tokens, {links} machine links, {credentials} machine credentials; deleted {held} held webhooks; removed {devices} mobile devices"
             ))
+        }
+        Admin::PushTest { .. } => {
+            Err("push-test runs through main (it needs the push settings)".into())
         }
         Admin::EnableUser { email } => {
             let n = sqlx::query("UPDATE users SET disabled_at = NULL WHERE email = $1::citext")
@@ -225,7 +240,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             out,
-            "disabled A@example.test: revoked 1 refresh tokens, 2 machine links, 1 machine credentials; deleted 0 held webhooks"
+            "disabled A@example.test: revoked 1 refresh tokens, 2 machine links, 1 machine credentials; deleted 0 held webhooks; removed 0 mobile devices"
         );
         let revoked: Vec<(String, bool)> =
             sqlx::query_as("SELECT hash, revoked_at IS NOT NULL FROM refresh_tokens ORDER BY hash")

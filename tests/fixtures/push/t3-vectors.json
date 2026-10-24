@@ -1,0 +1,1999 @@
+{
+ "generatedBy": "tests/fixtures/push/gen.ts against T3 infra/relay/src/agentActivity",
+ "nowMs": 1792843200000,
+ "states": {
+  "running": {
+   "environmentId": "machine-1",
+   "threadId": "thread-1",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:59:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "approval": {
+   "environmentId": "machine-1",
+   "threadId": "t-approval",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "waiting_for_approval",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:58:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "input": {
+   "environmentId": "machine-1",
+   "threadId": "t-input",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "waiting_for_input",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:57:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "starting": {
+   "environmentId": "machine-1",
+   "threadId": "t-starting",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "starting",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:56:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "stale": {
+   "environmentId": "machine-1",
+   "threadId": "t-stale",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "stale",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:55:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "failedRecent": {
+   "environmentId": "machine-1",
+   "threadId": "t-failed",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "failed",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:59:30.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "completedRecent": {
+   "environmentId": "machine-1",
+   "threadId": "t-done",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "completed",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:54:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "completedOld": {
+   "environmentId": "machine-1",
+   "threadId": "t-old",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "completed",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:40:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "expiredRunning": {
+   "environmentId": "machine-1",
+   "threadId": "t-expired",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T09:00:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "waitingDayOld": {
+   "environmentId": "machine-1",
+   "threadId": "t-day",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "waiting_for_input",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-23T11:00:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "messy": {
+   "environmentId": "machine-2",
+   "threadId": "t-messy",
+   "projectTitle": "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+   "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "Model 😀 with emoji",
+   "updatedAt": "2026-10-24T11:53:00.000Z",
+   "deepLink": "//evil.example/path"
+  },
+  "badLink": {
+   "environmentId": "machine-1",
+   "threadId": "t-badlink",
+   "projectTitle": "Project",
+   "threadTitle": "Thread",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:52:00.000Z",
+   "deepLink": "https://evil.example/"
+  },
+  "nel": {
+   "environmentId": "machine-1",
+   "threadId": "t-nel",
+   "projectTitle": "﻿ P ",
+   "threadTitle": "Next line﻿",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:50:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  },
+  "tabs": {
+   "environmentId": "machine-1",
+   "threadId": "t-tabs",
+   "projectTitle": " P roject ",
+   "threadTitle": "Tab\tand\n newline  title",
+   "phase": "running",
+   "headline": "Working",
+   "modelTitle": "gpt-5.4",
+   "updatedAt": "2026-10-24T11:51:00.000Z",
+   "deepLink": "/threads/machine-1/thread-1"
+  }
+ },
+ "aggregateInputs": {
+  "empty": {
+   "activeStates": [],
+   "terminalState": null
+  },
+  "oneRunning": {
+   "activeStates": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": null
+  },
+  "mixed": {
+   "activeStates": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-approval",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "waiting_for_approval",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:58:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "failed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-old",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "completed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:40:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-starting",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "starting",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:56:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-expired",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T09:00:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-day",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "waiting_for_input",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-23T11:00:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": null
+  },
+  "terminalOnly": {
+   "activeStates": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-done",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "completed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:54:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "failed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-old",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "completed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:40:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": null
+  },
+  "terminalPassed": {
+   "activeStates": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-old",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "completed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:40:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": {
+    "environmentId": "machine-1",
+    "threadId": "t-done",
+    "projectTitle": "Project",
+    "threadTitle": "Thread",
+    "phase": "completed",
+    "headline": "Working",
+    "modelTitle": "gpt-5.4",
+    "updatedAt": "2026-10-24T11:54:00.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   }
+  },
+  "terminalFailedPassed": {
+   "activeStates": [],
+   "terminalState": {
+    "environmentId": "machine-1",
+    "threadId": "t-failed",
+    "projectTitle": "Project",
+    "threadTitle": "Thread",
+    "phase": "failed",
+    "headline": "Working",
+    "modelTitle": "gpt-5.4",
+    "updatedAt": "2026-10-24T11:59:30.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   }
+  },
+  "many": {
+   "activeStates": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-approval",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "waiting_for_approval",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:58:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-input",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "waiting_for_input",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:57:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-starting",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "starting",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:56:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-stale",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "stale",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:55:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-2",
+     "threadId": "t-messy",
+     "projectTitle": "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+     "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "Model 😀 with emoji",
+     "updatedAt": "2026-10-24T11:53:00.000Z",
+     "deepLink": "//evil.example/path"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-badlink",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:52:00.000Z",
+     "deepLink": "https://evil.example/"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-tabs",
+     "projectTitle": " P roject ",
+     "threadTitle": "Tab\tand\n newline  title",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:51:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "failed",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": null
+  },
+  "sanitized": {
+   "activeStates": [
+    {
+     "environmentId": "machine-2",
+     "threadId": "t-messy",
+     "projectTitle": "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+     "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "Model 😀 with emoji",
+     "updatedAt": "2026-10-24T11:53:00.000Z",
+     "deepLink": "//evil.example/path"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-badlink",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:52:00.000Z",
+     "deepLink": "https://evil.example/"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-tabs",
+     "projectTitle": " P roject ",
+     "threadTitle": "Tab\tand\n newline  title",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:51:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-nel",
+     "projectTitle": "﻿ P ",
+     "threadTitle": "Next line﻿",
+     "phase": "running",
+     "headline": "Working",
+     "modelTitle": "gpt-5.4",
+     "updatedAt": "2026-10-24T11:50:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ],
+   "terminalState": null
+  }
+ },
+ "aggregates": {
+  "empty": null,
+  "oneRunning": {
+   "title": "T3 Code",
+   "subtitle": "Agent work in progress",
+   "activeCount": 1,
+   "updatedAt": "2026-10-24T11:59:00.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  },
+  "mixed": {
+   "title": "T3 Code",
+   "subtitle": "Agent work in progress",
+   "activeCount": 3,
+   "updatedAt": "2026-10-24T11:59:30.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-approval",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "waiting_for_approval",
+     "status": "Approval",
+     "updatedAt": "2026-10-24T11:58:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-starting",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "starting",
+     "status": "Connecting",
+     "updatedAt": "2026-10-24T11:56:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "failed",
+     "status": "Failed",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  },
+  "terminalOnly": {
+   "title": "T3 Code",
+   "subtitle": "Agent work failed",
+   "activeCount": 0,
+   "updatedAt": "2026-10-24T11:59:30.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "failed",
+     "status": "Failed",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-done",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "completed",
+     "status": "Done",
+     "updatedAt": "2026-10-24T11:54:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  },
+  "terminalPassed": {
+   "title": "T3 Code",
+   "subtitle": "Agent work completed",
+   "activeCount": 0,
+   "updatedAt": "2026-10-24T11:54:00.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-done",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "completed",
+     "status": "Done",
+     "updatedAt": "2026-10-24T11:54:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  },
+  "terminalFailedPassed": {
+   "title": "T3 Code",
+   "subtitle": "Agent work failed",
+   "activeCount": 0,
+   "updatedAt": "2026-10-24T11:59:30.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-failed",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "failed",
+     "status": "Failed",
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  },
+  "many": {
+   "title": "T3 Code",
+   "subtitle": "Agent work in progress",
+   "activeCount": 8,
+   "updatedAt": "2026-10-24T11:59:30.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-approval",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "waiting_for_approval",
+     "status": "Approval",
+     "updatedAt": "2026-10-24T11:58:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-input",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "waiting_for_input",
+     "status": "Input",
+     "updatedAt": "2026-10-24T11:57:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "thread-1",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-starting",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "starting",
+     "status": "Connecting",
+     "updatedAt": "2026-10-24T11:56:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-2",
+     "threadId": "t-messy",
+     "projectTitle": "Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+     "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...",
+     "modelTitle": "Model 😀 with emoji",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:53:00.000Z",
+     "deepLink": "/"
+    }
+   ]
+  },
+  "sanitized": {
+   "title": "T3 Code",
+   "subtitle": "Agent work in progress",
+   "activeCount": 4,
+   "updatedAt": "2026-10-24T11:53:00.000Z",
+   "activities": [
+    {
+     "environmentId": "machine-2",
+     "threadId": "t-messy",
+     "projectTitle": "Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+     "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...",
+     "modelTitle": "Model 😀 with emoji",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:53:00.000Z",
+     "deepLink": "/"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-badlink",
+     "projectTitle": "Project",
+     "threadTitle": "Thread",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:52:00.000Z",
+     "deepLink": "/"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-tabs",
+     "projectTitle": "P roject",
+     "threadTitle": "Tab\tand\n newline  title",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:51:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    },
+    {
+     "environmentId": "machine-1",
+     "threadId": "t-nel",
+     "projectTitle": "P",
+     "threadTitle": "Next line",
+     "modelTitle": "gpt-5.4",
+     "phase": "running",
+     "status": "Working",
+     "updatedAt": "2026-10-24T11:50:00.000Z",
+     "deepLink": "/threads/machine-1/thread-1"
+    }
+   ]
+  }
+ },
+ "huge": {
+  "title": "T3 Code",
+  "subtitle": "Agent work in progress",
+  "activeCount": 5,
+  "updatedAt": "2026-10-24T11:59:59.000Z",
+  "activities": [
+   {
+    "environmentId": "machine-1",
+    "threadId": "t-huge-0",
+    "projectTitle": "📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "modelTitle": "gpt-5.4",
+    "phase": "running",
+    "status": "Working",
+    "updatedAt": "2026-10-24T11:59:59.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   },
+   {
+    "environmentId": "machine-1",
+    "threadId": "t-huge-1",
+    "projectTitle": "📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "modelTitle": "gpt-5.4",
+    "phase": "running",
+    "status": "Working",
+    "updatedAt": "2026-10-24T11:59:58.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   },
+   {
+    "environmentId": "machine-1",
+    "threadId": "t-huge-2",
+    "projectTitle": "📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "modelTitle": "gpt-5.4",
+    "phase": "running",
+    "status": "Working",
+    "updatedAt": "2026-10-24T11:59:57.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   },
+   {
+    "environmentId": "machine-1",
+    "threadId": "t-huge-3",
+    "projectTitle": "📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "modelTitle": "gpt-5.4",
+    "phase": "running",
+    "status": "Working",
+    "updatedAt": "2026-10-24T11:59:56.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   },
+   {
+    "environmentId": "machine-1",
+    "threadId": "t-huge-4",
+    "projectTitle": "📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "threadTitle": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "modelTitle": "gpt-5.4",
+    "phase": "running",
+    "status": "Working",
+    "updatedAt": "2026-10-24T11:59:55.000Z",
+    "deepLink": "/threads/machine-1/thread-1"
+   }
+  ]
+ },
+ "notifications": {
+  "oneRunning": {
+   "title": "Thread",
+   "body": "Working: Project",
+   "environmentId": "machine-1",
+   "threadId": "thread-1",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "running",
+   "updatedAt": "2026-10-24T11:59:00.000Z"
+  },
+  "mixed": {
+   "title": "Thread",
+   "body": "Approval: Project",
+   "environmentId": "machine-1",
+   "threadId": "t-approval",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "waiting_for_approval",
+   "updatedAt": "2026-10-24T11:58:00.000Z"
+  },
+  "terminalOnly": {
+   "title": "Thread",
+   "body": "Failed: Project",
+   "environmentId": "machine-1",
+   "threadId": "t-failed",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "failed",
+   "updatedAt": "2026-10-24T11:59:30.000Z"
+  },
+  "terminalPassed": {
+   "title": "Thread",
+   "body": "Done: Project",
+   "environmentId": "machine-1",
+   "threadId": "t-done",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "completed",
+   "updatedAt": "2026-10-24T11:54:00.000Z"
+  },
+  "terminalFailedPassed": {
+   "title": "Thread",
+   "body": "Failed: Project",
+   "environmentId": "machine-1",
+   "threadId": "t-failed",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "failed",
+   "updatedAt": "2026-10-24T11:59:30.000Z"
+  },
+  "many": {
+   "title": "Thread",
+   "body": "Approval: Project",
+   "environmentId": "machine-1",
+   "threadId": "t-approval",
+   "deepLink": "/threads/machine-1/thread-1",
+   "phase": "waiting_for_approval",
+   "updatedAt": "2026-10-24T11:58:00.000Z"
+  },
+  "sanitized": {
+   "title": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...",
+   "body": "Working: Long title Long title Long title Long title Long title Long title Long title Long title Long title Long titl...",
+   "environmentId": "machine-2",
+   "threadId": "t-messy",
+   "deepLink": "/",
+   "phase": "running",
+   "updatedAt": "2026-10-24T11:53:00.000Z"
+  }
+ },
+ "transitions": {
+  "attention": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "waiting_for_approval",
+       "status": "Approval",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": true,
+     "notifyOnCompletion": true,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": {
+    "title": "Thread",
+    "body": "Approval: Project"
+   },
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": true,
+   "androidAggregate": {
+    "alert_id": "[\"machine-1\",\"thread-1\",\"waiting_for_approval\",\"2026-10-24T11:59:00.000Z\"]",
+    "alert_group": "[\"machine-1\",\"thread-1\"]",
+    "alert_title": "Thread",
+    "alert_body": "Approval: Project",
+    "alert_path": "/threads/machine-1/thread-1"
+   }
+  },
+  "attentionMuted": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "waiting_for_input",
+       "status": "Input",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": false,
+     "notifyOnCompletion": true,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": null,
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": true,
+   "androidAggregate": null
+  },
+  "replay": {
+   "input": {
+    "previousAggregate": null,
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 3,
+     "updatedAt": "2026-10-24T11:59:30.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "t-approval",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "waiting_for_approval",
+       "status": "Approval",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "t-starting",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "starting",
+       "status": "Connecting",
+       "updatedAt": "2026-10-24T11:56:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "t-failed",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "failed",
+       "status": "Failed",
+       "updatedAt": "2026-10-24T11:59:30.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": true,
+     "notifyOnCompletion": true,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": null,
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": null,
+   "androidAggregate": null
+  },
+  "twoFinished": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "completed",
+       "status": "Done",
+       "updatedAt": "2026-10-24T11:59:50.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "failed",
+       "status": "Failed",
+       "updatedAt": "2026-10-24T11:59:55.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": true,
+     "notifyOnCompletion": true,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": null,
+   "newlyTerminal": {
+    "title": "2 agents finished",
+    "body": "Thread, Second"
+   },
+   "newlyTerminalObservedOnly": {
+    "title": "2 agents finished",
+    "body": "Thread, Second"
+   },
+   "rowPhasesChanged": true,
+   "androidAggregate": {
+    "alert_id": "[[\"machine-1\",\"thread-1\",\"completed\",\"2026-10-24T11:59:50.000Z\"],[\"machine-1\",\"thread-2\",\"failed\",\"2026-10-24T11:59:55.000Z\"]]",
+    "alert_title": "2 agents finished",
+    "alert_body": "Thread, Second",
+    "alert_path": "/"
+   }
+  },
+  "finishedStale": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "completed",
+       "status": "Done",
+       "updatedAt": "2026-10-24T11:55:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": true,
+     "notifyOnCompletion": true,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": null,
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": true,
+   "androidAggregate": null
+  },
+  "finishedMuted": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 2,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "completed",
+       "status": "Done",
+       "updatedAt": "2026-10-24T11:59:50.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      },
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-2",
+       "projectTitle": "Project",
+       "threadTitle": "Second",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:58:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": {
+     "liveActivitiesEnabled": true,
+     "notificationsEnabled": true,
+     "notifyOnApproval": true,
+     "notifyOnInput": true,
+     "notifyOnCompletion": false,
+     "notifyOnFailure": true
+    }
+   },
+   "attention": null,
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": true,
+   "androidAggregate": null
+  },
+  "nullPrefs": {
+   "input": {
+    "previousAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "running",
+       "status": "Working",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "nextAggregate": {
+     "title": "T3 Code",
+     "subtitle": "Agent work in progress",
+     "activeCount": 1,
+     "updatedAt": "2026-10-24T11:59:00.000Z",
+     "activities": [
+      {
+       "environmentId": "machine-1",
+       "threadId": "thread-1",
+       "projectTitle": "Project",
+       "threadTitle": "Thread",
+       "modelTitle": "gpt-5.4",
+       "phase": "waiting_for_approval",
+       "status": "Approval",
+       "updatedAt": "2026-10-24T11:59:00.000Z",
+       "deepLink": "/threads/machine-1/thread-1"
+      }
+     ]
+    },
+    "preferences": null
+   },
+   "attention": {
+    "title": "Thread",
+    "body": "Approval: Project"
+   },
+   "newlyTerminal": null,
+   "newlyTerminalObservedOnly": null,
+   "rowPhasesChanged": true,
+   "androidAggregate": null
+  }
+ },
+ "terminalAlerts": {
+  "terminalPassed": {
+   "allowed": {
+    "title": "Thread",
+    "body": "Done: Project"
+   },
+   "muted": null
+  },
+  "terminalFailedPassed": {
+   "allowed": {
+    "title": "Thread",
+    "body": "Failed: Project"
+   },
+   "muted": null
+  },
+  "oneRunning": {
+   "allowed": null,
+   "muted": null
+  },
+  "empty": {
+   "allowed": null,
+   "muted": null
+  }
+ },
+ "androidStates": {
+  "running": {
+   "allowed": null,
+   "muted": null
+  },
+  "approval": {
+   "allowed": {
+    "alert_id": "[\"machine-1\",\"t-approval\",\"waiting_for_approval\",\"2026-10-24T11:58:00.000Z\"]",
+    "alert_group": "[\"machine-1\",\"t-approval\"]",
+    "alert_title": "Thread",
+    "alert_body": "Approval: Project",
+    "alert_path": "/threads/machine-1/thread-1"
+   },
+   "muted": null
+  },
+  "failedRecent": {
+   "allowed": {
+    "alert_id": "[\"machine-1\",\"t-failed\",\"failed\",\"2026-10-24T11:59:30.000Z\"]",
+    "alert_group": "[\"machine-1\",\"t-failed\"]",
+    "alert_title": "Thread",
+    "alert_body": "Failed: Project",
+    "alert_path": "/threads/machine-1/thread-1"
+   },
+   "muted": null
+  },
+  "completedOld": {
+   "allowed": null,
+   "muted": null
+  },
+  "messy": {
+   "allowed": null,
+   "muted": null
+  }
+ },
+ "fcm": {
+  "empty": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "false",
+    "activity_chip": "",
+    "activity_title": "Agent work completed",
+    "activity_phase": "",
+    "activity_active_count": "0",
+    "activity_attention_count": "0",
+    "activity_body": "",
+    "activity_path": "/",
+    "activity_expires_at": "0"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "false",
+    "activity_chip": "",
+    "activity_title": "Agent work completed",
+    "activity_phase": "",
+    "activity_active_count": "0",
+    "activity_attention_count": "0",
+    "activity_body": "",
+    "activity_path": "/",
+    "activity_expires_at": "0"
+   }
+  },
+  "oneRunning": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "1 active agent",
+    "activity_phase": "running",
+    "activity_active_count": "1",
+    "activity_attention_count": "0",
+    "activity_body": "Working: Thread · Project",
+    "activity_line_0": "Working\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792850340000"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "1 active agent",
+    "activity_phase": "running",
+    "activity_active_count": "1",
+    "activity_attention_count": "0",
+    "activity_body": "Working: Thread · Project",
+    "activity_line_0": "Working\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792850340000"
+   }
+  },
+  "mixed": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Review",
+    "activity_title": "3 active agents · 1 needs attention",
+    "activity_phase": "waiting_for_approval",
+    "activity_active_count": "3",
+    "activity_attention_count": "1",
+    "activity_body": "Approval: Thread · Project",
+    "activity_line_0": "Approval\tThread\tProject",
+    "activity_line_1": "Failed\tThread\tProject",
+    "activity_line_2": "Working\tThread\tProject",
+    "activity_line_3": "Connecting\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792929480000",
+    "alert_id": "250b2bda6db6a5cbd10246988613c2e86a7de5b123f2e204a246e5bfac8f3e5a",
+    "alert_group": "[\"machine-1\",\"thread-1\"]",
+    "alert_title": "Thread",
+    "alert_body": "Approval: Project",
+    "alert_path": "/threads/machine-1/thread-1"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Review",
+    "activity_title": "3 active agents · 1 needs attention",
+    "activity_phase": "waiting_for_approval",
+    "activity_active_count": "3",
+    "activity_attention_count": "1",
+    "activity_body": "Approval: Thread · Project",
+    "activity_line_0": "Approval\tThread\tProject",
+    "activity_line_1": "Failed\tThread\tProject",
+    "activity_line_2": "Working\tThread\tProject",
+    "activity_line_3": "Connecting\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792929480000",
+    "alert_id": "250b2bda6db6a5cbd10246988613c2e86a7de5b123f2e204a246e5bfac8f3e5a",
+    "alert_group": "[\"machine-1\",\"thread-1\"]",
+    "alert_title": "Thread",
+    "alert_body": "Approval: Project",
+    "alert_path": "/threads/machine-1/thread-1"
+   }
+  },
+  "terminalOnly": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "false",
+    "activity_chip": "",
+    "activity_title": "Agent work failed",
+    "activity_phase": "failed",
+    "activity_active_count": "0",
+    "activity_attention_count": "0",
+    "activity_body": "Failed: Thread · Project",
+    "activity_line_0": "Failed\tThread\tProject",
+    "activity_line_1": "Done\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792844070000"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "false",
+    "activity_chip": "",
+    "activity_title": "Agent work failed",
+    "activity_phase": "failed",
+    "activity_active_count": "0",
+    "activity_attention_count": "0",
+    "activity_body": "Failed: Thread · Project",
+    "activity_line_0": "Failed\tThread\tProject",
+    "activity_line_1": "Done\tThread\tProject",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792844070000"
+   }
+  },
+  "sanitized": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "4 active agents",
+    "activity_phase": "running",
+    "activity_active_count": "4",
+    "activity_attention_count": "0",
+    "activity_body": "Working: 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界... · Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_line_0": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\tLong title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_line_1": "Working\tThread\tProject",
+    "activity_line_2": "Working\tTab and newline title\tP roject",
+    "activity_line_3": "Working\tNext line\tP",
+    "activity_path": "/",
+    "activity_expires_at": "1792849980000"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "4 active agents",
+    "activity_phase": "running",
+    "activity_active_count": "4",
+    "activity_attention_count": "0",
+    "activity_body": "Working: 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界... · Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_line_0": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\tLong title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_line_1": "Working\tThread\tProject",
+    "activity_line_2": "Working\tTab and newline title\tP roject",
+    "activity_line_3": "Working\tNext line\tP",
+    "activity_path": "/",
+    "activity_expires_at": "1792849980000"
+   }
+  },
+  "many": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Review",
+    "activity_title": "8 active agents · 2 need attention",
+    "activity_phase": "waiting_for_approval",
+    "activity_active_count": "8",
+    "activity_attention_count": "2",
+    "activity_body": "Approval: Thread · Project",
+    "activity_line_0": "Approval\tThread\tProject",
+    "activity_line_1": "Input\tThread\tProject",
+    "activity_line_2": "Working\tThread\tProject",
+    "activity_line_3": "Connecting\tThread\tProject",
+    "activity_line_4": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\tLong title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792929480000",
+    "alert_id": "5df4909b461b9e7c37cc5e6aba2b3750d2eb9a26ed3e1f8ee647adcd96ff57e8",
+    "alert_title": "2 agents finished",
+    "alert_body": "Thread, Second",
+    "alert_path": "/"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Review",
+    "activity_title": "8 active agents · 2 need attention",
+    "activity_phase": "waiting_for_approval",
+    "activity_active_count": "8",
+    "activity_attention_count": "2",
+    "activity_body": "Approval: Thread · Project",
+    "activity_line_0": "Approval\tThread\tProject",
+    "activity_line_1": "Input\tThread\tProject",
+    "activity_line_2": "Working\tThread\tProject",
+    "activity_line_3": "Connecting\tThread\tProject",
+    "activity_line_4": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\tLong title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792929480000",
+    "alert_id": "5df4909b461b9e7c37cc5e6aba2b3750d2eb9a26ed3e1f8ee647adcd96ff57e8",
+    "alert_title": "2 agents finished",
+    "alert_body": "Thread, Second",
+    "alert_path": "/"
+   }
+  },
+  "huge": {
+   "raw": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "5 active agents",
+    "activity_phase": "running",
+    "activity_active_count": "5",
+    "activity_attention_count": "0",
+    "activity_body": "Working: 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界 · 📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_line_0": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_line_1": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_line_2": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_line_3": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_line_4": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792850399000",
+    "alert_id": "04f52d2daf91fa19ace20eead3de16f7ee4911f1da4b3556bc6c6406a44d502e",
+    "alert_title": "5 agents need attention",
+    "alert_body": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界, 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界, 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界, 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界, 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+    "alert_path": "/"
+   },
+   "fitted": {
+    "t3_kind": "agent_activity",
+    "device_id": "device-1",
+    "user_id": "user-1",
+    "updated_at": "1792843200000",
+    "active": "true",
+    "activity_chip": "Active",
+    "activity_title": "5 active agents",
+    "activity_phase": "running",
+    "activity_active_count": "5",
+    "activity_attention_count": "0",
+    "activity_body": "Working: 界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界 · 📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_line_0": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界…\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_line_1": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界…\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_line_2": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界…\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_line_3": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界…\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_line_4": "Working\t界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界…\t📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦…",
+    "activity_path": "/threads/machine-1/thread-1",
+    "activity_expires_at": "1792850399000",
+    "alert_id": "04f52d2daf91fa19ace20eead3de16f7ee4911f1da4b3556bc6c6406a44d502e",
+    "alert_title": "5 agents need attention",
+    "alert_body": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界, 界界界界界界…",
+    "alert_path": "/"
+   }
+  }
+ },
+ "apns": {
+  "keySeedLabel": "vekrel-push-test-apns-key",
+  "la_updateMixed": {
+   "request": {
+    "token": "fake-live-activity-token-0001",
+    "event": "update",
+    "priority": "5",
+    "payload": {
+     "aps": {
+      "timestamp": 1792843200,
+      "event": "update",
+      "content-state": {
+       "name": "AgentActivity",
+       "props": "{\"title\":\"T3 Code\",\"subtitle\":\"Agent work in progress\",\"activeCount\":3,\"updatedAt\":\"2026-10-24T11:59:30.000Z\",\"activities\":[{\"environmentId\":\"machine-1\",\"threadId\":\"t-approval\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"waiting_for_approval\",\"status\":\"Approval\",\"updatedAt\":\"2026-10-24T11:58:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"thread-1\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"running\",\"status\":\"Working\",\"updatedAt\":\"2026-10-24T11:59:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"t-starting\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"starting\",\"status\":\"Connecting\",\"updatedAt\":\"2026-10-24T11:56:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"t-failed\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"failed\",\"status\":\"Failed\",\"updatedAt\":\"2026-10-24T11:59:30.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"}]}"
+      },
+      "stale-date": 1792843800
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.sandbox.push.apple.com/3/device/fake-live-activity-token-0001",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "5",
+     "apns-push-type": "liveactivity",
+     "apns-topic": "com.example.vekrel.push-type.liveactivity",
+     "content-type": "application/json",
+     "content-length": "1390",
+     "b3": "9db2544da5c20514f1878c88be8caab6-11d92ddefe1dd1f6-1-59c98dd212c52769",
+     "traceparent": "00-9db2544da5c20514f1878c88be8caab6-11d92ddefe1dd1f6-01"
+    },
+    "body": "{\"aps\":{\"timestamp\":1792843200,\"event\":\"update\",\"content-state\":{\"name\":\"AgentActivity\",\"props\":\"{\\\"title\\\":\\\"T3 Code\\\",\\\"subtitle\\\":\\\"Agent work in progress\\\",\\\"activeCount\\\":3,\\\"updatedAt\\\":\\\"2026-10-24T11:59:30.000Z\\\",\\\"activities\\\":[{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-approval\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"waiting_for_approval\\\",\\\"status\\\":\\\"Approval\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:58:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"thread-1\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"running\\\",\\\"status\\\":\\\"Working\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:59:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-starting\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"starting\\\",\\\"status\\\":\\\"Connecting\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:56:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-failed\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"failed\\\",\\\"status\\\":\\\"Failed\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:59:30.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"}]}\"},\"stale-date\":1792843800}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  },
+  "la_updateAlert": {
+   "request": {
+    "token": "fake-live-activity-token-0001",
+    "event": "update",
+    "priority": "10",
+    "payload": {
+     "aps": {
+      "timestamp": 1792843200,
+      "event": "update",
+      "alert": {
+       "title": "Thread",
+       "body": "Approval: Project",
+       "sound": "default"
+      },
+      "content-state": {
+       "name": "AgentActivity",
+       "props": "{\"title\":\"T3 Code\",\"subtitle\":\"Agent work in progress\",\"activeCount\":8,\"updatedAt\":\"2026-10-24T11:59:30.000Z\",\"activities\":[{\"environmentId\":\"machine-1\",\"threadId\":\"t-approval\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"waiting_for_approval\",\"status\":\"Approval\",\"updatedAt\":\"2026-10-24T11:58:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"t-input\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"waiting_for_input\",\"status\":\"Input\",\"updatedAt\":\"2026-10-24T11:57:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"thread-1\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"running\",\"status\":\"Working\",\"updatedAt\":\"2026-10-24T11:59:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-1\",\"threadId\":\"t-starting\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"starting\",\"status\":\"Connecting\",\"updatedAt\":\"2026-10-24T11:56:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"},{\"environmentId\":\"machine-2\",\"threadId\":\"t-messy\",\"projectTitle\":\"Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...\",\"threadTitle\":\"界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\",\"modelTitle\":\"Model 😀 with emoji\",\"phase\":\"running\",\"status\":\"Working\",\"updatedAt\":\"2026-10-24T11:53:00.000Z\",\"deepLink\":\"/\"}]}"
+      },
+      "stale-date": 1792843800
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.sandbox.push.apple.com/3/device/fake-live-activity-token-0001",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "10",
+     "apns-push-type": "liveactivity",
+     "apns-topic": "com.example.vekrel.push-type.liveactivity",
+     "content-type": "application/json",
+     "content-length": "2195",
+     "b3": "e304e7d724ff03924ce86b8bb6a63058-311c52ebce2b1979-1-0b98b2a98700495a",
+     "traceparent": "00-e304e7d724ff03924ce86b8bb6a63058-311c52ebce2b1979-01"
+    },
+    "body": "{\"aps\":{\"timestamp\":1792843200,\"event\":\"update\",\"alert\":{\"title\":\"Thread\",\"body\":\"Approval: Project\",\"sound\":\"default\"},\"content-state\":{\"name\":\"AgentActivity\",\"props\":\"{\\\"title\\\":\\\"T3 Code\\\",\\\"subtitle\\\":\\\"Agent work in progress\\\",\\\"activeCount\\\":8,\\\"updatedAt\\\":\\\"2026-10-24T11:59:30.000Z\\\",\\\"activities\\\":[{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-approval\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"waiting_for_approval\\\",\\\"status\\\":\\\"Approval\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:58:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-input\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"waiting_for_input\\\",\\\"status\\\":\\\"Input\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:57:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"thread-1\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"running\\\",\\\"status\\\":\\\"Working\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:59:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-starting\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"starting\\\",\\\"status\\\":\\\"Connecting\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:56:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"},{\\\"environmentId\\\":\\\"machine-2\\\",\\\"threadId\\\":\\\"t-messy\\\",\\\"projectTitle\\\":\\\"Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long ti...\\\",\\\"threadTitle\\\":\\\"界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界...\\\",\\\"modelTitle\\\":\\\"Model 😀 with emoji\\\",\\\"phase\\\":\\\"running\\\",\\\"status\\\":\\\"Working\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:53:00.000Z\\\",\\\"deepLink\\\":\\\"/\\\"}]}\"},\"stale-date\":1792843800}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  },
+  "la_endWithState": {
+   "request": {
+    "token": "fake-live-activity-token-0001",
+    "event": "end",
+    "priority": "10",
+    "payload": {
+     "aps": {
+      "timestamp": 1792843200,
+      "event": "end",
+      "content-state": {
+       "name": "AgentActivity",
+       "props": "{\"title\":\"T3 Code\",\"subtitle\":\"Agent work completed\",\"activeCount\":0,\"updatedAt\":\"2026-10-24T11:54:00.000Z\",\"activities\":[{\"environmentId\":\"machine-1\",\"threadId\":\"t-done\",\"projectTitle\":\"Project\",\"threadTitle\":\"Thread\",\"modelTitle\":\"gpt-5.4\",\"phase\":\"completed\",\"status\":\"Done\",\"updatedAt\":\"2026-10-24T11:54:00.000Z\",\"deepLink\":\"/threads/machine-1/thread-1\"}]}"
+      },
+      "alert": {
+       "title": "Thread",
+       "body": "Done: Project",
+       "sound": "default"
+      },
+      "dismissal-date": 1792843500
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.sandbox.push.apple.com/3/device/fake-live-activity-token-0001",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "10",
+     "apns-push-type": "liveactivity",
+     "apns-topic": "com.example.vekrel.push-type.liveactivity",
+     "content-type": "application/json",
+     "content-length": "606",
+     "b3": "244841d6414172a6c84a3f87b1ea70d3-a420eae31ebbc67d-1-c6de332de69e221a",
+     "traceparent": "00-244841d6414172a6c84a3f87b1ea70d3-a420eae31ebbc67d-01"
+    },
+    "body": "{\"aps\":{\"timestamp\":1792843200,\"event\":\"end\",\"content-state\":{\"name\":\"AgentActivity\",\"props\":\"{\\\"title\\\":\\\"T3 Code\\\",\\\"subtitle\\\":\\\"Agent work completed\\\",\\\"activeCount\\\":0,\\\"updatedAt\\\":\\\"2026-10-24T11:54:00.000Z\\\",\\\"activities\\\":[{\\\"environmentId\\\":\\\"machine-1\\\",\\\"threadId\\\":\\\"t-done\\\",\\\"projectTitle\\\":\\\"Project\\\",\\\"threadTitle\\\":\\\"Thread\\\",\\\"modelTitle\\\":\\\"gpt-5.4\\\",\\\"phase\\\":\\\"completed\\\",\\\"status\\\":\\\"Done\\\",\\\"updatedAt\\\":\\\"2026-10-24T11:54:00.000Z\\\",\\\"deepLink\\\":\\\"/threads/machine-1/thread-1\\\"}]}\"},\"alert\":{\"title\":\"Thread\",\"body\":\"Done: Project\",\"sound\":\"default\"},\"dismissal-date\":1792843500}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  },
+  "la_endContentless": {
+   "request": {
+    "token": "fake-live-activity-token-0001",
+    "event": "end",
+    "priority": "10",
+    "payload": {
+     "aps": {
+      "timestamp": 1792843200,
+      "event": "end",
+      "dismissal-date": 1792843215
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.sandbox.push.apple.com/3/device/fake-live-activity-token-0001",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "10",
+     "apns-push-type": "liveactivity",
+     "apns-topic": "com.example.vekrel.push-type.liveactivity",
+     "content-type": "application/json",
+     "content-length": "74",
+     "b3": "d7d71564f36397f8cb25d7e8d36d7dae-1995d30aacff5fb5-1-0af3782978e592f0",
+     "traceparent": "00-d7d71564f36397f8cb25d7e8d36d7dae-1995d30aacff5fb5-01"
+    },
+    "body": "{\"aps\":{\"timestamp\":1792843200,\"event\":\"end\",\"dismissal-date\":1792843215}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  },
+  "push_thread": {
+   "request": {
+    "token": "push-token-0001",
+    "priority": "10",
+    "payload": {
+     "aps": {
+      "alert": {
+       "title": "Thread",
+       "body": "Approval: Project"
+      },
+      "sound": "default",
+      "thread-id": "machine-1/t-approval"
+     },
+     "body": {
+      "environmentId": "machine-1",
+      "threadId": "t-approval",
+      "deepLink": "/threads/machine-1/thread-1"
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.push.apple.com/3/device/push-token-0001",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "10",
+     "apns-push-type": "alert",
+     "apns-topic": "com.example.vekrel",
+     "content-type": "application/json",
+     "content-length": "218",
+     "b3": "47e6e41b497417d410f71e04b9db1a44-efd800bbf0bd97c9-1-a4117a2788e76b4e",
+     "traceparent": "00-47e6e41b497417d410f71e04b9db1a44-efd800bbf0bd97c9-01"
+    },
+    "body": "{\"aps\":{\"alert\":{\"title\":\"Thread\",\"body\":\"Approval: Project\"},\"sound\":\"default\",\"thread-id\":\"machine-1/t-approval\"},\"body\":{\"environmentId\":\"machine-1\",\"threadId\":\"t-approval\",\"deepLink\":\"/threads/machine-1/thread-1\"}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  },
+  "push_noThread": {
+   "request": {
+    "token": "push-token-0002",
+    "priority": "10",
+    "payload": {
+     "aps": {
+      "alert": {
+       "title": "T",
+       "body": "B"
+      },
+      "sound": "default",
+      "thread-id": "t3-agent-alerts"
+     },
+     "body": {
+      "environmentId": "machine-1",
+      "threadId": "",
+      "deepLink": "/"
+     }
+    }
+   },
+   "http": {
+    "method": "POST",
+    "url": "https://api.push.apple.com/3/device/push-token-0002",
+    "headers": {
+     "authorization": "bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IktFWTEyMzQ1NjcifQ . eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkyODQzMjAwfQ . KtWebgUdRGeawWEJGnsjH9uLmBiVwuVXsk-CWNAJ3-JzkQrhZ0Fv0GEu2upmjs5ajPm5KAZsWPY_GKTG_yRTIg",
+     "apns-priority": "10",
+     "apns-push-type": "alert",
+     "apns-topic": "com.example.vekrel",
+     "content-type": "application/json",
+     "content-length": "156",
+     "b3": "bf9e40908ec899ca08abe93c633d0f82-7b48ae735d0a8500-1-db873964ff4992b3",
+     "traceparent": "00-bf9e40908ec899ca08abe93c633d0f82-7b48ae735d0a8500-01"
+    },
+    "body": "{\"aps\":{\"alert\":{\"title\":\"T\",\"body\":\"B\"},\"sound\":\"default\",\"thread-id\":\"t3-agent-alerts\"},\"body\":{\"environmentId\":\"machine-1\",\"threadId\":\"\",\"deepLink\":\"/\"}}"
+   },
+   "result": {
+    "ok": true,
+    "status": 200,
+    "apnsId": "apns-1"
+   }
+  }
+ },
+ "fcmHttp": {
+  "oauth": {
+   "method": "POST",
+   "url": "https://oauth2.googleapis.com/token",
+   "headers": {
+    "content-type": "application/x-www-form-urlencoded",
+    "content-length": "707",
+    "b3": "74087de62b5157549c0dbe143b2f2a4c-89cbb447285149ee-1-b8d446748a10fdcf",
+    "traceparent": "00-74087de62b5157549c0dbe143b2f2a4c-89cbb447285149ee-01"
+   },
+   "body": "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=<assertion>"
+  },
+  "assertionSigningInput": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwdXNoQHZla3JlbC10ZXN0LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwic2NvcGUiOiJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9hdXRoL2ZpcmViYXNlLm1lc3NhZ2luZyIsImF1ZCI6Imh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwiaWF0IjoxNzkyODI5MzE3LCJleHAiOjE3OTI4MzI5MTd9",
+  "messages": [
+   {
+    "method": "POST",
+    "url": "https://fcm.googleapis.com/v1/projects/vekrel-test/messages:send",
+    "headers": {
+     "authorization": "Bearer ya29.test-access-token",
+     "content-type": "application/json",
+     "content-length": "963",
+     "b3": "74087de62b5157549c0dbe143b2f2a4c-974579b66397749f-1-b8d446748a10fdcf",
+     "traceparent": "00-74087de62b5157549c0dbe143b2f2a4c-974579b66397749f-01"
+    },
+    "body": "{\"message\":{\"token\":\"fcm-token-1\",\"data\":{\"t3_kind\":\"agent_activity\",\"device_id\":\"device-1\",\"user_id\":\"user-1\",\"updated_at\":\"1792843200000\",\"active\":\"true\",\"activity_chip\":\"Review\",\"activity_title\":\"3 active agents · 1 needs attention\",\"activity_phase\":\"waiting_for_approval\",\"activity_active_count\":\"3\",\"activity_attention_count\":\"1\",\"activity_body\":\"Approval: Thread · Project\",\"activity_line_0\":\"Approval\\tThread\\tProject\",\"activity_line_1\":\"Failed\\tThread\\tProject\",\"activity_line_2\":\"Working\\tThread\\tProject\",\"activity_line_3\":\"Connecting\\tThread\\tProject\",\"activity_path\":\"/threads/machine-1/thread-1\",\"activity_expires_at\":\"1792929480000\",\"alert_id\":\"250b2bda6db6a5cbd10246988613c2e86a7de5b123f2e204a246e5bfac8f3e5a\",\"alert_group\":\"[\\\"machine-1\\\",\\\"thread-1\\\"]\",\"alert_title\":\"Thread\",\"alert_body\":\"Approval: Project\",\"alert_path\":\"/threads/machine-1/thread-1\"},\"android\":{\"priority\":\"HIGH\",\"ttl\":\"300s\",\"restricted_package_name\":\"com.example.vekrel\"}}}"
+   },
+   {
+    "method": "POST",
+    "url": "https://fcm.googleapis.com/v1/projects/vekrel-test/messages:send",
+    "headers": {
+     "authorization": "Bearer ya29.test-access-token",
+     "content-type": "application/json",
+     "content-length": "555",
+     "b3": "7afff9daca7085fbc33634b7fdfe1ef2-97bfca5f1eabbec8-1-d89aa71b15e93313",
+     "traceparent": "00-7afff9daca7085fbc33634b7fdfe1ef2-97bfca5f1eabbec8-01"
+    },
+    "body": "{\"message\":{\"token\":\"fcm-token-2\",\"data\":{\"t3_kind\":\"agent_activity\",\"device_id\":\"device-1\",\"user_id\":\"user-1\",\"updated_at\":\"1792843200000\",\"active\":\"true\",\"activity_chip\":\"Active\",\"activity_title\":\"1 active agent\",\"activity_phase\":\"running\",\"activity_active_count\":\"1\",\"activity_attention_count\":\"0\",\"activity_body\":\"Working: Thread · Project\",\"activity_line_0\":\"Working\\tThread\\tProject\",\"activity_path\":\"/threads/machine-1/thread-1\",\"activity_expires_at\":\"1792850340000\"},\"android\":{\"priority\":\"HIGH\",\"ttl\":\"300s\",\"collapse_key\":\"t3-agent-activity\"}}}"
+   }
+  ]
+ }
+}
