@@ -6,15 +6,20 @@ use axum::extract::ConnectInfo;
 use axum::http::{Extensions, HeaderMap};
 use sqlx::PgPool;
 
-// shortcut: assumes Railway's edge sets X-Real-IP (plan Global Constraints); confirm on staging (Task 2).
-/// The one forwarded header trusted for the client address; every other one is ignored.
+/// The one forwarded header that may name the client (Railway's edge, plan Global Constraints),
+/// read only with `TRUST_PROXY_IP_HEADER=true`; every other forwarded header is ignored.
 pub const CLIENT_IP_HEADER: &str = "x-real-ip";
 
-/// The edge's header when it holds an IP, else the socket peer (`serve` attaches `ConnectInfo`).
-/// `None` only for a request that came through neither (unit tests without `MockConnectInfo`).
-pub fn client_ip(headers: &HeaderMap, extensions: &Extensions) -> Option<IpAddr> {
-    headers
-        .get(CLIENT_IP_HEADER)
+/// With `trust_header`, the edge's header when it holds an IP; else (and as the fallback) the
+/// socket peer, which `serve` attaches as `ConnectInfo`. `None` only when neither exists (tests).
+pub fn client_ip(
+    headers: &HeaderMap,
+    extensions: &Extensions,
+    trust_header: bool,
+) -> Option<IpAddr> {
+    trust_header
+        .then(|| headers.get(CLIENT_IP_HEADER))
+        .flatten()
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.trim().parse().ok())
         .or_else(|| {
@@ -70,15 +75,19 @@ mod tests {
     fn client_ip_prefers_the_edge_header_then_the_peer() {
         let mut h = HeaderMap::new();
         let mut ext = Extensions::new();
-        assert_eq!(client_ip(&h, &ext), None);
+        assert_eq!(client_ip(&h, &ext, true), None);
         ext.insert(ConnectInfo(SocketAddr::from(([192, 0, 2, 9], 5000))));
-        assert_eq!(client_ip(&h, &ext), Some([192, 0, 2, 9].into()));
+        let peer = Some([192, 0, 2, 9].into());
+        assert_eq!(client_ip(&h, &ext, true), peer);
         h.insert("x-forwarded-for", "198.51.100.1".parse().unwrap());
-        assert_eq!(client_ip(&h, &ext), Some([192, 0, 2, 9].into()));
+        assert_eq!(client_ip(&h, &ext, true), peer);
         h.insert(CLIENT_IP_HEADER, "not an ip".parse().unwrap());
-        assert_eq!(client_ip(&h, &ext), Some([192, 0, 2, 9].into()));
+        assert_eq!(client_ip(&h, &ext, true), peer);
         h.insert(CLIENT_IP_HEADER, "203.0.113.4".parse().unwrap());
-        assert_eq!(client_ip(&h, &ext), Some([203, 0, 113, 4].into()));
+        assert_eq!(client_ip(&h, &ext, true), Some([203, 0, 113, 4].into()));
+        // Not trusted (the default): a client-sent header is ignored.
+        assert_eq!(client_ip(&h, &ext, false), peer);
+        assert_eq!(client_ip(&h, &Extensions::new(), false), None);
     }
 
     /// Many concurrent hits on one key, each on its own pool connection: exactly `max` pass.

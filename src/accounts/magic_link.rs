@@ -24,7 +24,7 @@ use super::oauth::{
     internal, message, random_secret,
 };
 use super::signup::VerifiedIdentity;
-use crate::config::MagicLinkTransport;
+use crate::config::{Config, MagicLinkTransport};
 use crate::email::{self, Email, Mailer};
 use crate::rate_limit::{self, client_ip};
 
@@ -43,13 +43,16 @@ pub struct MagicLinks {
     mailer: Box<dyn Mailer>,
     /// Log transport (never production, see config): the page shows the link and code.
     echo: bool,
+    trust_ip_header: bool,
 }
 
-pub fn router(accounts: Arc<AccountsState>, transport: &MagicLinkTransport) -> Router {
+pub fn router(accounts: Arc<AccountsState>, config: &Config) -> Router {
+    let transport = &config.magic_link_transport;
     let state = Arc::new(MagicLinks {
         accounts,
         mailer: email::from_transport(transport),
         echo: *transport == MagicLinkTransport::Log,
+        trust_ip_header: config.trust_proxy_ip_header,
     });
     Router::new()
         .route("/auth/email", post(request_link))
@@ -155,7 +158,7 @@ async fn request_link(
             "Enter an address like name@example.com, then try again.",
         );
     }
-    let Some(ip) = client_ip(&headers, &extensions) else {
+    let Some(ip) = client_ip(&headers, &extensions, m.trust_ip_header) else {
         return internal("no client address (serve attaches ConnectInfo)");
     };
     // Fixed key order (rate_limit::allow_all locks in this order).

@@ -68,7 +68,11 @@ impl Res {
 
 fn app_with(pool: PgPool, vars: &[(&str, &str)]) -> App {
     let keys = SigningKeys::from_json(&json!([entry("k1", "active").0]).to_string()).unwrap();
-    let mut all = vec![("RELAY_ORIGIN", ISS), ("SIGNUP_MODE", "open")];
+    let mut all = vec![
+        ("RELAY_ORIGIN", ISS),
+        ("SIGNUP_MODE", "open"),
+        ("TRUST_PROXY_IP_HEADER", "true"),
+    ];
     all.extend_from_slice(vars);
     let config = Config::for_tests(&all);
     App {
@@ -729,4 +733,44 @@ async fn a_guess_in_flight_counts_before_a_later_right_code(pool: PgPool) {
     assert_eq!(right.status, StatusCode::BAD_REQUEST, "{}", right.body);
     assert!(right.headers.get(header::LOCATION).is_none());
     assert_eq!(a.count("SELECT count(*) FROM auth_codes").await, 0);
+}
+
+/// `TRUST_PROXY_IP_HEADER` unset: the peer is the key, and a client-sent `X-Real-IP` changes nothing.
+#[sqlx::test]
+async fn spoofed_ip_header_is_ignored_unless_trusted(pool: PgPool) {
+    use axum::extract::ConnectInfo;
+    let base = app_with(pool.clone(), &[("TRUST_PROXY_IP_HEADER", "false")]);
+    let b = base.browser().await;
+    let a = App {
+        router: base.router.clone().layer(axum::Extension(ConnectInfo(
+            std::net::SocketAddr::from(([192, 0, 2, 50], 40000)),
+        ))),
+        pool: pool.clone(),
+    };
+    for i in 0..20 {
+        let spoofed = format!("198.51.100.{i}");
+        let r = a
+            .post(
+                "/auth/email",
+                &[("email", &format!("u{i}@example.test"))],
+                Some(&b),
+                &spoofed,
+            )
+            .await;
+        assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    }
+    let r = a
+        .post(
+            "/auth/email",
+            &[("email", "late@example.test")],
+            Some(&b),
+            "203.0.113.99",
+        )
+        .await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        a.count("SELECT count(*) FROM relay_rate_limits WHERE key LIKE 'magic_link:ip:%' AND key <> 'magic_link:ip:192.0.2.50'")
+            .await,
+        0
+    );
 }

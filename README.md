@@ -24,6 +24,7 @@ Environment variables only:
 | `RESEND_API_KEY` | unset | Required with `resend`. Never logged |
 | `MAGIC_LINK_FROM` | unset | Required with `resend`: sender on a Resend-verified domain, e.g. `Vekrel <signin@<domain>>` |
 | `RESEND_BASE_URL` | `https://api.resend.com` | Override for tests |
+| `TRUST_PROXY_IP_HEADER` | `false` | `true`: rate limits key on `X-Real-IP` (falling back to the socket peer). Set it on Railway only after the staging check (plan 6A Task 2) shows the edge overwrites a client-sent `X-Real-IP`; until then the peer address is used |
 | `DATABASE_URL` | unset | Postgres URL, required by `serve`. Migrations in `migrations/` apply at boot |
 | `RUST_LOG` | `info` | Log filter; logs are JSON on stdout |
 
@@ -38,7 +39,7 @@ cargo run -- keygen --auth-kid 2026-10   # one AUTH_SIGNING_KEYS entry (status n
 
 ## Accounts
 
-`GET /oauth/authorize` (PKCE S256 only, exact redirect URIs per client in `src/accounts/clients.rs`) shows the sign-in page; `POST /oauth/token` handles `authorization_code` and `refresh_token` (rotated on every use; a reused token revokes its whole family); `POST /oauth/revoke` signs out. The web client gets its refresh token only as an `HttpOnly; Secure; SameSite=Lax; Path=/oauth` cookie. Email sign-in: `POST /auth/email` sends a link and a 6-character code (15 min, single use, stored hashed; 3 sends per email per 15 min, 20 per IP per hour (IP from `X-Real-IP`, else the socket peer), 200 per hour in total). The reply is the same for every address; the sign-up rules apply after the link is opened. The link signs in only the browser that asked; elsewhere it shows the code to type into the waiting page (`POST /auth/email/code`, 5 tries). GitHub, Google and device code arrive in later tasks.
+`GET /oauth/authorize` (PKCE S256 only, exact redirect URIs per client in `src/accounts/clients.rs`) shows the sign-in page; `POST /oauth/token` handles `authorization_code` and `refresh_token` (rotated on every use; a reused token revokes its whole family); `POST /oauth/revoke` signs out. The web client gets its refresh token only as an `HttpOnly; Secure; SameSite=Lax; Path=/oauth` cookie. Email sign-in: `POST /auth/email` sends a link and a 6-character code (15 min, single use, stored hashed; 3 sends per email per 15 min, 20 per IP per hour (IP: the socket peer, or `X-Real-IP` with `TRUST_PROXY_IP_HEADER=true`), 200 per hour in total). The reply is the same for every address; the sign-up rules apply after the link is opened. The link signs in only the browser that asked; elsewhere it shows the code to type into the waiting page (`POST /auth/email/code`, 5 tries). GitHub, Google and device code arrive in later tasks.
 
 Device code (RFC 8628, `vekrel-engine connect --headless`, client `vekrel-cli` only): `POST /oauth/device_authorization` returns a device code (stored hashed) and an 8-letter user code (`BCDF-GHJK`, consonants only), valid 10 min, poll every 5 s. The person opens `/device`, enters the code, signs in on the normal page (same sign-up rules), then approves or denies explicitly. The CLI polls `/oauth/token` with `grant_type=urn:ietf:params:oauth:grant-type:device_code` and gets `authorization_pending`, `slow_down` (interval +5 s), `expired_token`, `access_denied`, or tokens once. One account can look up 10 codes per 15 min.
 

@@ -44,6 +44,10 @@ pub struct Config {
     /// `vekrel-web` redirect `<origin>/auth/callback` and is the only CORS origin for `/oauth/token`.
     pub web_origins: Vec<String>,
     pub magic_link_transport: MagicLinkTransport,
+    /// `TRUST_PROXY_IP_HEADER=true|false`, default false: rate limits key on the socket peer.
+    /// Set true on Railway only once staging shows the edge overwrites a client-sent `X-Real-IP`
+    /// (plan 6A Task 2); then the header is used, falling back to the peer.
+    pub trust_proxy_ip_header: bool,
 }
 
 impl Config {
@@ -117,6 +121,15 @@ impl Config {
                 ));
             }
         };
+        let trust_proxy_ip_header = match get("TRUST_PROXY_IP_HEADER").as_deref() {
+            None | Some("false") => false,
+            Some("true") => true,
+            Some(other) => {
+                return Err(format!(
+                    "TRUST_PROXY_IP_HEADER must be true or false: {other:?}"
+                ));
+            }
+        };
         Ok(Self {
             addr: SocketAddr::from(([0, 0, 0, 0], port)),
             relay_origin,
@@ -124,6 +137,7 @@ impl Config {
             signup_mode,
             web_origins,
             magic_link_transport,
+            trust_proxy_ip_header,
         })
     }
 
@@ -157,6 +171,18 @@ mod tests {
         assert_eq!(c.signup_mode, SignupMode::Allowlist);
         assert!(c.web_origins.is_empty());
         assert_eq!(c.magic_link_transport, MagicLinkTransport::Log);
+        assert!(!c.trust_proxy_ip_header);
+        assert!(
+            load(&[("TRUST_PROXY_IP_HEADER", "true")])
+                .unwrap()
+                .trust_proxy_ip_header
+        );
+        assert!(
+            !load(&[("TRUST_PROXY_IP_HEADER", "false")])
+                .unwrap()
+                .trust_proxy_ip_header
+        );
+        assert!(load(&[("TRUST_PROXY_IP_HEADER", "yes")]).is_err());
     }
 
     #[test]

@@ -25,7 +25,7 @@ pub fn router(pool: PgPool, keys: Arc<SigningKeys>, config: &Config) -> Router {
         .merge(wellknown::router(&keys, &config.relay_origin))
         .merge(oauth::router(accounts.clone()))
         .merge(device::router(accounts.clone()))
-        .merge(magic_link::router(accounts, &config.magic_link_transport))
+        .merge(magic_link::router(accounts, config))
 }
 
 async fn health(State(pool): State<PgPool>) -> (StatusCode, Json<Value>) {
