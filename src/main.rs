@@ -74,7 +74,8 @@ async fn admin_cli(cmd: admin::Admin) -> Result<String, String> {
     let config = config::Config::from_env()?;
     let url = config
         .database_url
-        .as_deref()
+        .as_ref()
+        .map(|s| s.0.as_str())
         .ok_or("DATABASE_URL is required")?;
     admin::run(&db::connect(url).await?, cmd).await
 }
@@ -83,7 +84,8 @@ async fn serve() -> Result<(), String> {
     let config = config::Config::from_env()?;
     let database_url = config
         .database_url
-        .as_deref()
+        .as_ref()
+        .map(|s| s.0.as_str())
         .ok_or("DATABASE_URL is required")?;
     let keys = std::sync::Arc::new(accounts::keys::SigningKeys::from_env()?);
     let mint = config

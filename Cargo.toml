@@ -30,6 +30,8 @@ http-body-util = "0.1.5"
 # Test-only RS256 keys for the fake Google (both already in the tree through jsonwebtoken).
 rand = "0.8"
 rsa = "0.9"
+# Paused clock for the request-deadline test.
+tokio = { version = "1.54.1", features = ["test-util"] }
 tower = { version = "0.5.3", features = ["util"] }
 
 # Test-only RSA key generation (fake Google) is very slow unoptimised.

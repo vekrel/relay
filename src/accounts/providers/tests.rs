@@ -54,6 +54,8 @@ fn sign_rs256(key: &rsa::RsaPrivateKey, claims: &Value) -> String {
 /// What the fake providers answer, and what they were sent.
 struct Mock {
     gh_id: u64,
+    /// Replaces the whole `/user` body when set.
+    gh_user: Option<Value>,
     gh_emails: Value,
     /// Google ID token claims; `None` means "the standard good claims for the nonce sent".
     g_claims: Option<Value>,
@@ -100,7 +102,9 @@ fn fake_providers(m: M) -> Router {
                 if !bearer_ok(&h) {
                     return StatusCode::UNAUTHORIZED.into_response();
                 }
-                Json(json!({"login": "octo", "id": m.lock().unwrap().gh_id})).into_response()
+                let m = m.lock().unwrap();
+                let user = m.gh_user.clone();
+                Json(user.unwrap_or_else(|| json!({"login": "octo", "id": m.gh_id}))).into_response()
             }),
         )
         .route(
@@ -185,6 +189,7 @@ async fn setup(pool: PgPool, mode: &str) -> T {
     keys();
     let mock: M = Arc::new(Mutex::new(Mock {
         gh_id: 4242,
+        gh_user: None,
         gh_emails: json!([
             {"email": "gh@example.test", "primary": true, "verified": true, "visibility": "private"},
             {"email": "other@example.test", "primary": false, "verified": true, "visibility": null}
@@ -228,7 +233,8 @@ async fn setup(pool: PgPool, mode: &str) -> T {
 
 impl T {
     async fn get(&self, uri: &str, cookie: Option<&str>) -> Res {
-        let mut r = Request::get(uri);
+        let peer = std::net::SocketAddr::from(([192, 0, 2, 1], 4000));
+        let mut r = Request::get(uri).extension(axum::extract::ConnectInfo(peer));
         if let Some(c) = cookie {
             r = r.header(header::COOKIE, c);
         }
@@ -729,4 +735,65 @@ async fn provider_secrets_never_reach_the_logs(pool: PgPool) {
         !logs.contains("gh-code") && !logs.contains("g-code"),
         "{logs}"
     );
+}
+
+/// Upstream failures log a fixed kind: decode errors quote the offending value (here a
+/// PII-looking fragment), so neither reqwest's nor jsonwebtoken's text reaches the logs.
+#[sqlx::test]
+async fn upstream_failures_log_the_kind_only(pool: PgPool) {
+    crate::test_logs::capture_logs(|| ());
+    let t = setup(pool, "open").await;
+    t.mock.lock().unwrap().gh_user =
+        Some(json!({"login": "x", "id": "leak-gh-fragment@example.test"}));
+    assert_eq!(t.sign_in("github").await.status, StatusCode::BAD_GATEWAY);
+    let (cookie, sent) = t.begin("google").await;
+    let mut claims = google_claims(&sent["nonce"], "g-sub-9", "g9@example.test", true);
+    claims["email_verified"] = json!("leak-g-fragment@example.test");
+    t.mock.lock().unwrap().g_claims = Some(claims);
+    let res = t
+        .callback("google", &cookie, "g-code", &sent["state"])
+        .await;
+    assert_eq!(res.status, StatusCode::BAD_GATEWAY, "{}", res.body);
+    let logs = crate::test_logs::capture_logs(|| ());
+    assert!(logs.contains("provider sign-in failed"), "{logs}");
+    assert!(!logs.contains("leak-gh-fragment"), "{logs}");
+    assert!(!logs.contains("leak-g-fragment"), "{logs}");
+}
+
+#[test]
+fn provider_error_codes_are_logged_only_when_code_shaped() {
+    assert_eq!(
+        error_code(Some("bad_verification_code".into())),
+        "bad_verification_code"
+    );
+    assert_eq!(error_code(Some("ann@example.test".into())), "other");
+    assert_eq!(error_code(Some("x".repeat(65))), "other");
+    assert_eq!(error_code(None), "none");
+}
+
+/// No provider round trip for an unknown or expired auth request: start does not redirect and
+/// callback makes no upstream call.
+#[sqlx::test]
+async fn start_and_callback_need_a_live_auth_request(pool: PgPool) {
+    let t = setup(pool, "open").await;
+    for p in ["github", "google"] {
+        let res = t
+            .get(&format!("/auth/{p}"), Some("vekrel_auth_request=unknown"))
+            .await;
+        assert_eq!(res.status, StatusCode::BAD_REQUEST, "{p}: {}", res.body);
+        assert!(res.body.contains("Sign-in expired"), "{p}");
+    }
+    let (cookie, sent) = t.begin("github").await;
+    sqlx::query("UPDATE auth_requests SET expires_at = now() - interval '1 second'")
+        .execute(&t.pool)
+        .await
+        .unwrap();
+    let res = t.get("/auth/google", Some(&cookie)).await;
+    assert_eq!(res.status, StatusCode::BAD_REQUEST, "{}", res.body);
+    let res = t
+        .callback("github", &cookie, "gh-code", &sent["state"])
+        .await;
+    assert_eq!(res.status, StatusCode::BAD_REQUEST, "{}", res.body);
+    assert!(res.body.contains("Sign-in expired"));
+    assert_eq!(t.token_calls(), 0, "no upstream call");
 }

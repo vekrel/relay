@@ -617,3 +617,126 @@ async fn device_secrets_never_reach_the_logs(pool: PgPool) {
         assert!(!logs.contains(&secret), "secret in logs: {secret}");
     }
 }
+
+/// Fills `key`'s window as if `n` hits had just happened.
+async fn fill(pool: &PgPool, key: &str, n: i32) {
+    sqlx::query("INSERT INTO relay_rate_limits (key, window_start, count) VALUES ($1, now(), $2)")
+        .bind(key)
+        .bind(n)
+        .execute(pool)
+        .await
+        .unwrap();
+}
+
+/// Per-IP limits on sign-in starts (`/oauth/authorize`, `/device`), `/oauth/token` and
+/// `/oauth/device_authorization`; another address is not affected.
+#[sqlx::test]
+async fn sign_in_token_and_device_start_are_limited_per_ip(pool: PgPool) {
+    let a = device_app(pool, "open");
+    let p = &a.state.pool;
+    let ip = TEST_PEER.ip();
+    fill(p, &format!("authorize:ip:{ip}"), 60).await;
+    fill(p, &format!("token:ip:{ip}"), 300).await;
+    fill(p, &format!("device_authorization:ip:{ip}"), 10).await;
+    let (_, c) = pkce();
+    let res = a.authorize(CLI, CLI_REDIRECT, &c).await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
+    let res = a.get("/device?user_code=BCDF-GHJK", None).await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
+    let res = a.poll("whatever").await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
+    // CliTokenManager backs off on slow_down (device polls) and treats 429 as transient (refresh).
+    assert_eq!(res.json()["error"], "slow_down");
+    let res = a
+        .post("/oauth/device_authorization", &[("client_id", CLI)], &[])
+        .await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
+    assert_eq!(res.json()["error"], "slow_down");
+    assert_eq!(count(p, "device_codes").await, 0);
+    assert_eq!(count(p, "auth_requests").await, 0);
+    // Another client address still gets through.
+    let other = App {
+        router: a
+            .router
+            .clone()
+            .layer(axum::Extension(axum::extract::ConnectInfo(
+                std::net::SocketAddr::from(([198, 51, 100, 7], 4000)),
+            ))),
+        state: a.state.clone(),
+    };
+    assert_eq!(
+        other.authorize(CLI, CLI_REDIRECT, &c).await.status,
+        StatusCode::OK
+    );
+    other.device_start().await;
+    assert_eq!(
+        other.poll("whatever").await.json()["error"],
+        "invalid_grant"
+    );
+}
+
+/// User-code lookups (`/device/callback`) are limited per IP as well as per user.
+#[sqlx::test]
+async fn device_code_lookups_are_limited_per_ip(pool: PgPool) {
+    let a = device_app(pool, "open");
+    let d = a.device_start().await;
+    fill(
+        &a.state.pool,
+        &format!("device_lookup:ip:{}", TEST_PEER.ip()),
+        20,
+    )
+    .await;
+    let res = a
+        .device_sign_in(&s(&d, "user_code"), "a@example.test")
+        .await;
+    assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS, "{}", res.body);
+    assert!(!res.body.contains("approval"));
+}
+
+/// The callback's `state` is the user code the sign-in started with; another one is refused.
+#[sqlx::test]
+async fn callback_state_is_bound_to_the_started_sign_in(pool: PgPool) {
+    let a = device_app(pool, "open");
+    let first = s(&a.device_start().await, "user_code");
+    let second = s(&a.device_start().await, "user_code");
+    let page = a.get(&format!("/device?user_code={first}"), None).await;
+    let verifier = page.cookie("vekrel_device_verifier");
+    let request = page.cookie("vekrel_auth_request");
+    let back = a
+        .get(
+            "/auth/test?sub=s&email=a@example.test",
+            Some(&format!("vekrel_auth_request={request}")),
+        )
+        .await;
+    let mut q = back.redirect_query(&format!("{ISS}/device/callback"));
+    q.insert("state".into(), second.replace('-', ""));
+    let query = form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(&q)
+        .finish();
+    let res = a
+        .get(
+            &format!("/device/callback?{query}"),
+            Some(&format!("vekrel_device_verifier={verifier}")),
+        )
+        .await;
+    assert_eq!(res.status, StatusCode::BAD_REQUEST, "{}", res.body);
+    assert!(!res.body.contains("approval"), "{}", res.body);
+}
+
+/// A user disabled between the prompt and the answer cannot approve.
+#[sqlx::test]
+async fn confirm_refuses_a_user_disabled_after_the_prompt(pool: PgPool) {
+    let a = device_app(pool, "open");
+    let d = a.device_start().await;
+    let page = a
+        .device_sign_in(&s(&d, "user_code"), "a@example.test")
+        .await;
+    assert_eq!(page.status, StatusCode::OK, "{}", page.body);
+    sqlx::query("UPDATE users SET disabled_at = now()")
+        .execute(&a.state.pool)
+        .await
+        .unwrap();
+    let res = a.answer(&approval_of(&page), "approve").await;
+    assert_eq!(res.status, StatusCode::FORBIDDEN, "{}", res.body);
+    assert_eq!(status(&a.state.pool).await, "pending");
+}

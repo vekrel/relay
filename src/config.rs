@@ -37,7 +37,7 @@ pub struct Config {
     /// Public origin of the relay, e.g. `https://relay.example.com` (T3's `relayIssuer`).
     pub relay_origin: String,
     /// Postgres URL; `serve` requires it. Never logged.
-    pub database_url: Option<String>,
+    pub database_url: Option<Secret>,
     /// `SIGNUP_MODE=allowlist|open`, default `allowlist`.
     pub signup_mode: SignupMode,
     /// `WEB_ORIGINS`: comma-separated origins of the web app (`https://app.<domain>`). Each gets the
@@ -212,7 +212,7 @@ impl Config {
         Ok(Self {
             addr: SocketAddr::from(([0, 0, 0, 0], port)),
             relay_origin,
-            database_url: get("DATABASE_URL").filter(|s| !s.is_empty()),
+            database_url: get("DATABASE_URL").filter(|s| !s.is_empty()).map(Secret),
             signup_mode,
             web_origins,
             magic_link_transport,
@@ -375,8 +375,8 @@ mod tests {
         assert_eq!(c.addr.port(), 9001);
         assert_eq!(c.relay_origin, "https://relay.example.com");
         assert_eq!(
-            c.database_url.as_deref(),
-            Some("postgres://localhost/relay")
+            c.database_url,
+            Some(Secret("postgres://localhost/relay".into()))
         );
         assert_eq!(c.signup_mode, SignupMode::Open);
         assert_eq!(
@@ -399,6 +399,37 @@ mod tests {
         ] {
             assert!(load(&[("WEB_ORIGINS", bad)]).is_err(), "{bad}");
         }
+    }
+
+    /// `{:?}` of a full Config carries no secret value (it reaches logs via `?config` easily).
+    #[test]
+    fn debug_redacts_every_secret() {
+        let secrets = [
+            (
+                "DATABASE_URL",
+                "postgres://relay:db-pass-SECRET@db.internal/relay",
+            ),
+            ("RESEND_API_KEY", "re_resend_SECRET"),
+            ("GITHUB_CLIENT_SECRET", "gh_client_SECRET"),
+            ("GOOGLE_CLIENT_SECRET", "g_client_SECRET"),
+            (
+                "RELAY_MINT_PRIVATE_KEY",
+                "-----BEGIN PRIVATE KEY-----mint_SECRET",
+            ),
+        ];
+        let mut vars = vec![
+            ("MAGIC_LINK_TRANSPORT", "resend"),
+            ("MAGIC_LINK_FROM", "Vekrel <signin@example.com>"),
+            ("GITHUB_CLIENT_ID", "gh-id"),
+            ("GOOGLE_CLIENT_ID", "g-id"),
+        ];
+        vars.extend(secrets);
+        let debug = format!("{:?}", load(&vars).unwrap());
+        for (name, value) in secrets {
+            assert!(!debug.contains(value), "{name} in Debug: {debug}");
+        }
+        assert!(!debug.contains("SECRET"), "{debug}");
+        assert!(debug.contains("gh-id"), "non-secrets still print: {debug}");
     }
 
     /// Unset transport means Resend: a deploy without a key fails at boot, never echoes links.

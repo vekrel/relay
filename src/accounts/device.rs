@@ -14,7 +14,7 @@ use std::sync::Arc;
 use askama::Template;
 use axum::extract::rejection::{FormRejection, QueryRejection};
 use axum::extract::{Query, State};
-use axum::http::{HeaderMap, StatusCode, header};
+use axum::http::{Extensions, HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Form, Json, Router};
@@ -45,6 +45,10 @@ const USER_CODE_LEN: usize = 8;
 /// guess at someone else's pending code out of reach.
 const LOOKUPS_PER_WINDOW: i32 = 10;
 const LOOKUP_WINDOW_SECS: f64 = 900.0;
+/// Per client IP, `(max, window seconds)`; ours (T3 used Clerk's device endpoint): device code
+/// requests, and user-code lookups next to the per-user limit above.
+const DEVICE_START_IP_LIMIT: (i64, i64) = (10, 900);
+const LOOKUP_IP_LIMIT: (i64, i64) = (20, 900);
 const APPROVAL_TTL_SECS: u64 = 300;
 const APPROVAL_TYP: &str = "vekrel-device-approval+jwt";
 /// The browser leg's client. Not in `Clients`, so `/oauth/authorize` and `/oauth/token` refuse it.
@@ -120,8 +124,21 @@ struct DeviceAuthorization {
 async fn device_authorization(
     State(s): State<Arc<AccountsState>>,
     headers: HeaderMap,
+    extensions: Extensions,
     form: Result<Form<AuthorizationForm>, FormRejection>,
 ) -> Response {
+    if let Some(res) = oauth::ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "device_authorization",
+        DEVICE_START_IP_LIMIT,
+        oauth::too_many_oauth,
+    )
+    .await
+    {
+        return res;
+    }
     let Ok(Form(f)) = form else {
         return oauth_error("invalid_request", "malformed form body");
     };
@@ -208,6 +225,8 @@ struct PageParams {
 /// The code is not looked up before sign-in, so guessing costs a sign-in per try (see `callback`).
 async fn device_page(
     State(s): State<Arc<AccountsState>>,
+    headers: HeaderMap,
+    extensions: Extensions,
     q: Result<Query<PageParams>, QueryRejection>,
 ) -> Response {
     let input = q.ok().and_then(|Query(q)| q.user_code).unwrap_or_default();
@@ -224,7 +243,21 @@ async fn device_page(
             page.render().expect("template renders"),
         );
     };
-    let verifier = random_secret();
+    if let Some(res) = oauth::ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "authorize",
+        oauth::SIGN_IN_START_IP_LIMIT,
+        oauth::too_many_pages,
+    )
+    .await
+    {
+        return res;
+    }
+    // The user code rides in the verifier, so the auth request's challenge commits to it and
+    // `callback` can tell the `state` it gets back was not swapped.
+    let verifier = format!("{}.{code}", random_secret());
     let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
     let mut res = oauth::start_sign_in(
         &s,
@@ -259,6 +292,14 @@ struct Approval {
     exp: u64,
 }
 
+fn too_many_lookups() -> Response {
+    message(
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many attempts",
+        "Wait 15 minutes, then run the sign-in command again.",
+    )
+}
+
 fn invalid_code_page() -> Response {
     message(
         StatusCode::BAD_REQUEST,
@@ -272,6 +313,7 @@ fn invalid_code_page() -> Response {
 async fn callback(
     State(s): State<Arc<AccountsState>>,
     headers: HeaderMap,
+    extensions: Extensions,
     q: Result<Query<CallbackParams>, QueryRejection>,
 ) -> Response {
     let (
@@ -284,7 +326,10 @@ async fn callback(
     else {
         return expired_page();
     };
-    let Some(user_code) = normalize(&state) else {
+    let Some(user_code) = verifier
+        .rsplit_once('.')
+        .and_then(|(_, bound)| normalize(&state).filter(|c| c == bound))
+    else {
         return expired_page();
     };
     let redeemed: Option<(Uuid, String, bool)> = match sqlx::query_as(
@@ -307,6 +352,18 @@ async fn callback(
     if URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes())) != challenge {
         return expired_page();
     }
+    if let Some(res) = oauth::ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "device_lookup",
+        LOOKUP_IP_LIMIT,
+        too_many_lookups,
+    )
+    .await
+    {
+        return res;
+    }
     // Every lookup counts, hit or miss, so one account cannot walk the code space.
     let lookups: Result<i32, _> = sqlx::query_scalar(
         "INSERT INTO relay_rate_limits (key, window_start, count)
@@ -322,11 +379,7 @@ async fn callback(
         Err(e) => return internal(e),
         Ok(n) if n > LOOKUPS_PER_WINDOW => {
             tracing::warn!(%user_id, "device code lookups over the limit");
-            return message(
-                StatusCode::TOO_MANY_REQUESTS,
-                "Too many attempts",
-                "Wait 15 minutes, then run the sign-in command again.",
-            );
+            return too_many_lookups();
         }
         Ok(_) => {}
     }
@@ -418,6 +471,28 @@ async fn confirm(
         Some("deny") => "denied",
         _ => return expired_page(),
     };
+    // Re-checked here: the account may have been disabled since the prompt was shown.
+    let disabled: Option<bool> =
+        match sqlx::query_scalar("SELECT disabled_at IS NOT NULL FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_optional(&s.pool)
+            .await
+        {
+            Ok(d) => d,
+            Err(e) => return internal(e),
+        };
+    match disabled {
+        Some(false) => {}
+        Some(true) => {
+            tracing::info!(%user_id, "device sign-in refused: account disabled");
+            return message(
+                StatusCode::FORBIDDEN,
+                "Account disabled",
+                "This Vekrel account is disabled.",
+            );
+        }
+        None => return expired_page(),
+    }
     let answered = sqlx::query(
         "UPDATE device_codes SET status = $3, user_id = $2
          WHERE user_code = $1 AND status = 'pending' AND expires_at > now()",

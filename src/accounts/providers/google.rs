@@ -7,7 +7,7 @@ use jsonwebtoken::jwk::JwkSet;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
 
-use super::{Failure, upstream};
+use super::{Failure, error_code, upstream};
 use crate::accounts::signup::VerifiedIdentity;
 use crate::config::OAuthApp;
 
@@ -61,7 +61,7 @@ pub(super) async fn identity(
     let status = res.status();
     let t: TokenResponse = res.json().await.map_err(upstream)?;
     let Some(id_token) = t.id_token.filter(|_| status.is_success()) else {
-        let e = t.error.unwrap_or_default();
+        let e = error_code(t.error);
         return Err(Failure::Upstream(format!(
             "token exchange refused ({status}): {e}"
         )));
@@ -92,7 +92,13 @@ pub(super) async fn identity(
     v.set_issuer(&ISSUERS);
     v.set_required_spec_claims(&["exp", "iss", "aud", "sub"]);
     let c = jsonwebtoken::decode::<Claims>(&id_token, &key, &v)
-        .map_err(|e| bad(&format!("{:?}", e.kind())))?
+        // The variant name only: `Json(..)` carries serde's text, which quotes claim values.
+        .map_err(|e| {
+            bad(format!("{:?}", e.kind())
+                .split('(')
+                .next()
+                .unwrap_or_default())
+        })?
         .claims;
     if c.nonce.as_deref() != Some(nonce) {
         return Err(bad("nonce mismatch"));

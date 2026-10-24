@@ -105,7 +105,13 @@ fn challenge() -> String {
 }
 
 impl App {
-    async fn send(&self, req: Request<Body>) -> Res {
+    /// With the socket peer `serve` attaches; a test that layers its own `ConnectInfo` wins.
+    async fn send(&self, mut req: Request<Body>) -> Res {
+        req.extensions_mut()
+            .insert(axum::extract::ConnectInfo(std::net::SocketAddr::from((
+                [192, 0, 2, 1],
+                4000,
+            ))));
         let res = self.router.clone().oneshot(req).await.unwrap();
         let status = res.status();
         let headers = res.headers().clone();
@@ -670,7 +676,7 @@ async fn global_send_cap_is_a_backstop(pool: PgPool) {
     assert_eq!(res.status, StatusCode::TOO_MANY_REQUESTS);
     assert_eq!(a.count("SELECT count(*) FROM magic_links").await, 0);
     assert_eq!(
-        a.count("SELECT count(*) FROM relay_rate_limits WHERE key <> 'magic_link:global'")
+        a.count("SELECT count(*) FROM relay_rate_limits WHERE key LIKE 'magic_link:%' AND key <> 'magic_link:global'")
             .await,
         0,
         "a refused send records nothing"
@@ -816,7 +822,12 @@ async fn trusted_but_malformed_ip_header_is_400(pool: PgPool) {
             .await;
         assert_eq!(r.status, StatusCode::BAD_REQUEST, "{bad:?}");
     }
-    assert_eq!(a.count("SELECT count(*) FROM relay_rate_limits").await, 0);
+    // Sign-in starts (`authorize:` keys) are counted by `/oauth/authorize`, not here.
+    assert_eq!(
+        a.count("SELECT count(*) FROM relay_rate_limits WHERE key LIKE 'magic_link:%'")
+            .await,
+        0
+    );
     assert_eq!(a.count("SELECT count(*) FROM magic_links").await, 0);
 }
 

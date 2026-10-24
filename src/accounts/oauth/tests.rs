@@ -94,8 +94,16 @@ impl Res {
     }
 }
 
+/// The socket peer `serve` would attach; a test that layers its own `ConnectInfo` wins.
+const TEST_PEER: std::net::SocketAddr = std::net::SocketAddr::new(
+    std::net::IpAddr::V4(std::net::Ipv4Addr::new(192, 0, 2, 1)),
+    4000,
+);
+
 impl App {
-    async fn send(&self, req: Request<Body>) -> Res {
+    async fn send(&self, mut req: Request<Body>) -> Res {
+        req.extensions_mut()
+            .insert(axum::extract::ConnectInfo(TEST_PEER));
         let res = self.router.clone().oneshot(req).await.unwrap();
         let status = res.status();
         let headers = res.headers().clone();
@@ -348,12 +356,8 @@ async fn sign_in_page_is_branded_and_hardened(pool: PgPool) {
     let (_, c) = pkce();
     let res = a.authorize(CLI, CLI_REDIRECT, &c).await;
     assert_eq!(res.status, StatusCode::OK);
-    for text in [
-        "Continue with GitHub",
-        "Continue with Google",
-        "action=\"/auth/email\"",
-        "#FF6A2B",
-    ] {
+    // Provider buttons: sign_in_page_shows_configured_providers_only.
+    for text in ["action=\"/auth/email\"", "#FF6A2B"] {
         assert!(res.body.contains(text), "{text}");
     }
     assert_eq!(res.headers[header::X_FRAME_OPTIONS], "DENY");
@@ -1008,4 +1012,44 @@ async fn cookie_revoke_needs_a_web_origin(pool: PgPool) {
         a.refresh(t["refresh_token"].as_str().unwrap()).await.json()["error"],
         "invalid_grant"
     );
+}
+
+/// Only configured providers get a button; the email form is always there.
+#[sqlx::test]
+async fn sign_in_page_shows_configured_providers_only(pool: PgPool) {
+    let keys =
+        Arc::new(SigningKeys::from_json(&json!([entry("k1", "active").0]).to_string()).unwrap());
+    for (vars, github, google) in [
+        (vec![], false, false),
+        (
+            vec![("GITHUB_CLIENT_ID", "id"), ("GITHUB_CLIENT_SECRET", "s")],
+            true,
+            false,
+        ),
+        (
+            vec![("GOOGLE_CLIENT_ID", "id"), ("GOOGLE_CLIENT_SECRET", "s")],
+            false,
+            true,
+        ),
+    ] {
+        let config = Config::for_tests(&vars);
+        let a = App {
+            router: router(AccountsState::new(pool.clone(), keys.clone(), &config)),
+            state: AccountsState::new(pool.clone(), keys.clone(), &config),
+        };
+        let (_, c) = pkce();
+        let page = a.authorize(CLI, CLI_REDIRECT, &c).await;
+        assert_eq!(page.status, StatusCode::OK, "{}", page.body);
+        assert_eq!(
+            page.body.contains(r#"href="/auth/github""#),
+            github,
+            "{vars:?}"
+        );
+        assert_eq!(
+            page.body.contains(r#"href="/auth/google""#),
+            google,
+            "{vars:?}"
+        );
+        assert!(page.body.contains(r#"action="/auth/email""#));
+    }
 }

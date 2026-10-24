@@ -122,8 +122,9 @@ async fn start(State(s): State<Arc<Providers>>, headers: HeaderMap, p: Provider)
     let Some(app) = s.app(p) else {
         return not_configured(p);
     };
-    let Some(request_id) = oauth::cookie(&headers, AUTH_REQUEST_COOKIE) else {
-        return oauth::expired_page();
+    let request_id = match live_request(&s, &headers).await {
+        Ok(id) => id,
+        Err(res) => return *res,
     };
     let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(derive("pkce", &request_id)));
     let mut q = form_urlencoded::Serializer::new(String::new());
@@ -166,8 +167,9 @@ async fn callback(
     let Some(app) = s.app(p) else {
         return not_configured(p);
     };
-    let Some(request_id) = oauth::cookie(&headers, AUTH_REQUEST_COOKIE) else {
-        return oauth::expired_page();
+    let request_id = match live_request(&s, &headers).await {
+        Ok(id) => id,
+        Err(res) => return *res,
     };
     let q = q.ok().map(|Query(q)| q);
     let state = q.as_ref().and_then(|q| q.state.as_deref()).unwrap_or("");
@@ -230,7 +232,54 @@ async fn callback(
     }
 }
 
-/// Upstream error text: status and reqwest's own message (no bodies, which carry tokens).
+/// Upstream error kind and status only: reqwest's text can quote response fragments (decode
+/// errors), and bodies carry tokens.
 fn upstream(e: reqwest::Error) -> Failure {
-    Failure::Upstream(e.without_url().to_string())
+    let kind = if e.is_timeout() {
+        "timeout"
+    } else if e.is_connect() {
+        "connect"
+    } else if e.is_status() {
+        "status"
+    } else if e.is_decode() {
+        "decode"
+    } else if e.is_body() {
+        "body"
+    } else if e.is_request() {
+        "request"
+    } else {
+        "other"
+    };
+    Failure::Upstream(match e.status() {
+        Some(st) => format!("{kind} ({})", st.as_u16()),
+        None => kind.to_owned(),
+    })
+}
+
+/// A provider's OAuth `error` field, logged only when shaped like an RFC 6749 code.
+fn error_code(e: Option<String>) -> String {
+    match e {
+        None => "none".into(),
+        Some(e) if e.len() <= 64 && e.bytes().all(|b| b.is_ascii_lowercase() || b == b'_') => e,
+        Some(_) => "other".into(),
+    }
+}
+
+/// The browser's auth-request id, if that request exists and is unexpired. Checked before any
+/// upstream call, so a stale or forged cookie costs the provider nothing.
+async fn live_request(s: &Providers, headers: &HeaderMap) -> Result<String, Box<Response>> {
+    let Some(id) = oauth::cookie(headers, AUTH_REQUEST_COOKIE) else {
+        return Err(Box::new(oauth::expired_page()));
+    };
+    match sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM auth_requests WHERE id = $1 AND expires_at > now())",
+    )
+    .bind(&id)
+    .fetch_one(&s.accounts.pool)
+    .await
+    {
+        Ok(true) => Ok(id),
+        Ok(false) => Err(Box::new(oauth::expired_page())),
+        Err(e) => Err(Box::new(oauth::internal(e))),
+    }
 }

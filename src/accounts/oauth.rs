@@ -12,7 +12,7 @@ use askama::Template;
 use axum::extract::rejection::{FormRejection, QueryRejection};
 use axum::extract::{FromRef, FromRequestParts, Query, State};
 use axum::http::request::Parts;
-use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
+use axum::http::{Extensions, HeaderMap, HeaderValue, Method, StatusCode, header};
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Form, Json, Router};
@@ -29,6 +29,7 @@ use super::keys::{PublicKeys, SigningKeys};
 use super::signup::{self, Refusal, VerifiedIdentity};
 use super::tokens::{self, ACCESS_TOKEN_TTL_SECS, AccessClaims};
 use crate::config::{Config, SignupMode};
+use crate::rate_limit;
 
 /// Owner decision 4 / research §3: codes 60 s, refresh 30 days sliding.
 const CODE_TTL_SECS: i64 = 60;
@@ -38,6 +39,11 @@ const AUTH_REQUEST_TTL_SECS: i64 = 1800;
 pub(crate) const AUTH_REQUEST_COOKIE: &str = "vekrel_auth_request";
 pub const REFRESH_COOKIE: &str = "vekrel_refresh";
 const MAX_STATE_LEN: usize = 512;
+/// Per client IP, `(max, window seconds)`. Ours (T3 had Clerk in front of these routes):
+/// sign-in starts (`/oauth/authorize` and `/device`, each stores an auth request);
+/// `/oauth/token`, where one CLI polling a device code every 5 s for its 10 min is 120.
+pub(super) const SIGN_IN_START_IP_LIMIT: (i64, i64) = (60, 900);
+const TOKEN_IP_LIMIT: (i64, i64) = (300, 900);
 const PAGE_CSP: &str = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
 
 pub struct AccountsState {
@@ -48,6 +54,10 @@ pub struct AccountsState {
     pub signup_mode: SignupMode,
     pub clients: Clients,
     pub web_origins: Vec<String>,
+    pub trust_ip_header: bool,
+    /// Which provider buttons the sign-in page shows (`GITHUB_*`, `GOOGLE_*` set).
+    pub github: bool,
+    pub google: bool,
 }
 
 impl AccountsState {
@@ -61,6 +71,9 @@ impl AccountsState {
             signup_mode: config.signup_mode,
             clients: Clients::new(&config.web_origins),
             web_origins: config.web_origins.clone(),
+            trust_ip_header: config.trust_proxy_ip_header,
+            github: config.github.is_some(),
+            google: config.google.is_some(),
         })
     }
 }
@@ -127,7 +140,10 @@ pub(super) fn set_cookie(
 
 #[derive(Template)]
 #[template(path = "signin.html")]
-struct SignInPage;
+struct SignInPage {
+    github: bool,
+    google: bool,
+}
 
 #[derive(Template)]
 #[template(path = "message.html")]
@@ -219,6 +235,45 @@ pub(super) fn internal(e: impl ErrorKind) -> Response {
     StatusCode::INTERNAL_SERVER_ERROR.into_response()
 }
 
+/// One hit on `name`'s per-IP limit (`rate_limit::allow_all`). `Some` is the answer to send
+/// instead of going on: `too_many()` over the limit, 400 for a malformed trusted IP header, 500
+/// on a database error.
+pub(super) async fn ip_limited(
+    s: &AccountsState,
+    headers: &HeaderMap,
+    extensions: &Extensions,
+    name: &str,
+    (max, secs): (i64, i64),
+    too_many: fn() -> Response,
+) -> Option<Response> {
+    let ip = match rate_limit::client_ip(headers, extensions, s.trust_ip_header) {
+        Ok(Some(ip)) => rate_limit::ip_bucket(ip),
+        Ok(None) => return Some(internal("no client address (serve attaches ConnectInfo)")),
+        Err(_) => return Some(StatusCode::BAD_REQUEST.into_response()),
+    };
+    match rate_limit::allow_all(&s.pool, &[(format!("{name}:ip:{ip}"), max, secs)]).await {
+        Ok(true) => None,
+        Ok(false) => Some(too_many()),
+        Err(e) => Some(internal(e)),
+    }
+}
+
+pub(super) fn too_many_pages() -> Response {
+    message(
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many attempts",
+        "Wait a few minutes, then try again.",
+    )
+}
+
+/// 429 with `slow_down`: Engine `CliTokenManager` widens its poll interval on it, and treats
+/// 429 on refresh as transient.
+pub(super) fn too_many_oauth() -> Response {
+    let mut res = oauth_error("slow_down", "too many requests; wait and retry");
+    *res.status_mut() = StatusCode::TOO_MANY_REQUESTS;
+    res
+}
+
 #[derive(Deserialize)]
 struct AuthorizeParams {
     response_type: Option<String>,
@@ -236,6 +291,8 @@ fn is_b64url(s: &str) -> bool {
 
 async fn authorize(
     State(s): State<Arc<AccountsState>>,
+    headers: HeaderMap,
+    extensions: Extensions,
     q: Result<Query<AuthorizeParams>, QueryRejection>,
 ) -> Response {
     let bad = |body| message(StatusCode::BAD_REQUEST, "Sign-in link is not valid", body);
@@ -279,6 +336,18 @@ async fn authorize(
             "code_challenge must be a base64url SHA-256",
         );
     }
+    if let Some(res) = ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "authorize",
+        SIGN_IN_START_IP_LIMIT,
+        too_many_pages,
+    )
+    .await
+    {
+        return res;
+    }
     start_sign_in(
         &s,
         &client_id,
@@ -316,7 +385,12 @@ pub(super) async fn start_sign_in(
     }
     let mut res = html(
         StatusCode::OK,
-        SignInPage.render().expect("template renders"),
+        SignInPage {
+            github: s.github,
+            google: s.google,
+        }
+        .render()
+        .expect("template renders"),
     );
     let (k, v) = set_cookie(AUTH_REQUEST_COOKIE, &id, "/", AUTH_REQUEST_TTL_SECS);
     res.headers_mut()
@@ -481,8 +555,21 @@ struct IdClaims<'a> {
 async fn token(
     State(s): State<Arc<AccountsState>>,
     headers: HeaderMap,
+    extensions: Extensions,
     form: Result<Form<TokenForm>, FormRejection>,
 ) -> Response {
+    if let Some(res) = ip_limited(
+        &s,
+        &headers,
+        &extensions,
+        "token",
+        TOKEN_IP_LIMIT,
+        too_many_oauth,
+    )
+    .await
+    {
+        return res;
+    }
     let Ok(Form(f)) = form else {
         return oauth_error("invalid_request", "malformed form body");
     };

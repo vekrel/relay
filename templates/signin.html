@@ -2,9 +2,9 @@
 {% block title %}Sign in{% endblock %}
 {% block content %}
 <h1>Sign in to Vekrel</h1>
-<a class="button" href="/auth/github">Continue with GitHub</a>
-<a class="button" href="/auth/google">Continue with Google</a>
-<div class="or">or</div>
+{% if github %}<a class="button" href="/auth/github">Continue with GitHub</a>{% endif %}
+{% if google %}<a class="button" href="/auth/google">Continue with Google</a>{% endif %}
+{% if github || google %}<div class="or">or</div>{% endif %}
 <form method="post" action="/auth/email">
 <label for="email">Email</label>
 <input id="email" name="email" type="email" autocomplete="email" required>

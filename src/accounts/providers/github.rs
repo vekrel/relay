@@ -3,7 +3,7 @@
 // because the email links the identity to an existing account (Review Focus 1).
 use serde::Deserialize;
 
-use super::{Failure, upstream};
+use super::{Failure, error_code, upstream};
 use crate::accounts::signup::VerifiedIdentity;
 use crate::config::OAuthApp;
 
@@ -51,7 +51,7 @@ pub(super) async fn identity(
         .await
         .map_err(upstream)?;
     let Some(token) = t.access_token else {
-        let e = t.error.unwrap_or_default();
+        let e = error_code(t.error);
         return Err(Failure::Upstream(format!("token exchange refused: {e}")));
     };
     let api = app.data_url.trim_end_matches('/');
