@@ -40,6 +40,9 @@ pub struct Config {
     pub database_url: Option<Secret>,
     /// `SIGNUP_MODE=allowlist|open`, default `allowlist`.
     pub signup_mode: SignupMode,
+    /// `SIGNUP_ALLOWED_DOMAINS` (Vekrel): comma-separated domains whose every address may create an
+    /// account in allowlist mode, lowercase, e.g. `vekrel.com`. Exact match, no subdomains.
+    pub signup_allowed_domains: Vec<String>,
     /// `WEB_ORIGINS`: comma-separated origins of the web app (`https://app.<domain>`). Each gets the
     /// `vekrel-web` redirect `<origin>/auth/callback` and is the only CORS origin for `/oauth/token`.
     pub web_origins: Vec<String>,
@@ -218,6 +221,17 @@ impl Config {
                 return Err(format!("SIGNUP_MODE must be allowlist or open: {other:?}"));
             }
         };
+        let mut signup_allowed_domains = Vec::new();
+        for d in get("SIGNUP_ALLOWED_DOMAINS").unwrap_or_default().split(',') {
+            let d = d.trim().to_ascii_lowercase();
+            if d.is_empty() {
+                continue;
+            }
+            if d.contains('@') || !d.contains('.') || d.starts_with('.') || d.ends_with('.') {
+                return Err(format!("SIGNUP_ALLOWED_DOMAINS: not a domain: {d:?}"));
+            }
+            signup_allowed_domains.push(d);
+        }
         let mut web_origins = Vec::new();
         for o in get("WEB_ORIGINS").unwrap_or_default().split(',') {
             let o = o.trim();
@@ -301,6 +315,7 @@ impl Config {
             relay_origin,
             database_url: get("DATABASE_URL").filter(|s| !s.is_empty()).map(Secret),
             signup_mode,
+            signup_allowed_domains,
             web_origins,
             magic_link_transport,
             trust_proxy_ip_header,
@@ -411,6 +426,7 @@ mod tests {
         assert_eq!(c.relay_origin, "http://localhost:8080");
         assert!(c.database_url.is_none());
         assert_eq!(c.signup_mode, SignupMode::Allowlist);
+        assert!(c.signup_allowed_domains.is_empty());
         assert!(c.web_origins.is_empty());
         assert!(matches!(
             c.magic_link_transport,
@@ -504,6 +520,21 @@ mod tests {
         assert!(!format!("{g:?}").contains("g-secret"));
         assert!(load(&[("GITHUB_CLIENT_ID", "x")]).is_err());
         assert!(load(&[("GOOGLE_CLIENT_SECRET", "x")]).is_err());
+    }
+
+    #[test]
+    fn signup_allowed_domains_are_lowercased_and_validated() {
+        let c = load(&[("SIGNUP_ALLOWED_DOMAINS", " Vekrel.com, ,b.example ")]).unwrap();
+        assert_eq!(c.signup_allowed_domains, ["vekrel.com", "b.example"]);
+        for bad in [
+            "@vekrel.com",
+            "x@vekrel.com",
+            "localhost",
+            ".vekrel.com",
+            "vekrel.com.",
+        ] {
+            assert!(load(&[("SIGNUP_ALLOWED_DOMAINS", bad)]).is_err(), "{bad}");
+        }
     }
 
     #[test]

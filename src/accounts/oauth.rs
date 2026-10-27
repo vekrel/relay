@@ -52,6 +52,7 @@ pub struct AccountsState {
     pub public_keys: PublicKeys,
     pub issuer: String,
     pub signup_mode: SignupMode,
+    pub signup_allowed_domains: Vec<String>,
     pub clients: Clients,
     pub web_origins: Vec<String>,
     pub trust_ip_header: bool,
@@ -69,6 +70,7 @@ impl AccountsState {
             public_keys,
             issuer: config.relay_origin.clone(),
             signup_mode: config.signup_mode,
+            signup_allowed_domains: config.signup_allowed_domains.clone(),
             clients: Clients::new(&config.web_origins),
             web_origins: config.web_origins.clone(),
             trust_ip_header: config.trust_proxy_ip_header,
@@ -434,7 +436,14 @@ pub(super) async fn complete_sign_in_linking(
     let Some((client_id, redirect_uri, challenge, state, true)) = pending else {
         return expired_page();
     };
-    let resolved = signup::resolve_user(&s.pool, s.signup_mode, &identity, link_by_email).await;
+    let resolved = signup::resolve_user(
+        &s.pool,
+        s.signup_mode,
+        &s.signup_allowed_domains,
+        &identity,
+        link_by_email,
+    )
+    .await;
     let user_id = match resolved {
         Err(e) => return internal(e),
         Ok(Err(Refusal::NotAllowed)) => {

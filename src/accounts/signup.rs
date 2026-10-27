@@ -15,7 +15,7 @@ pub struct VerifiedIdentity {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Refusal {
-    /// New email, `SIGNUP_MODE=allowlist`, not in `signup_allowlist`.
+    /// New email, `SIGNUP_MODE=allowlist`, not in `signup_allowlist` or `SIGNUP_ALLOWED_DOMAINS`.
     NotAllowed,
     Disabled,
     /// New identity, its email belongs to an existing user, and the provider may not link it.
@@ -27,6 +27,7 @@ pub enum Refusal {
 pub async fn resolve_user(
     pool: &PgPool,
     mode: SignupMode,
+    allowed_domains: &[String],
     id: &VerifiedIdentity,
     link_by_email: bool,
 ) -> Result<Result<Uuid, Refusal>, sqlx::Error> {
@@ -53,6 +54,7 @@ pub async fn resolve_user(
                 Some(u) => u,
                 None => {
                     let allowed = mode == SignupMode::Open
+                        || domain_allowed(allowed_domains, &id.email)
                         || sqlx::query_scalar::<_, bool>(
                             "SELECT EXISTS (SELECT 1 FROM signup_allowlist WHERE email = $1::citext)",
                         )
@@ -98,6 +100,14 @@ pub async fn resolve_user(
     Ok(Ok(user_id))
 }
 
+/// `SIGNUP_ALLOWED_DOMAINS` (Vekrel): the part after the last `@` equals a listed domain exactly
+/// (no subdomains). Domains are stored lowercase.
+fn domain_allowed(domains: &[String], email: &str) -> bool {
+    email
+        .rsplit_once('@')
+        .is_some_and(|(_, d)| domains.iter().any(|a| a.eq_ignore_ascii_case(d)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,10 +128,36 @@ mod tests {
     }
 
     #[sqlx::test]
+    async fn allowed_domains_admit_any_address_at_that_domain_only(pool: PgPool) {
+        let a = SignupMode::Allowlist;
+        let d = ["vekrel.com".to_owned()];
+        for email in [
+            "x@evil-vekrel.com",
+            "x@sub.vekrel.com",
+            "vekrel.com@evil.test",
+            "x@vekrel.com.evil.test",
+        ] {
+            assert_eq!(
+                resolve_user(&pool, a, &d, &ident(email, email), true)
+                    .await
+                    .unwrap(),
+                Err(Refusal::NotAllowed),
+                "{email}"
+            );
+        }
+        assert_eq!(users(&pool).await, 0);
+        resolve_user(&pool, a, &d, &ident("1", "Someone@Vekrel.COM"), true)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(users(&pool).await, 1);
+    }
+
+    #[sqlx::test]
     async fn allowlist_mode_creates_only_listed_emails(pool: PgPool) {
         let a = SignupMode::Allowlist;
         assert_eq!(
-            resolve_user(&pool, a, &ident("1", "out@example.test"), true)
+            resolve_user(&pool, a, &[], &ident("1", "out@example.test"), true)
                 .await
                 .unwrap(),
             Err(Refusal::NotAllowed)
@@ -131,12 +167,12 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
-        let id = resolve_user(&pool, a, &ident("2", "in@example.test"), true)
+        let id = resolve_user(&pool, a, &[], &ident("2", "in@example.test"), true)
             .await
             .unwrap()
             .unwrap();
         // Same identity again: same user, no new row.
-        let again = resolve_user(&pool, a, &ident("2", "in@example.test"), true)
+        let again = resolve_user(&pool, a, &[], &ident("2", "in@example.test"), true)
             .await
             .unwrap()
             .unwrap();
@@ -146,23 +182,36 @@ mod tests {
 
     #[sqlx::test]
     async fn open_mode_creates_users(pool: PgPool) {
-        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
-            .await
-            .unwrap();
+        let id = resolve_user(
+            &pool,
+            SignupMode::Open,
+            &[],
+            &ident("1", "a@example.test"),
+            true,
+        )
+        .await
+        .unwrap();
         assert!(id.is_ok());
         assert_eq!(users(&pool).await, 1);
     }
 
     #[sqlx::test]
     async fn existing_user_signs_in_even_when_not_listed(pool: PgPool) {
-        let id = resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
-            .await
-            .unwrap()
-            .unwrap();
+        let id = resolve_user(
+            &pool,
+            SignupMode::Open,
+            &[],
+            &ident("1", "a@example.test"),
+            true,
+        )
+        .await
+        .unwrap()
+        .unwrap();
         // A second verified identity with the same email links to the same user in allowlist mode.
         let linked = resolve_user(
             &pool,
             SignupMode::Allowlist,
+            &[],
             &ident("other", "A@example.test"),
             true,
         )
@@ -180,17 +229,23 @@ mod tests {
 
     #[sqlx::test]
     async fn disabled_user_is_refused(pool: PgPool) {
-        resolve_user(&pool, SignupMode::Open, &ident("1", "a@example.test"), true)
-            .await
-            .unwrap()
-            .unwrap();
+        resolve_user(
+            &pool,
+            SignupMode::Open,
+            &[],
+            &ident("1", "a@example.test"),
+            true,
+        )
+        .await
+        .unwrap()
+        .unwrap();
         sqlx::query("UPDATE users SET disabled_at = now()")
             .execute(&pool)
             .await
             .unwrap();
         for i in [ident("1", "a@example.test"), ident("new", "a@example.test")] {
             assert_eq!(
-                resolve_user(&pool, SignupMode::Open, &i, true)
+                resolve_user(&pool, SignupMode::Open, &[], &i, true)
                     .await
                     .unwrap(),
                 Err(Refusal::Disabled)
@@ -206,12 +261,12 @@ mod tests {
     #[sqlx::test]
     async fn non_linking_identity_never_attaches_by_email(pool: PgPool) {
         let o = SignupMode::Open;
-        resolve_user(&pool, o, &ident("1", "a@example.test"), true)
+        resolve_user(&pool, o, &[], &ident("1", "a@example.test"), true)
             .await
             .unwrap()
             .unwrap();
         assert_eq!(
-            resolve_user(&pool, o, &ident("g", "A@example.test"), false)
+            resolve_user(&pool, o, &[], &ident("g", "A@example.test"), false)
                 .await
                 .unwrap(),
             Err(Refusal::EmailTaken)
@@ -222,11 +277,11 @@ mod tests {
             .unwrap();
         assert_eq!(n, 1, "nothing attached");
         // A new email still signs up, and that identity signs back in.
-        let id = resolve_user(&pool, o, &ident("g", "new@example.test"), false)
+        let id = resolve_user(&pool, o, &[], &ident("g", "new@example.test"), false)
             .await
             .unwrap()
             .unwrap();
-        let again = resolve_user(&pool, o, &ident("g", "new@example.test"), false)
+        let again = resolve_user(&pool, o, &[], &ident("g", "new@example.test"), false)
             .await
             .unwrap()
             .unwrap();
