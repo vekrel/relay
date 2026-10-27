@@ -54,7 +54,8 @@ pub async fn resolve_user(
                 Some(u) => u,
                 None => {
                     let allowed = mode == SignupMode::Open
-                        || domain_allowed(allowed_domains, &id.email)
+                        // Only a provider authoritative for the address may use a domain match.
+                        || (link_by_email && domain_allowed(allowed_domains, &id.email))
                         || sqlx::query_scalar::<_, bool>(
                             "SELECT EXISTS (SELECT 1 FROM signup_allowlist WHERE email = $1::citext)",
                         )
@@ -145,6 +146,13 @@ mod tests {
                 "{email}"
             );
         }
+        // Google for an address it is not authoritative for (no matching `hd`).
+        assert_eq!(
+            resolve_user(&pool, a, &d, &ident("g", "x@vekrel.com"), false)
+                .await
+                .unwrap(),
+            Err(Refusal::NotAllowed)
+        );
         assert_eq!(users(&pool).await, 0);
         resolve_user(&pool, a, &d, &ident("1", "Someone@Vekrel.COM"), true)
             .await
